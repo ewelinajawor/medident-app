@@ -7,7 +7,6 @@ import Notifications from "./components/Notifications";
 import Settings from "./components/Settings";
 import ShoppingList from "./components/ShoppingList";
 import Orders from "./components/Orders"; // Importuj komponent Orders
-import ProductList from "./components/ProductList"; // Import nowego komponentu do zapasów
 
 function App() {
   const [username] = useState("Janek"); // Przykładowa nazwa użytkownika, możesz ją dynamicznie pobierać
@@ -22,7 +21,6 @@ function App() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/shopping-list" element={<ShoppingList />} />
         <Route path="/orders" element={<Orders />} /> {/* Dodaj trasę do Orders */}
-        <Route path="/product-list" element={<ProductList />} /> {/* Trasa dla listy produktów */}
       </Routes>
     </Router>
   );
