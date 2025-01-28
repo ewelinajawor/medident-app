@@ -1,0 +1,173 @@
+/* Główne tło */
+.shopping-list-container {
+  padding: 30px;
+  background: linear-gradient(135deg, #f0f4f7 0%, #e1f5fe 100%);
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 1s ease-in-out;
+  font-family: 'Roboto', sans-serif;
+  max-width: 900px;
+  margin: 0 auto;
+  overflow-x: auto; /* Zapobiega zawijaniu się na mniejszych ekranach */
+}
+
+/* Nagłówek - gradient z fioletu do ciemnego fioletu */
+.shopping-list-container h2 {
+  font-size: 32px;
+  font-weight: 700;
+  color: transparent;
+  margin-bottom: 20px;
+  text-align: center;
+  letter-spacing: 1px;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(145deg, #66004d, #220066); /* Gradient w odcieniach fioletu */
+  -webkit-background-clip: text;
+  background-clip: text;
+  /* Gradient w nagłówku */
+}
+
+/* Animacja */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Formularz dodawania produktu */
+.product-form {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  height: 50px; /* Wyrównanie wysokości */
+  width: 100%;
+}
+
+/* Pola wyboru produktu i ilości */
+.product-form select,
+.product-form input,
+.product-form button {
+  padding: 10px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+  height: 40px; /* Wyrównanie wysokości pól */
+  width: 220px; /* Stała szerokość dla wszystkich elementów */
+  box-sizing: border-box; /* Zawiera padding w szerokości */
+}
+
+/* Zmniejszenie pola ilości sztuk */
+.product-form input {
+  width: 120px; /* Mniejsze pole na ilość */
+}
+
+/* Pola wybór produktu i przycisk z wyrównaniem */
+.product-form select,
+.product-form input {
+  height: 40px; /* Wyrównanie wysokości */
+}
+
+.product-form select:focus,
+.product-form input:focus {
+  border-color: #1a2a6c;
+}
+
+/* Przycisk dodawania produktu */
+.product-form button {
+  background-color: #1a2a6c; /* Granatowy przycisk */
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  width: 220px; /* Szerokość przycisku na równi z polami */
+  height: 40px; /* Wyrównanie wysokości przycisku */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.product-form button:hover {
+  background-color: #102b56; /* Ciemniejszy granat przy najechaniu */
+  transform: translateY(-3px);
+}
+
+/* Tabela */
+.shopping-list {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.shopping-list th,
+.shopping-list td {
+  padding: 12px 15px;
+  text-align: center;
+  border: 1px solid #ddd;
+  font-size: 16px;
+}
+
+.shopping-list th {
+  background-color: #1a2a6c;
+  color: white;
+  font-weight: 700;
+}
+
+.product-item {
+  background-color: #ffffff;
+}
+
+.product-item:hover {
+  background-color: #f1f1f1;
+}
+
+/* Przycisk usuwania */
+.remove-btn {
+  background-color: #ff7043;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.remove-btn:hover {
+  background-color: #d32f2f;
+  transform: translateY(-3px);
+}
+
+/* Przyciski akcji */
+.action-buttons {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.send-order-btn {
+  background-color: #1a2a6c;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.send-order-btn:hover {
+  background-color: #102b56;
+  transform: translateY(-3px);
+}
+
+/* Tekst nagłówka lista zakupów w kolorze ciemnej szarości */
+.shopping-list-container h2 {
+  color: #2d3748; /* Ciemniejszy odcień szarości */
+}

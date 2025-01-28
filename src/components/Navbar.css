@@ -1,0 +1,81 @@
+/* Kontener nawigacji */
+.navbar {
+  background: linear-gradient(145deg, #660066, #300047); /* Gradient dla navbaru */
+  color: white;
+  padding: 10px 30px;  /* Mniejsze wypełnienie */
+  display: flex;
+  justify-content: flex-start; /* Wyrównanie do lewej */
+  align-items: center;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Delikatny cień */
+  animation: navbarFadeIn 1s ease-out; /* Animacja przy załadowaniu */
+  font-size: 16px; /* Mniejsza czcionka */
+}
+
+/* Animacja załadowania navbaru */
+@keyframes navbarFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Linki nawigacji */
+.navbar .nav-links {
+  display: flex;
+  gap: 20px; /* Odstęp pomiędzy linkami */
+  margin-left: auto; /* Wyrównanie linków do prawej */
+}
+
+.navbar a {
+  color: white;
+  text-decoration: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Efekt przy najechaniu na link */
+.navbar a:hover {
+  background-color: #4fd1c5; /* Kolor pasujący do reszty palety */
+  transform: translateY(-2px); /* Efekt podniesienia */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Wyraźniejszy cień */
+}
+
+/* Efekt aktywnego linku (na stronie) */
+.navbar a.active {
+  background-color: #220066; /* Kolor tła aktywnego linku */
+  color: white;
+  transform: translateY(0); /* Zatrzymanie efektu podniesienia */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Cień dla aktywnego linku */
+}
+
+/* Ikona hamburgera dla responsywności */
+.navbar .hamburger {
+  display: none;
+}
+
+/* Styl dla ikony hamburgera przy mniejszych ekranach */
+@media screen and (max-width: 768px) {
+  .navbar .hamburger {
+    display: block;
+    cursor: pointer;
+    color: white;
+    font-size: 30px;
+  }
+
+  .navbar .nav-links {
+    display: none;  /* Ukrywanie linków przy małych ekranach */
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .navbar.open .nav-links {
+    display: flex;  /* Pokazywanie menu po kliknięciu na hamburger */
+  }
+}

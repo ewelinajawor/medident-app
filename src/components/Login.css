@@ -1,0 +1,109 @@
+/* components/Login.css */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap'); /* Nowa czcionka */
+
+.login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #e1f5e1; /* Jasnozielone tło */
+  padding: 20px;
+  font-family: 'Roboto', sans-serif; /* Używamy nowej czcionki */
+  flex-direction: column; /* Zmienione na kolumnowy układ */
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 40px; /* Zwiększenie marginesu na dole */
+  color: #2e7d32; /* Ciemnozielony nagłówek */
+  font-size: 32px; /* Zwiększenie rozmiaru czcionki nagłówka */
+}
+
+form {
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.5s ease-out;
+  border: 1px solid #388e3c; /* Ciemnozielone obramowanie formularza */
+}
+
+form div {
+  margin-bottom: 15px;
+}
+
+label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  display: block; /* Zmiana na display block, by etykiety były wyświetlane nad inputem */
+  margin-bottom: 5px;
+  text-align: center; /* Wyrównanie etykiety do środka */
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #388e3c; /* Ciemnozielone obramowanie */
+  border-radius: 5px;
+  box-sizing: border-box;
+  transition: border 0.3s ease;
+  background-color: #f1f8f1; /* Jasnozielone tło wewnętrzne */
+}
+
+input:focus {
+  border-color: #2e7d32; /* Ciemnozielone obramowanie przy fokusie */
+  outline: none;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  background-color: #388e3c;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #2e7d32;
+}
+
+button.forgot-password {
+  background-color: transparent;
+  color: #388e3c;
+  border: none;
+  text-align: center;
+  text-decoration: underline;
+  margin-top: 5px;
+}
+
+button.forgot-password:hover {
+  background-color: transparent;
+  color: #2e7d32;
+}
+
+/* Animacja dla logowania */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error {
+  color: red;
+  font-size: 14px;
+  text-align: center;
+}

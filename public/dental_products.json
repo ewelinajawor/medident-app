@@ -1,0 +1,227 @@
+[
+    {
+        "product_id": 1,
+        "name": "Kopia rentgenowska",
+        "price": 25.5,
+        "stock": 150,
+        "supplier": "MedSupply",
+        "category": "Diagnostyka",
+        "expiration_date": "2025-12-15"
+    },
+    {
+        "product_id": 2,
+        "name": "Pasta do polerowania",
+        "price": 10.75,
+        "stock": 300,
+        "supplier": "DentCare",
+        "category": "Stomatologia",
+        "expiration_date": "2026-06-01"
+    },
+    {
+        "product_id": 3,
+        "name": "Jednorazowe r\u0119kawiczki",
+        "price": 0.2,
+        "stock": 1000,
+        "supplier": "CleanMed",
+        "category": "Higiena",
+        "expiration_date": "2025-08-10"
+    },
+    {
+        "product_id": 4,
+        "name": "Wiert\u0142o stomatologiczne",
+        "price": 18.5,
+        "stock": 200,
+        "supplier": "DrillMaster",
+        "category": "Sprz\u0119t",
+        "expiration_date": "2026-01-15"
+    },
+    {
+        "product_id": 5,
+        "name": "\u015arodki do dezynfekcji",
+        "price": 12.99,
+        "stock": 500,
+        "supplier": "SanitizerPro",
+        "category": "Higiena",
+        "expiration_date": "2025-04-01"
+    },
+    {
+        "product_id": 6,
+        "name": "Mikrosilnik dentystyczny",
+        "price": 220.0,
+        "stock": 50,
+        "supplier": "TechDental",
+        "category": "Sprz\u0119t",
+        "expiration_date": "2026-08-25"
+    },
+    {
+        "product_id": 7,
+        "name": "Wosk ortodontyczny",
+        "price": 5.99,
+        "stock": 450,
+        "supplier": "BraceCare",
+        "category": "Ortodontyka",
+        "expiration_date": "2026-03-15"
+    },
+    {
+        "product_id": 8,
+        "name": "Maseczki ochronne",
+        "price": 0.1,
+        "stock": 2000,
+        "supplier": "SafeMed",
+        "category": "Higiena",
+        "expiration_date": "2025-07-20"
+    },
+    {
+        "product_id": 9,
+        "name": "Zestaw narz\u0119dzi chirurgicznych",
+        "price": 85.0,
+        "stock": 30,
+        "supplier": "SurgicalTech",
+        "category": "Sprz\u0119t",
+        "expiration_date": "2026-11-30"
+    },
+    {
+        "product_id": 10,
+        "name": "Zestaw do wybielania z\u0119b\u00f3w",
+        "price": 45.0,
+        "stock": 250,
+        "supplier": "WhiteSmile",
+        "category": "Stomatologia",
+        "expiration_date": "2025-09-10"
+    },
+    {
+        "product_id": 11,
+        "name": "Kamera endoskopowa",
+        "price": 350.0,
+        "stock": 15,
+        "supplier": "EndoVision",
+        "category": "Sprz\u0119t",
+        "expiration_date": "2027-01-12"
+    },
+    {
+        "product_id": 12,
+        "name": "Silikon stomatologiczny",
+        "price": 7.99,
+        "stock": 200,
+        "supplier": "FlexDent",
+        "category": "Materia\u0142",
+        "expiration_date": "2026-02-28"
+    },
+    {
+        "product_id": 13,
+        "name": "\u017bel do usuwania kamienia",
+        "price": 9.99,
+        "stock": 600,
+        "supplier": "CleanDent",
+        "category": "Stomatologia",
+        "expiration_date": "2025-10-10"
+    },
+    {
+        "product_id": 14,
+        "name": "Folia ochronna na fotel",
+        "price": 1.5,
+        "stock": 800,
+        "supplier": "CoverMed",
+        "category": "Higiena",
+        "expiration_date": "2025-05-22"
+    },
+    {
+        "product_id": 15,
+        "name": "Imad\u0142o stomatologiczne",
+        "price": 39.99,
+        "stock": 100,
+        "supplier": "FixDental",
+        "category": "Sprz\u0119t",
+        "expiration_date": "2026-07-01"
+    },
+    {
+        "product_id": 16,
+        "name": "Podk\u0142adka ortodontyczna",
+        "price": 3.49,
+        "stock": 450,
+        "supplier": "BraceTech",
+        "category": "Ortodontyka",
+        "expiration_date": "2026-04-17"
+    },
+    {
+        "product_id": 17,
+        "name": "Akumulator do fotela",
+        "price": 150.0,
+        "stock": 25,
+        "supplier": "PowerDent",
+        "category": "Sprz\u0119t",
+        "expiration_date": "2027-02-15"
+    },
+    {
+        "product_id": 18,
+        "name": "R\u0119cznik papierowy",
+        "price": 0.05,
+        "stock": 3000,
+        "supplier": "CleanPaper",
+        "category": "Higiena",
+        "expiration_date": "2025-12-30"
+    },
+    {
+        "product_id": 19,
+        "name": "Szczoteczki interdentalne",
+        "price": 2.5,
+        "stock": 500,
+        "supplier": "SmileTech",
+        "category": "Stomatologia",
+        "expiration_date": "2026-09-10"
+    },
+    {
+        "product_id": 20,
+        "name": "Klipsy do szcz\u0119k",
+        "price": 4.99,
+        "stock": 250,
+        "supplier": "JawFix",
+        "category": "Ortodontyka",
+        "expiration_date": "2026-11-01"
+    },
+    {
+        "product_id": 21,
+        "name": "Krem do znieczulenia",
+        "price": 15.0,
+        "stock": 150,
+        "supplier": "Anesthesio",
+        "category": "Leki",
+        "expiration_date": "2025-06-10"
+    },
+    {
+        "product_id": 22,
+        "name": "Lampa do wybielania",
+        "price": 250.0,
+        "stock": 20,
+        "supplier": "WhiteningTech",
+        "category": "Sprz\u0119t",
+        "expiration_date": "2026-05-05"
+    },
+    {
+        "product_id": 23,
+        "name": "Sprz\u0119t do usuwania kamienia",
+        "price": 120.0,
+        "stock": 30,
+        "supplier": "CleanCare",
+        "category": "Sprz\u0119t",
+        "expiration_date": "2026-03-01"
+    },
+    {
+        "product_id": 24,
+        "name": "Guma do ochrony dzi\u0105se\u0142",
+        "price": 6.0,
+        "stock": 400,
+        "supplier": "GumDent",
+        "category": "Materia\u0142",
+        "expiration_date": "2025-12-25"
+    },
+    {
+        "product_id": 25,
+        "name": "Chusteczki do dezynfekcji",
+        "price": 1.2,
+        "stock": 800,
+        "supplier": "DisinfectTech",
+        "category": "Higiena",
+        "expiration_date": "2025-09-30"
+    }
+]

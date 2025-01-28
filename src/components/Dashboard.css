@@ -1,0 +1,133 @@
+/* Powitanie użytkownika */
+.welcome-message {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2d3748; /* Ciemniejszy odcień szarości */
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+/* Kontener główny */
+.dashboard-container {
+  padding: 40px;
+  background-color: #f4f7fb;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 1s ease-in-out;
+}
+
+/* Animacja załadowania dashboardu */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Nagłówek */
+.dashboard-container h2 {
+  font-size: 32px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Kafelki */
+.tiles {
+  display: flex;
+  justify-content: space-between; /* Rozmieszczenie kafelków równomiernie */
+  gap: 20px;
+  margin-top: 30px;
+  flex-wrap: nowrap; /* Zapewnia, że kafelki nie będą się zawijały */
+}
+
+/* Styl dla pojedynczego kafelka */
+.tile {
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  width: 23%; /* Zmniejszamy szerokość, by zmieściły się w jednym rzędzie */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: tileFadeIn 1s ease-out;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Animacja załadowania kafelków */
+@keyframes tileFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Efekt przy najechaniu na kafelek */
+.tile:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Kolory kafelków z gradientem */
+.tile-ok {
+  background: linear-gradient(145deg, #660066, #300047);
+  color: white;
+}
+
+.tile-warning {
+  background: linear-gradient(145deg, #66004d, #220066);
+  color: white;
+}
+
+.tile-critical {
+  background: linear-gradient(145deg, #4b0082, #220066);
+  color: white;
+}
+
+.tile-upcoming-expenses {
+  background: linear-gradient(145deg, #4fd1c5, #220066);
+  color: white;
+}
+
+/* Przyciski pod kafelkami */
+.dashboard-container button {
+  background-color: #ffffff; /* Biały */
+  color: #220066; /* Kolor tekstu pasujący do palety */
+  padding: 12px 30px;
+  border-radius: 5px;
+  border: 1px solid #220066; /* Kontur przycisku */
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Delikatny cień */
+}
+
+/* Efekt przy najechaniu na przycisk */
+.dashboard-container button:hover {
+  background-color: #220066; /* Ciemniejszy odcień przycisku */
+  color: white; /* Zmiana koloru tekstu */
+  transform: translateY(-2px); /* Efekt delikatnego podniesienia */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Wyraźniejszy cień przy najechaniu */
+}
+
+/* Efekt przy kliknięciu przycisku */
+.dashboard-container button:active {
+  transform: translateY(0); /* Powrót do pierwotnej pozycji po kliknięciu */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Przywrócenie cienia po kliknięciu */
+}
+
+/* Focus na przyciskach */
+.dashboard-container button:focus {
+  outline: none;
+}

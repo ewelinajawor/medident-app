@@ -1,0 +1,66 @@
+.notifications-container {
+  padding: 20px;
+  background-color: #f4f7fb;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 1s ease-in-out;
+}
+
+.notifications-container h2 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Animacja załadowania powiadomień */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.notifications-list {
+  list-style: none;
+  padding: 0;
+}
+
+.notification {
+  font-size: 16px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.3s ease;
+}
+
+.notification-icon {
+  margin-right: 10px;
+  font-size: 20px;
+}
+
+/* Kolory powiadomień */
+.notification.warning {
+  background-color: #fff9c4; /* Jasny żółty */
+  color: #fbc02d; /* Ciemniejszy żółty */
+}
+
+.notification.critical {
+  background-color: #ffebee; /* Jasny odcień czerwieni */
+  color: #d32f2f; /* Głęboka, intensywna czerwień */
+}
+
+.notification.info {
+  background-color: #b3e5fc; /* Jaśniejszy niebieski */
+  color: #039be5; /* Jasny niebieski */
+}
+
+/* Efekt najechania */
+.notification:hover {
+  background-color: #f1f1f1;
+}

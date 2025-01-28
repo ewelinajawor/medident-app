@@ -1,0 +1,85 @@
+/* Kontener główny ekran zamówień */
+.orders-container {
+  padding: 40px;
+  background: linear-gradient(135deg, #f0f4f7 0%, #e1f5fe 100%); /* Gradient podobny do reszty aplikacji */
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  font-family: 'Roboto', sans-serif;
+  animation: fadeIn 1s ease-in-out; /* Animacja podobna do reszty aplikacji */
+}
+
+/* Animacja */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Nagłówek */
+.orders-container h2 {
+  font-size: 32px;
+  font-weight: 700;
+  color: transparent;
+  margin-bottom: 20px;
+  text-align: center;
+  letter-spacing: 1px;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(145deg, #66004d, #220066); /* Gradient fioletowy */
+  -webkit-background-clip: text;
+  background-clip: text;
+  /* Gradient w nagłówku */
+}
+
+/* Styl dla tabeli */
+.orders-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.orders-table th, .orders-table td {
+  padding: 12px;
+  text-align: center;
+}
+
+.orders-table th {
+  background-color: #1a2a6c; /* Granatowy podobny do reszty aplikacji */
+  color: white;
+}
+
+.orders-table td {
+  border: 1px solid #BDC3C7; /* Subtelna szarość */
+}
+
+/* Kolory statusów zamówienia */
+.status-in-progress {
+  color: #E67E22; /* Pomarańczowy */
+}
+
+.status-delivered {
+  color: #1ABC9C; /* Miętowy zielony */
+}
+
+/* Przycisk Nowe Zamówienie */
+.add-order-button button {
+  background-color: #1a2a6c; /* Granatowy przycisk */
+  color: white;
+  padding: 12px 30px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  font-family: 'Roboto', sans-serif;
+}
+
+.add-order-button button:hover {
+  background-color: #102b56; /* Ciemniejszy granat przy najechaniu */
+  transform: translateY(-3px);
+}
+
+.add-order-button button:focus {
+  outline: none;
+}
