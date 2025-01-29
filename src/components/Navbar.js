@@ -5,7 +5,7 @@ import "./Navbar.css"; // Import stylu
 const Navbar = () => {
   return (
     <nav className="navbar">
-      <div className="logo">DentalApp</div>
+      <div className="logo">MedidentApp</div>
       <ul className="nav-links">
         <li><Link to="/dashboard" className="nav-item">Strona Główna</Link></li>
         <li><Link to="/inventory" className="nav-item">Magazyn</Link></li>

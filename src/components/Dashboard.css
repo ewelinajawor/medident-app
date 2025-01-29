@@ -1,12 +1,3 @@
-/* Powitanie użytkownika */
-.welcome-message {
-  font-size: 24px;
-  font-weight: bold;
-  color: #2d3748; /* Ciemniejszy odcień szarości */
-  margin-bottom: 16px;
-  text-align: center;
-}
-
 /* Kontener główny */
 .dashboard-container {
   padding: 40px;
@@ -81,7 +72,7 @@
 
 /* Kolory kafelków z gradientem */
 .tile-ok {
-  background: linear-gradient(145deg, #660066, #300047);
+  background: linear-gradient(145deg, #660066, #220b4e);
   color: white;
 }
 
@@ -91,11 +82,16 @@
 }
 
 .tile-critical {
-  background: linear-gradient(145deg, #4b0082, #220066);
+  background: linear-gradient(145deg, #4b0082, #66004d);
   color: white;
 }
 
 .tile-upcoming-expenses {
+  background: linear-gradient(145deg, #004747, #220066);
+  color: white;
+}
+
+.tile-offers {
   background: linear-gradient(145deg, #4fd1c5, #220066);
   color: white;
 }

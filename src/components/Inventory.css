@@ -49,29 +49,6 @@
   transform: scale(1.05);
 }
 
-/* Sortowanie zapasów */
-.sort-options {
-  margin-bottom: 20px;
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-}
-
-.sort-options button {
-  background: linear-gradient(45deg, #4fd1c5, #220066); /* Kolor pasujący do nawigacji */
-  color: white;
-  padding: 8px 12px;
-  border-radius: 5px;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease;
-}
-
-.sort-options button:hover {
-  background: linear-gradient(45deg, #35bfa4, #2a0055); /* Zmiana koloru przy najechaniu */
-  transform: scale(1.05);
-}
-
 /* Tabela zapasów */
 .product-table {
   width: 100%;
@@ -92,17 +69,7 @@
   font-size: 16px;
   font-weight: bold;
   color: #333;
-}
-
-.product-table td {
-  font-size: 14px;
-  color: #666;
-}
-
-.product-table tr:hover {
-  background-color: #f5f5f5;
-  transform: scale(1.02);
-  transition: transform 0.3s ease;
+  cursor: pointer;
 }
 
 /* Kolory zapasów */
@@ -116,6 +83,25 @@
   background-color: #e8f5e9; /* Zielony dla wystarczających zapasów */
   color: #388e3c;
   font-weight: bold;
+}
+
+/* Strzałki sortowania */
+.sort-arrow {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-left: 2px solid transparent;
+  border-right: 2px solid transparent;
+  border-top: 5px solid #2d3748; /* Ciemnoszary kolor, pasujący do nagłówka */
+  margin-left: 5px;
+}
+
+.sort-arrow.asc {
+  transform: rotate(180deg); /* Obrót strzałki w górę */
+}
+
+.sort-arrow.desc {
+  transform: rotate(0deg); /* Strzałka skierowana w dół */
 }
 
 /* Przyciski w zapasach */

@@ -33,27 +33,71 @@
   /* Gradient w nagłówku */
 }
 
-/* Styl dla tabeli */
-.orders-table table {
-  width: 100%;
-  border-collapse: collapse;
+/* Zakładki nawigacyjne */
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  gap: 10px;
 }
 
-.orders-table th, .orders-table td {
-  padding: 12px;
+.tab-button {
+  background: linear-gradient(45deg, #660066, #300047); /* Fioletowy gradient */
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.tab-button:hover {
+  background: linear-gradient(45deg, #4b004e, #66004d); /* Zmiana koloru przy najechaniu */
+  transform: scale(1.05);
+}
+
+.tab-button.active {
+  background: linear-gradient(45deg, #4fd1c5, #220066); /* Aktywny przycisk */
+}
+
+/* Tworzenie zamówienia */
+.create-order {
   text-align: center;
 }
 
-.orders-table th {
+.action-btn {
+  background: linear-gradient(45deg, #4fd1c5, #220066); /* Fioletowy dla przycisków */
+  color: white;
+  padding: 12px 20px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.action-btn:hover {
+  background: linear-gradient(45deg, #220066, #4fd1c5);
+  transform: scale(1.05);
+}
+
+/* Historia zamówień */
+.order-history table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.order-history th, .order-history td {
+  padding: 12px;
+  text-align: center;
+  border: 1px solid #BDC3C7; /* Subtelna szarość */
+}
+
+.order-history th {
   background-color: #1a2a6c; /* Granatowy podobny do reszty aplikacji */
   color: white;
 }
 
-.orders-table td {
-  border: 1px solid #BDC3C7; /* Subtelna szarość */
-}
-
-/* Kolory statusów zamówienia */
 .status-in-progress {
   color: #E67E22; /* Pomarańczowy */
 }
@@ -62,24 +106,7 @@
   color: #1ABC9C; /* Miętowy zielony */
 }
 
-/* Przycisk Nowe Zamówienie */
-.add-order-button button {
-  background-color: #1a2a6c; /* Granatowy przycisk */
-  color: white;
-  padding: 12px 30px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  width: 100%;
-  transition: background-color 0.3s ease, transform 0.3s ease;
-  font-family: 'Roboto', sans-serif;
-}
-
-.add-order-button button:hover {
-  background-color: #102b56; /* Ciemniejszy granat przy najechaniu */
-  transform: translateY(-3px);
-}
-
-.add-order-button button:focus {
-  outline: none;
+/* Modyfikacja zamówienia */
+.modify-order {
+  text-align: center;
 }

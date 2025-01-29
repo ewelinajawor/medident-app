@@ -13,6 +13,9 @@ function Dashboard({ username }) {
   const savingsStatus = "Dobre";  // Stan oszczędności
   const savingsAmount = 1500;  // Kwota oszczędności
 
+  const offersStatus = "Oczekiwanie";  // Status ofert
+  const offersAmount = 2;  // Liczba ofert
+
   return (
     <div className="dashboard-container">
       <h2 className="welcome-message">Witaj, {username}!</h2>
@@ -20,7 +23,7 @@ function Dashboard({ username }) {
       <div className="tiles">
         {/* Kafelki */}
         <div className="tile tile-ok">
-          <h3>Aktualne zapasy</h3>
+          <h3>Magazyn</h3>
           <p>Stan zapasów: {inventoryStatus}</p>
           <p>Poziom zapasów: {inventoryLevel}</p>
           <Link to="/inventory">
@@ -29,16 +32,11 @@ function Dashboard({ username }) {
         </div>
 
         <div className="tile tile-warning">
-          <h3>Przyszłe wydatki</h3>
-          <p>Stan: Do zaplanowania</p>
+          <h3>Lista zamówień</h3>
+          <p>Ostatnie zamówienie: {orderCount} zamówień w {orderStatus}</p>
           <Link to="/shopping-list">
             <button>Lista zakupów</button>
           </Link>
-        </div>
-
-        <div className="tile tile-critical">
-          <h3>Ostatnie zamówienia</h3>
-          <p>{orderCount} zamówień w {orderStatus}</p>
           <Link to="/orders">
             <button>Przejdź do zamówień</button>
           </Link>
@@ -50,6 +48,15 @@ function Dashboard({ username }) {
           <p>Kwota: {savingsAmount} PLN</p>
           <Link to="/savings">
             <button>Przejdź do oszczędności</button>
+          </Link>
+        </div>
+
+        <div className="tile tile-offers">
+          <h3>Oferty</h3>
+          <p>Otrzymano {offersAmount} ofert</p>
+          <p>Status: {offersStatus}</p>
+          <Link to="/offers">
+            <button>Analizuj oferty</button>
           </Link>
         </div>
       </div>

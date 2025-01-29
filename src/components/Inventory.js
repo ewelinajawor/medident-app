@@ -16,6 +16,7 @@ function Inventory() {
   const sortedProducts = [...products].sort((a, b) => {
     if (sortBy === 'stock') return a.stock - b.stock;
     if (sortBy === 'name') return a.name.localeCompare(b.name);
+    if (sortBy === 'category') return a.category.localeCompare(b.category);
     return 0;
   });
 
@@ -24,6 +25,11 @@ function Inventory() {
     if (!filterCategory) return true;
     return product.category === filterCategory;
   });
+
+  // Funkcja zmieniająca sortowanie
+  const handleSort = (field) => {
+    setSortBy((prevSortBy) => (prevSortBy === field ? '' : field));
+  };
 
   return (
     <div className="inventory">
@@ -37,18 +43,22 @@ function Inventory() {
         <button onClick={() => setFilterCategory('Sprzęt')}>Sprzęt</button>
       </div>
 
-      {/* Sortowanie */}
-      <div className="sort-options">
-        <button onClick={() => setSortBy('name')}>Sortuj alfabetycznie</button>
-        <button onClick={() => setSortBy('stock')}>Sortuj według zapasów</button>
-      </div>
-
       {/* Tabela produktów */}
       <table className="product-table">
         <thead>
           <tr>
-            <th>Nazwa produktu</th>
-            <th>Aktualny poziom zapasów</th>
+            <th onClick={() => handleSort('name')}>
+              Nazwa produktu
+              {sortBy === 'name' && <span className={`sort-arrow ${sortBy === 'name' ? 'asc' : ''}`}></span>}
+            </th>
+            <th onClick={() => handleSort('category')}>
+              Kategoria
+              {sortBy === 'category' && <span className={`sort-arrow ${sortBy === 'category' ? 'asc' : ''}`}></span>}
+            </th>
+            <th onClick={() => handleSort('stock')}>
+              Poziom zapasów
+              {sortBy === 'stock' && <span className={`sort-arrow ${sortBy === 'stock' ? 'asc' : ''}`}></span>}
+            </th>
             <th>Minimalny poziom zapasów</th>
             <th>Akcja</th>
           </tr>
@@ -60,6 +70,7 @@ function Inventory() {
               className={product.stock <= product.minStock ? 'low-stock' : 'sufficient-stock'}
             >
               <td>{product.name}</td>
+              <td>{product.category}</td>
               <td>{product.stock}</td>
               <td>{product.minStock}</td>
               <td>
