@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // Importujemy useNavigate
 import "./ProductList.css"; // Importujemy styl CSS
 
 const ProductList = () => {
@@ -8,6 +9,7 @@ const ProductList = () => {
   const [itemsPerPage] = useState(100); // Ilość produktów na stronie
   const [sortConfig, setSortConfig] = useState({ key: "name", direction: "asc" }); // Konfiguracja sortowania
   const [searchTerm, setSearchTerm] = useState(""); // Wartość wpisanego tekstu w filtrach
+  const navigate = useNavigate(); // Hook do obsługi nawigacji
 
   // Ładujemy dane z pliku JSON
   useEffect(() => {
@@ -50,7 +52,6 @@ const ProductList = () => {
     const value = e.target.value.toLowerCase();
     setSearchTerm(value);
 
-    // Filtrowanie całej listy produktów, a nie tylko widocznych na stronie
     setFilteredProducts(
       products.filter((product) => {
         const nameMatch = product.name && product.name.toLowerCase().includes(value);
@@ -60,7 +61,6 @@ const ProductList = () => {
         return nameMatch || supplierMatch || categoryMatch;
       })
     );
-    setPage(1); // Resetujemy stronę po zmianie filtra
   };
 
   // Obliczanie produktów na danej stronie
@@ -80,6 +80,11 @@ const ProductList = () => {
     if (page * itemsPerPage < filteredProducts.length) setPage(page + 1);
   };
 
+  // Funkcja do przejścia na stronę formularza dodawania produktu
+  const goToAddProduct = () => {
+    navigate("/add-product"); // Zakładając, że masz stronę formularza pod tym adresem
+  };
+
   return (
     <div className="product-list-container">
       <h1>Lista Produktów</h1>
@@ -92,6 +97,11 @@ const ProductList = () => {
           value={searchTerm} 
           onChange={handleSearch} 
         />
+      </div>
+
+      {/* Przycisk do dodania nowego produktu */}
+      <div className="add-product-button">
+        <button onClick={goToAddProduct}>Dodaj Nowy Produkt</button>
       </div>
 
       <table>

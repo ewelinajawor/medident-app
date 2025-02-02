@@ -12,6 +12,46 @@ h1 {
   color: #660066;
 }
 
+/* Stylowanie pola do filtrowania */
+.filter-input {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.filter-input input {
+  padding: 10px;
+  width: 300px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.filter-input input:focus {
+  outline: none;
+  border-color: #660066;
+}
+
+/* Przycisk dodawania nowego produktu */
+.add-product-button {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.add-product-button button {
+  padding: 10px 20px;
+  background-color: #660066;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.add-product-button button:hover {
+  background-color: #220b4e;
+}
+
 /* Style dla tabeli produktów */
 table {
   width: 100%;
@@ -84,27 +124,4 @@ td.low-stock {
 .pagination span {
   font-size: 16px;
   color: #333;
-}
-
-/* Style dla inputów filtrów */
-.filter-input {
-  margin-bottom: 10px;
-  text-align: center;
-}
-
-.filter-input input {
-  padding: 8px;
-  width: 300px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 16px;
-}
-
-.filter-input input:focus {
-  outline: none;
-  border-color: #660066;
-}
-
-input::placeholder {
-  color: #aaa;
 }

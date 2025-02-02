@@ -156,7 +156,7 @@ const ShoppingList = () => {
           {products.map((product, index) => (
             <tr key={index} className="product-item">
               <td>{product.name}</td>
-              <td>
+              <td className="quantity-column">
                 <input
                   type="number"
                   min="1"
@@ -183,7 +183,9 @@ const ShoppingList = () => {
           {products.map((product, index) => (
             <div key={index} className="order-summary-item">
               <span className="product-name">{product.name}</span>
-              <span className="product-quantity">{product.quantity} szt.</span>
+              <span className="product-quantity">
+                {" - "} {product.quantity} szt.
+              </span>
             </div>
           ))}
         </div>

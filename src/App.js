@@ -9,7 +9,7 @@ import ShoppingList from "./components/ShoppingList";
 import Orders from "./components/Orders";
 import Suppliers from "./components/Suppliers";
 import ProductList from "./components/ProductList";
-// import Footer from "./components/Footer"; // Usuń ten import
+import AddProduct from "./components/AddProduct";  // Import formularza
 
 function App() {
   useEffect(() => {
@@ -51,6 +51,7 @@ function App() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/suppliers" element={<Suppliers suppliers={suppliers} setSuppliers={setSuppliers} />} />
             <Route path="/product-list" element={<ProductList />} />
+            <Route path="/add-product" element={<AddProduct />} />  {/* Nowa trasa do formularza */}
           </Routes>
         </div>
         {/* <Footer /> */}
