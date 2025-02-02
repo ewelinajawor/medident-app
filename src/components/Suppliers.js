@@ -1,71 +1,118 @@
 import React, { useState, useEffect } from "react";
-import "./Suppliers.css"; // Stylizacja tabeli dostawców
+import InputMask from "react-input-mask";
+import "./Suppliers.css";
 
-const Suppliers = ({ suppliers, setSuppliers }) => {
+const Suppliers = () => {
   const [newSupplier, setNewSupplier] = useState({
     name: "",
     email: "",
     phone: "",
     nip: "",
   });
-  const [showForm, setShowForm] = useState(false); // Stan do pokazywania formularza
+  const [showForm, setShowForm] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState(null);
 
-  // Obsługa zmiany w formularzu
+  // Funkcja do pobierania dostawców z localStorage
+  const getStoredSuppliers = () => {
+    const storedSuppliers = JSON.parse(localStorage.getItem('suppliers'));
+    return storedSuppliers ? storedSuppliers : [];
+  };
+
+  // Funkcja do inicjalizacji dostawców z domyślnymi wartościami
+  const initializeSuppliers = () => {
+    const defaultSuppliers = [
+      { id: Date.now(), name: "Koldental", email: "info@koldental.com.pl", phone: "+48 225146200", nip: "5241001593" },
+      { id: Date.now() + 1, name: "Meditrans", email: "e-sklep@meditrans.pl", phone: "+48 413067122", nip: "6572896029" },
+      { id: Date.now() + 2, name: "Marrodent", email: "marek.fajkis@marrodent.pl", phone: "+33 8152013", nip: "9372343899" },
+    ];
+    localStorage.setItem('suppliers', JSON.stringify(defaultSuppliers));
+    return defaultSuppliers;
+  };
+
+  // Inicjalizowanie dostawców z localStorage lub domyślnych danych
+  const [suppliers, setSuppliers] = useState(() => {
+    const storedSuppliers = getStoredSuppliers();
+    if (storedSuppliers.length === 0) {
+      return initializeSuppliers();
+    }
+    return storedSuppliers;
+  });
+
+  // Funkcja do zapisywania dostawców do localStorage
+  const saveSuppliersToLocalStorage = (suppliersList) => {
+    localStorage.setItem('suppliers', JSON.stringify(suppliersList));
+  };
+
+  useEffect(() => {
+    saveSuppliersToLocalStorage(suppliers);
+  }, [suppliers]);
+
   const handleInputChange = (e) => {
     setNewSupplier({ ...newSupplier, [e.target.name]: e.target.value });
   };
 
-  // Obsługa dodawania nowego dostawcy
+  const validateEmail = (email) => {
+    return /^[a-zA-Z0-9._%+-]+@[a-zAz0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+  };
+
   const addSupplier = () => {
-    if (!newSupplier.name || !newSupplier.email || !newSupplier.phone || !newSupplier.nip) {
-      alert("Wypełnij wszystkie pola!");
+    if (!newSupplier.name || !validateEmail(newSupplier.email) || newSupplier.phone.includes("_") || newSupplier.nip.includes("_")) {
+      alert("Wypełnij wszystkie pola poprawnie!");
       return;
     }
-    const newSupplierData = { id: suppliers.length + 1, ...newSupplier };
-    const updatedSuppliers = [...suppliers, newSupplierData];
-    setSuppliers(updatedSuppliers);  // Aktualizujemy dane dostawców w rodzicu
-    setNewSupplier({ name: "", email: "", phone: "", nip: "" }); // Reset formularza
-    setShowForm(false); // Zamknięcie formularza
+
+    const updatedSuppliers = [...suppliers];
+
+    if (editingSupplier) {
+      const index = updatedSuppliers.findIndex(supplier => supplier.id === editingSupplier.id);
+      updatedSuppliers[index] = { ...editingSupplier, ...newSupplier };
+      setSuppliers(updatedSuppliers);
+      setEditingSupplier(null);
+    } else {
+      const newSupplierData = { id: Date.now(), ...newSupplier };
+      updatedSuppliers.push(newSupplierData);
+      setSuppliers(updatedSuppliers);
+    }
+
+    setNewSupplier({ name: "", email: "", phone: "", nip: "" });
+    setShowForm(false);
+  };
+
+  const removeSupplier = (id) => {
+    const updatedSuppliers = suppliers.filter((supplier) => supplier.id !== id);
+    setSuppliers(updatedSuppliers);
+  };
+
+  const editSupplier = (supplier) => {
+    setNewSupplier({ ...supplier });
+    setEditingSupplier(supplier);
+    setShowForm(true);
   };
 
   return (
     <div className="suppliers-container">
       <h2>Lista dostawców</h2>
-      <button className="add-supplier-btn" onClick={() => setShowForm(!showForm)}>
+      <button className="primary-btn" onClick={() => {
+        setShowForm(!showForm);
+        setEditingSupplier(null);
+        setNewSupplier({ name: "", email: "", phone: "", nip: "" });
+      }}>
         {showForm ? "Anuluj" : "Dodaj dostawcę"}
       </button>
 
       {showForm && (
         <div className="supplier-form">
-          <input
-            type="text"
-            name="name"
-            placeholder="Nazwa"
-            value={newSupplier.name}
-            onChange={handleInputChange}
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={newSupplier.email}
-            onChange={handleInputChange}
-          />
-          <input
-            type="text"
-            name="phone"
-            placeholder="Telefon"
-            value={newSupplier.phone}
-            onChange={handleInputChange}
-          />
-          <input
-            type="text"
-            name="nip"
-            placeholder="NIP"
-            value={newSupplier.nip}
-            onChange={handleInputChange}
-          />
-          <button onClick={addSupplier}>Dodaj</button>
+          <input type="text" name="name" placeholder="Nazwa" value={newSupplier.name} onChange={handleInputChange} />
+
+          <input type="email" name="email" placeholder="Email" value={newSupplier.email} onChange={handleInputChange} className={validateEmail(newSupplier.email) ? "" : "error"} />
+
+          <InputMask mask="+48 999-999-999" name="phone" placeholder="Telefon" value={newSupplier.phone} onChange={handleInputChange} />
+
+          <InputMask mask="999-999-99-99" name="nip" placeholder="NIP" value={newSupplier.nip} onChange={handleInputChange} />
+
+          <button className="primary-btn" onClick={addSupplier}>
+            {editingSupplier ? "Zapisz zmiany" : "Dodaj"}
+          </button>
         </div>
       )}
 
@@ -79,6 +126,7 @@ const Suppliers = ({ suppliers, setSuppliers }) => {
               <th>Email</th>
               <th>Telefon</th>
               <th>NIP</th>
+              <th>Akcje</th>
             </tr>
           </thead>
           <tbody>
@@ -88,6 +136,10 @@ const Suppliers = ({ suppliers, setSuppliers }) => {
                 <td>{supplier.email}</td>
                 <td>{supplier.phone}</td>
                 <td>{supplier.nip}</td>
+                <td>
+                  <button className="edit-btn" onClick={() => editSupplier(supplier)}>Edytuj</button>
+                  <button className="delete-btn" onClick={() => removeSupplier(supplier.id)}>Usuń</button>
+                </td>
               </tr>
             ))}
           </tbody>

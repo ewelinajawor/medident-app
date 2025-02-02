@@ -12,7 +12,8 @@ const Navbar = () => {
         <li><Link to="/notifications" className="nav-item">Powiadomienia</Link></li>
         <li><Link to="/settings" className="nav-item">Ustawienia</Link></li>
         <li><Link to="/product-list" className="nav-item">Zapas</Link></li>
-        <li><Link to="/suppliers" className="nav-item">Dostawcy</Link></li> {/* Nowa zakładka */}
+        <li><Link to="/suppliers" className="nav-item">Dostawcy</Link></li>
+        <li><Link to="/shopping-list" className="nav-item">Lista Zakupów</Link></li> {/* Nowa zakładka */}
       </ul>
     </nav>
   );

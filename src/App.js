@@ -51,10 +51,9 @@ function App() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/suppliers" element={<Suppliers suppliers={suppliers} setSuppliers={setSuppliers} />} />
             <Route path="/product-list" element={<ProductList />} />
-            <Route path="/add-product" element={<AddProduct />} />  {/* Nowa trasa do formularza */}
+            <Route path="/add-product" element={<AddProduct />} />
           </Routes>
         </div>
-        {/* <Footer /> */}
       </div>
     </Router>
   );

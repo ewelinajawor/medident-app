@@ -1,68 +1,103 @@
+/* Ogólny kontener formularza i tabeli */
 .suppliers-container {
-    max-width: 800px;
-    margin: 20px auto;
-    padding: 20px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
-  }
-  
-  .suppliers-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-  }
-  
-  .suppliers-table th, .suppliers-table td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: left;
-  }
-  
-  .suppliers-table th {
-    background-color: #660066;
-    color: white;
-  }
-  
-  .add-supplier-btn {
-    margin-bottom: 10px;
-    padding: 10px 15px;
-    background-color: #4fd1c5;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-  
-  .add-supplier-btn:hover {
-    background-color: #38a89d;
-  }
-  
-  .supplier-form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin: 20px 0;
-  }
-  
-  .supplier-form input {
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-  }
-  
-  .supplier-form button {
-    padding: 10px;
-    background-color: #220066;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .supplier-form button:hover {
-    background-color: #4fd1c5;
-  }
-  
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.primary-btn {
+  background-color: #660066;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.primary-btn:hover {
+  background-color: #004747;
+}
+
+.supplier-form input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.supplier-form input.error {
+  border-color: red;
+}
+
+.supplier-form input:focus {
+  outline: none;
+  border-color: #660066;
+}
+
+.suppliers-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.suppliers-table th,
+.suppliers-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.suppliers-table th {
+  background-color: #f1f1f1;
+  color: #333;
+}
+
+.suppliers-table tr:hover {
+  background-color: #f4f4f4;
+}
+
+.suppliers-table .edit-btn,
+.suppliers-table .delete-btn {
+  background-color: #660066;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.suppliers-table .edit-btn:hover {
+  background-color: #004747;
+}
+
+.suppliers-table .delete-btn {
+  background-color: #e74c3c;
+}
+
+.suppliers-table .delete-btn:hover {
+  background-color: #c0392b;
+}
+
+.error {
+  color: red;
+  font-size: 14px;
+  margin-top: -10px;
+}
+
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
