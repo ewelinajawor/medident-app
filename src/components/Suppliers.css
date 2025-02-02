@@ -1,0 +1,68 @@
+.suppliers-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .suppliers-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .suppliers-table th, .suppliers-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .suppliers-table th {
+    background-color: #660066;
+    color: white;
+  }
+  
+  .add-supplier-btn {
+    margin-bottom: 10px;
+    padding: 10px 15px;
+    background-color: #4fd1c5;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .add-supplier-btn:hover {
+    background-color: #38a89d;
+  }
+  
+  .supplier-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 20px 0;
+  }
+  
+  .supplier-form input {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+  
+  .supplier-form button {
+    padding: 10px;
+    background-color: #220066;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .supplier-form button:hover {
+    background-color: #4fd1c5;
+  }
+  

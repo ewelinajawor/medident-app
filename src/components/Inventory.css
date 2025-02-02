@@ -1,138 +1,137 @@
-/* Styl ogólny dla zapasów */
-.inventory {
-  padding: 20px;
-  font-family: Arial, sans-serif;
-  background-color: #fafafa; /* Jasne tło dla lepszej czytelności */
-  border-radius: 10px;
-  animation: fadeIn 1s ease-in-out;
+/* Wyrównanie tabel */
+table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-/* Animacja załadowania */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Nagłówek sekcji zapasów */
-.inventory h2 {
-  margin-bottom: 20px;
-  font-size: 28px;
-  color: #2d3748;
+th, td {
+  padding: 12px 15px;
   text-align: center;
-  animation: fadeIn 1s ease-in-out;
+  border: 1px solid #ddd;
+  font-size: 16px;
 }
 
-/* Filtrowanie zapasów */
+th {
+  background-color: #1a2a6c;
+  color: white;
+  font-weight: 700;
+}
+
+/* Pole do zmiany ilości */
+input[type="number"] {
+  padding: 5px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 2px solid #ccc;
+  width: 80px;
+}
+
+/* Przyciski akcji */
+.add-to-list-btn,
+.add-product-btn,
+.create-btn {
+  background-color: #1a2a6c;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  font-size: 16px;
+}
+
+.add-to-list-btn:hover,
+.add-product-btn:hover,
+.create-btn:hover {
+  background-color: #102b56;
+  transform: translateY(-3px);
+}
+
+/* Tabela - poprawki dla lepszej przejrzystości */
+.product-table table {
+  margin-top: 20px;
+}
+
+/* Style dla filtrów */
 .filters {
-  margin-bottom: 20px;
   display: flex;
-  gap: 15px;
   justify-content: center;
+  margin-bottom: 20px;
 }
 
 .filters button {
-  background: linear-gradient(45deg, #660066, #300047); /* Fioletowy gradient */
+  background-color: #1a2a6c;
   color: white;
-  padding: 8px 12px;
-  border-radius: 5px;
+  padding: 8px 16px;
+  border-radius: 8px;
   border: none;
+  margin: 0 10px;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  transition: background-color 0.3s ease;
 }
 
 .filters button:hover {
-  background: linear-gradient(45deg, #4b004e, #66004d); /* Zmiana koloru przy najechaniu */
-  transform: scale(1.05);
+  background-color: #102b56;
 }
 
-/* Tabela zapasów */
-.product-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  animation: fadeIn 1s ease-in-out;
-}
-
-.product-table th,
-.product-table td {
-  padding: 12px;
-  text-align: center;
-  border: 1px solid #ddd;
-}
-
-.product-table th {
-  background-color: #f1f1f1;
-  font-size: 16px;
-  font-weight: bold;
-  color: #333;
+/* Style przycisków dla produktów */
+.product-table button {
+  background-color: #1a2a6c;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
   cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-/* Kolory zapasów */
+.product-table button:hover {
+  background-color: #6183ba;
+  transform: translateY(-3px);
+}
+
+.add-product-btn {
+  display: block;
+  margin: 20px auto;
+  font-size: 18px;
+  width: 100%;
+}
+
+/* Styl stopki */
+.footer {
+  text-align: center;
+  padding: 5px;  /* Jeszcze mniejszy padding */
+  background-color: #ffffff;
+  color: #d3d3d3;  /* Jasnoszary kolor tekstu */
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  font-size: 10px;  /* Zmniejszenie czcionki */
+}
+
+.inventory {
+  padding-bottom: 50px;  /* Zapewnia przestrzeń na stopkę */
+}
+
+/* Kolorowanie niskich zapasów */
 .low-stock {
-  background-color: #ffebee; /* Czerwony dla niskich zapasów */
-  color: #d32f2f;
-  font-weight: bold;
+  background-color: #ffcccc; /* Jasnoczerwony dla niskich zapasów */
 }
 
 .sufficient-stock {
-  background-color: #e8f5e9; /* Zielony dla wystarczających zapasów */
-  color: #388e3c;
-  font-weight: bold;
+  background-color: #c8e6c9; /* Jasnozielony dla wystarczających zapasów */
 }
 
-/* Strzałki sortowania */
-.sort-arrow {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-left: 2px solid transparent;
-  border-right: 2px solid transparent;
-  border-top: 5px solid #2d3748; /* Ciemnoszary kolor, pasujący do nagłówka */
-  margin-left: 5px;
+/* Animacje przycisków */
+.add-to-list-btn,
+.add-product-btn,
+.create-btn {
+  transition: all 0.3s ease;
 }
 
-.sort-arrow.asc {
-  transform: rotate(180deg); /* Obrót strzałki w górę */
-}
-
-.sort-arrow.desc {
-  transform: rotate(0deg); /* Strzałka skierowana w dół */
-}
-
-/* Przyciski w zapasach */
-.inventory button {
-  background: linear-gradient(45deg, #660066, #300047); /* Fioletowy dla zapasów */
-  color: white;
-  padding: 8px 12px;
-  border-radius: 5px;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease;
-}
-
-.inventory button:hover {
-  background: linear-gradient(45deg, #4b004e, #66004d); /* Zmiana odcienia przy najechaniu */
-  transform: scale(1.05);
-}
-
-/* Przyciski dodawania produktów w zapasach */
-.add-product-btn {
-  margin-top: 20px;
-  background: linear-gradient(45deg, #660066, #300047); /* Fioletowy gradient */
-  color: white;
-  padding: 12px 20px;
-  border-radius: 5px;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease;
-}
-
-.add-product-btn:hover {
-  background: linear-gradient(45deg, #4b004e, #66004d); /* Zmiana koloru przy najechaniu */
-  transform: scale(1.05);
+.add-to-list-btn:hover,
+.add-product-btn:hover,
+.create-btn:hover {
+  background-color: #102b56;
+  transform: translateY(-3px);
 }

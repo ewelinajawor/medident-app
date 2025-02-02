@@ -14,8 +14,8 @@ const ShoppingList = () => {
 
   const [productToAdd, setProductToAdd] = useState(null);
   const [quantityToAdd, setQuantityToAdd] = useState(1);
+  const [selectedProviders, setSelectedProviders] = useState([]); // Tablica dostawców
 
-  // Lista produktów do rozwijanej listy
   const productOptions = [
     { value: "Wypełnienie", label: "Wypełnienie" },
     { value: "Dezynfekcja", label: "Dezynfekcja" },
@@ -25,23 +25,59 @@ const ShoppingList = () => {
     { value: "Materiały kompozytowe", label: "Materiały kompozytowe" },
   ];
 
+  const providerOptions = [
+    { value: "Dostawca 1", label: "Dostawca 1" },
+    { value: "Dostawca 2", label: "Dostawca 2" },
+    { value: "Dostawca 3", label: "Dostawca 3" },
+  ];
+
   const handleSelectProduct = (selectedOption) => {
     setProductToAdd(selectedOption);
   };
 
+  const handleSelectProviders = (selectedOptions) => {
+    setSelectedProviders(selectedOptions || []); // Obsługuje wiele dostawców
+  };
+
   const handleAddProduct = () => {
     if (productToAdd && quantityToAdd >= 1) {
-      setProducts([
-        ...products,
-        { name: productToAdd.label, quantity: quantityToAdd },
-      ]);
+      const existingProductIndex = products.findIndex(
+        (product) => product.name === productToAdd.label
+      );
+
+      if (existingProductIndex !== -1) {
+        const updatedProducts = [...products];
+        updatedProducts[existingProductIndex].quantity += quantityToAdd;
+        setProducts(updatedProducts);
+      } else {
+        setProducts([
+          ...products,
+          { name: productToAdd.label, quantity: quantityToAdd },
+        ]);
+      }
+
       setProductToAdd(null);
       setQuantityToAdd(1);
+    } else {
+      alert("Wybierz produkt i wprowadź poprawną ilość.");
     }
   };
 
   const handleRemoveProduct = (index) => {
     setProducts(products.filter((_, i) => i !== index));
+    setProductToAdd(null);
+    setQuantityToAdd(1);
+  };
+
+  const handleSendOrder = () => {
+    if (selectedProviders.length === 0) {
+      alert("Wybierz co najmniej jednego dostawcę przed wysłaniem zamówienia!");
+      return;
+    }
+
+    // Listowanie wybranych dostawców
+    const providersList = selectedProviders.map(provider => provider.label).join(", ");
+    alert(`Zamówienie zostało wysłane do: ${providersList}`);
   };
 
   return (
@@ -60,6 +96,7 @@ const ShoppingList = () => {
           min="1"
           value={quantityToAdd}
           onChange={(e) => setQuantityToAdd(Math.max(1, parseInt(e.target.value)))}
+          placeholder="Ilość"
         />
         <button className="add-product-btn" onClick={handleAddProduct}>
           Dodaj produkt
@@ -92,8 +129,20 @@ const ShoppingList = () => {
         </tbody>
       </table>
 
+      <div className="provider-selection">
+        <Select
+          options={providerOptions}
+          onChange={handleSelectProviders}
+          value={selectedProviders}
+          isMulti // Włączenie wielokrotnego wyboru
+          placeholder="Wybierz dostawców"
+        />
+      </div>
+
       <div className="action-buttons">
-        <button className="send-order-btn">Wyślij zamówienie</button>
+        <button className="send-order-btn" onClick={handleSendOrder}>
+          Wyślij zamówienie
+        </button>
       </div>
     </div>
   );

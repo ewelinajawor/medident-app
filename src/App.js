@@ -6,11 +6,12 @@ import Inventory from "./components/Inventory";
 import Notifications from "./components/Notifications";
 import Settings from "./components/Settings";
 import ShoppingList from "./components/ShoppingList";
-import Orders from "./components/Orders"; // Importuj komponent Orders
-import Footer from "./components/Footer"; // Importuj komponent stopki
+import Orders from "./components/Orders";
+import Suppliers from "./components/Suppliers"; // Import nowego komponentu
+import Footer from "./components/Footer";
 
 function App() {
-  const [username] = useState("Janek"); // Przykładowa nazwa użytkownika, możesz ją dynamicznie pobierać
+  const [username] = useState("Janek");
 
   return (
     <Router>
@@ -22,10 +23,11 @@ function App() {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/shopping-list" element={<ShoppingList />} />
-          <Route path="/orders" element={<Orders />} /> {/* Dodaj trasę do Orders */}
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/suppliers" element={<Suppliers />} /> {/* Nowa ścieżka */}
         </Routes>
       </div>
-      <Footer /> {/* Dodaj stopkę na dole strony */}
+      <Footer />
     </Router>
   );
 }

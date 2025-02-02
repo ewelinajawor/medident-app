@@ -11,7 +11,8 @@ const Navbar = () => {
         <li><Link to="/inventory" className="nav-item">Magazyn</Link></li>
         <li><Link to="/notifications" className="nav-item">Powiadomienia</Link></li>
         <li><Link to="/settings" className="nav-item">Ustawienia</Link></li>
-        <li><Link to="/product-list" className="nav-item">Zapas</Link></li> {/* Dodany link do zapasów */}
+        <li><Link to="/product-list" className="nav-item">Zapas</Link></li>
+        <li><Link to="/suppliers" className="nav-item">Dostawcy</Link></li> {/* Nowa zakładka */}
       </ul>
     </nav>
   );
