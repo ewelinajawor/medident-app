@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./Suppliers.css"; // Stylizacja tabeli dostawców
 
-const Suppliers = () => {
+const Suppliers = ({ onSuppliersLoaded }) => {
   const [suppliers, setSuppliers] = useState([]);
   const [newSupplier, setNewSupplier] = useState({
     name: "",
@@ -13,12 +13,14 @@ const Suppliers = () => {
 
   useEffect(() => {
     // Dodane firmy dostawcze
-    setSuppliers([
+    const initialSuppliers = [
       { id: 1, name: "Koldental", email: "info@koldental.com.pl", phone: "+48 225146200", nip: "5241001593" },
       { id: 2, name: "Meditrans", email: "e-sklep@meditrans.pl", phone: "+48 413067122", nip: "6572896029" },
       { id: 3, name: "Marrodent", email: "marek.fajkis@marrodent.pl", phone: "+33 8152013", nip: "9372343899" },
-    ]);
-  }, []);
+    ];
+    setSuppliers(initialSuppliers);
+    onSuppliersLoaded(initialSuppliers);  // Przekazujemy dane dostawców do rodzica
+  }, [onSuppliersLoaded]);
 
   // Obsługa zmiany w formularzu
   const handleInputChange = (e) => {
@@ -31,7 +33,10 @@ const Suppliers = () => {
       alert("Wypełnij wszystkie pola!");
       return;
     }
-    setSuppliers([...suppliers, { id: suppliers.length + 1, ...newSupplier }]);
+    const newSupplierData = { id: suppliers.length + 1, ...newSupplier };
+    const updatedSuppliers = [...suppliers, newSupplierData];
+    setSuppliers(updatedSuppliers);
+    onSuppliersLoaded(updatedSuppliers);  // Aktualizujemy dane u rodzica
     setNewSupplier({ name: "", email: "", phone: "", nip: "" }); // Reset formularza
     setShowForm(false); // Zamknięcie formularza
   };
@@ -45,10 +50,34 @@ const Suppliers = () => {
 
       {showForm && (
         <div className="supplier-form">
-          <input type="text" name="name" placeholder="Nazwa" value={newSupplier.name} onChange={handleInputChange} />
-          <input type="email" name="email" placeholder="Email" value={newSupplier.email} onChange={handleInputChange} />
-          <input type="text" name="phone" placeholder="Telefon" value={newSupplier.phone} onChange={handleInputChange} />
-          <input type="text" name="nip" placeholder="NIP" value={newSupplier.nip} onChange={handleInputChange} />
+          <input
+            type="text"
+            name="name"
+            placeholder="Nazwa"
+            value={newSupplier.name}
+            onChange={handleInputChange}
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={newSupplier.email}
+            onChange={handleInputChange}
+          />
+          <input
+            type="text"
+            name="phone"
+            placeholder="Telefon"
+            value={newSupplier.phone}
+            onChange={handleInputChange}
+          />
+          <input
+            type="text"
+            name="nip"
+            placeholder="NIP"
+            value={newSupplier.nip}
+            onChange={handleInputChange}
+          />
           <button onClick={addSupplier}>Dodaj</button>
         </div>
       )}

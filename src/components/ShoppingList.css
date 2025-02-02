@@ -1,112 +1,133 @@
 /* Kontener główny listy zakupów */
 .shopping-list-container {
+  max-width: 1000px;
+  margin: 20px auto;
   padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
+/* Nagłówek */
 h2 {
-  font-size: 24px;
-  margin-bottom: 20px;
   text-align: center;
-}
-
-/* Wybór listy zakupów */
-.select-list {
   margin-bottom: 20px;
+  font-size: 24px;
 }
 
 /* Formularz dodawania produktu */
 .product-form {
   display: flex;
-  justify-content: space-between;
+  gap: 10px;
   align-items: center;
   margin-bottom: 20px;
 }
 
-.select-product,
-.quantity-input,
-.add-product-btn {
-  margin-bottom: 0; /* Usunięcie marginesów poniżej, aby wyrównać je do poziomu nagłówków */
-}
-
 .select-product {
-  width: 32%; /* Ustawienie szerokości na równą proporcję */
-  height: 36px; /* Zwiększenie wysokości dla wyrównania */
+  flex: 3;
 }
 
 .quantity-input {
-  width: 32%; /* Ustawienie szerokości na równą proporcję */
-  height: 36px; /* Zwiększenie wysokości dla wyrównania */
+  flex: 1;
+  text-align: center;
 }
 
-/* Przycisk dodawania produktu */
 .add-product-btn {
-  padding: 8px 10px; /* Zmniejszenie przycisku */
+  flex: 2;
+  padding: 10px;
   background: linear-gradient(145deg, #660066, #220b4e);
   color: white;
   border: none;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease;
-  width: 32%; /* Ustawienie szerokości na równą proporcję */
-  margin-left: 10px;
-  height: 36px; /* Zwiększenie wysokości dla wyrównania */
-  font-size: 16px; /* Zwiększenie tekstu, aby pasowało */
-  display: flex; /* Używamy flexa, żeby ikona i tekst były obok siebie */
-  align-items: center; /* Wyrównanie ikony z tekstem */
-  justify-content: center; /* Wyrównanie elementów na środku */
+  border-radius: 5px;
+  transition: background 0.3s ease, transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .add-product-btn:hover {
-  background: linear-gradient(145deg, #004747, #220066);
+  background: linear-gradient(145deg, #004747, #220b4e);
   transform: scale(1.05);
 }
 
-/* Tabela produktów w liście zakupów */
-table.shopping-list {
+/* Tabela z produktami */
+.shopping-list {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
 }
 
-table.shopping-list th, table.shopping-list td {
+.shopping-list th,
+.shopping-list td {
   padding: 10px;
   text-align: left;
 }
 
-table.shopping-list th {
-  background-color: linear-gradient(145deg, #660066, #220b4e);
-  font-weight: bold;
+.shopping-list th {
+  background: linear-gradient(145deg, #660066, #220b4e);
   color: white;
   border-bottom: 2px solid #ddd;
 }
 
-table.shopping-list td {
+.shopping-list td {
   border-bottom: 1px solid #ddd;
 }
 
-/* Przycisk usunięcia produktu */
+.quantity-edit {
+  width: 60px;
+  text-align: center;
+}
+
+/* Przycisk usuwania produktu */
 .remove-btn {
-  background-color: transparent;
-  color: #333;
-  border: 1px solid #ddd;
   padding: 5px 10px;
+  border: 1px solid #ddd;
+  background: transparent;
+  color: #333;
   cursor: pointer;
+  border-radius: 5px;
+  transition: background 0.3s ease;
 }
 
 .remove-btn:hover {
-  background-color: #f0f0f0;
+  background: #f0f0f0;
 }
 
-/* Przycisk wysyłania zamówienia */
+/* Sekcja akcji - wybór dostawców oraz wysłanie zamówienia */
+.provider-form {
+  margin-top: 20px;
+}
+
+.select-provider {
+  width: 250px;
+}
+
 .send-order-btn {
-  padding: 10px;
+  padding: 10px 20px;
   background: linear-gradient(145deg, #660066, #220b4e);
   color: white;
   border: none;
   cursor: pointer;
-  margin-top: 20px; /* Dodany margines na górze, aby oddzielić od tabeli */
+  border-radius: 5px;
+  transition: background 0.3s ease, transform 0.3s ease;
+  margin-top: 10px;
+  display: block;
+  width: 100%;
 }
 
 .send-order-btn:hover {
-  background: linear-gradient(145deg, #004747, #220066);
+  background: linear-gradient(145deg, #004747, #220b4e);
   transform: scale(1.05);
+}
+
+/* Stopka – przykładowa, aby nie zasłaniała przycisków */
+.footer {
+  margin-top: auto;
+  padding: 10px;
+  text-align: center;
+  background: #fff;
 }
