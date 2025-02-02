@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
-import Suppliers from "./Suppliers"; // Importowanie komponentu dostawców
-import ProductList from "./ProductList"; // Importowanie komponentu z listą produktów
 import "./ShoppingList.css";
 
 const ShoppingList = () => {
@@ -21,7 +19,6 @@ const ShoppingList = () => {
   const [productOptions, setProductOptions] = useState([]);
 
   useEffect(() => {
-    // Zakładając, że Supplier.js będzie przekazywać dane dostawców przez props onSuppliersLoaded
     const fetchSuppliers = async () => {
       const supplierData = await fetchSuppliersFromAPI();
       setSuppliers(supplierData);
@@ -29,7 +26,6 @@ const ShoppingList = () => {
 
     fetchSuppliers();
 
-    // Załaduj produkty z komponentu ProductList.js
     const loadProducts = async () => {
       const fetchedProducts = await fetchProductsFromAPI();
       setProductOptions(fetchedProducts.map(product => ({
@@ -40,7 +36,6 @@ const ShoppingList = () => {
     loadProducts();
   }, []);
 
-  // Funkcja do pobierania danych dostawców z pliku Suppliers.js
   const fetchSuppliersFromAPI = () => {
     return [
       { value: "Koldental", label: "Koldental" },
@@ -49,7 +44,6 @@ const ShoppingList = () => {
     ];
   };
 
-  // Funkcja do pobierania danych produktów (symulacja)
   const fetchProductsFromAPI = () => {
     return [
       { name: "Wypełnienie", quantity: 10 },
@@ -118,6 +112,11 @@ const ShoppingList = () => {
     alert(`Zamówienie zostało wysłane do: ${providersList}`);
   };
 
+  // Funkcja do obliczania całkowitej ilości produktów
+  const calculateTotalQuantity = () => {
+    return products.reduce((total, product) => total + product.quantity, 0);
+  };
+
   return (
     <div className="shopping-list-container">
       <h2>Lista zakupów</h2>
@@ -176,6 +175,22 @@ const ShoppingList = () => {
           ))}
         </tbody>
       </table>
+
+      {/* Podsumowanie zamówienia */}
+      <div className="order-summary">
+        <h3>Podsumowanie zamówienia</h3>
+        <div className="order-summary-list">
+          {products.map((product, index) => (
+            <div key={index} className="order-summary-item">
+              <span className="product-name">{product.name}</span>
+              <span className="product-quantity">{product.quantity} szt.</span>
+            </div>
+          ))}
+        </div>
+        <div className="total-quantity">
+          <strong>Łączna ilość produktów: {calculateTotalQuantity()} szt.</strong>
+        </div>
+      </div>
 
       {/* Formularz dostawców */}
       <div className="provider-form">
