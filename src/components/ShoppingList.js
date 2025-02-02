@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import Suppliers from "./Suppliers"; // Importowanie komponentu dostawców
+import ProductList from "./ProductList"; // Importowanie komponentu z listą produktów
 import "./ShoppingList.css";
 
 const ShoppingList = () => {
@@ -17,6 +18,7 @@ const ShoppingList = () => {
   const [quantityToAdd, setQuantityToAdd] = useState(1);
   const [selectedProviders, setSelectedProviders] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
+  const [productOptions, setProductOptions] = useState([]);
 
   useEffect(() => {
     // Zakładając, że Supplier.js będzie przekazywać dane dostawców przez props onSuppliersLoaded
@@ -26,11 +28,20 @@ const ShoppingList = () => {
     };
 
     fetchSuppliers();
+
+    // Załaduj produkty z komponentu ProductList.js
+    const loadProducts = async () => {
+      const fetchedProducts = await fetchProductsFromAPI();
+      setProductOptions(fetchedProducts.map(product => ({
+        value: product.name, label: product.name
+      })));
+    };
+
+    loadProducts();
   }, []);
 
   // Funkcja do pobierania danych dostawców z pliku Suppliers.js
   const fetchSuppliersFromAPI = () => {
-    // Tu symulujemy pobieranie danych. Możesz to zmienić na fetch z prawdziwego API.
     return [
       { value: "Koldental", label: "Koldental" },
       { value: "Meditrans", label: "Meditrans" },
@@ -38,14 +49,17 @@ const ShoppingList = () => {
     ];
   };
 
-  const productOptions = [
-    { value: "Wypełnienie", label: "Wypełnienie" },
-    { value: "Dezynfekcja", label: "Dezynfekcja" },
-    { value: "Wiertła stomatologiczne", label: "Wiertła stomatologiczne" },
-    { value: "Szczoteczki międzyzębowe", label: "Szczoteczki międzyzębowe" },
-    { value: "Strzykawki do wypełnień", label: "Strzykawki do wypełnień" },
-    { value: "Materiały kompozytowe", label: "Materiały kompozytowe" },
-  ];
+  // Funkcja do pobierania danych produktów (symulacja)
+  const fetchProductsFromAPI = () => {
+    return [
+      { name: "Wypełnienie", quantity: 10 },
+      { name: "Dezynfekcja", quantity: 15 },
+      { name: "Wiertła stomatologiczne", quantity: 20 },
+      { name: "Szczoteczki międzyzębowe", quantity: 25 },
+      { name: "Strzykawki do wypełnień", quantity: 30 },
+      { name: "Materiały kompozytowe", quantity: 35 },
+    ];
+  };
 
   const handleSelectProduct = (selectedOption) => {
     setProductToAdd(selectedOption);
@@ -64,7 +78,6 @@ const ShoppingList = () => {
       if (existingProductIndex !== -1) {
         const updatedProducts = [...products];
         updatedProducts[existingProductIndex].quantity += quantityToAdd;
-        updatedProducts[existingProductIndex].dateAdded = new Date().toLocaleDateString();
         setProducts(updatedProducts);
       } else {
         setProducts([
@@ -122,16 +135,15 @@ const ShoppingList = () => {
           type="number"
           min="1"
           value={quantityToAdd}
-          onChange={(e) => setQuantityToAdd(Math.max(1, parseInt(e.target.value)))}
-          placeholder="Ilość"
+          onChange={(e) => setQuantityToAdd(parseInt(e.target.value))}
           className="quantity-input"
         />
-        <button className="add-product-btn" onClick={handleAddProduct}>
+        <button onClick={handleAddProduct} className="add-product-btn">
           Dodaj produkt
         </button>
       </div>
 
-      {/* Tabela z produktami */}
+      {/* Tabela produktów */}
       <table className="shopping-list">
         <thead>
           <tr>
@@ -165,33 +177,19 @@ const ShoppingList = () => {
         </tbody>
       </table>
 
-      {/* Sekcja z wyborem dostawców */}
+      {/* Formularz dostawców */}
       <div className="provider-form">
         <Select
-          isMulti
           options={suppliers}
+          isMulti
           onChange={handleSelectProviders}
           value={selectedProviders}
-          placeholder="Wybierz dostawców"
+          placeholder="Wybierz dostawcę"
           className="select-provider"
         />
-      </div>
-
-      {/* Przycisk wysyłania zamówienia */}
-      <button className="send-order-btn" onClick={handleSendOrder}>
-        Wyślij zamówienie
-      </button>
-
-      {/* Podgląd listy zakupów */}
-      <div className="order-summary">
-        <h3>Podsumowanie zamówienia</h3>
-        <ul>
-          {products.map((product, index) => (
-            <li key={index}>
-              {product.name} - {product.quantity} szt. (Dodano: {product.dateAdded})
-            </li>
-          ))}
-        </ul>
+        <button onClick={handleSendOrder} className="send-order-btn">
+          Wyślij zamówienie
+        </button>
       </div>
     </div>
   );

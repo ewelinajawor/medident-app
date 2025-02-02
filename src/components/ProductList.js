@@ -1,20 +1,25 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import "./ProductList.css"; // Importujemy styl CSS
 
 const ProductList = () => {
   const [products, setProducts] = useState([]); // Przechowywanie wszystkich produktów
   const [filteredProducts, setFilteredProducts] = useState([]); // Przechowywanie filtrowanych produktów
-  const [filterActive, setFilterActive] = useState(null); // Przechowywanie aktywnego filtra
+  const [page, setPage] = useState(1); // Numer aktualnej strony
+  const [itemsPerPage] = useState(100); // Ilość produktów na stronie
   const [sortConfig, setSortConfig] = useState({ key: "name", direction: "asc" }); // Konfiguracja sortowania
-  const filterInputRef = useRef(null); // Referencja do pola filtra, by kontrolować kliknięcie poza nim
+  const [searchTerm, setSearchTerm] = useState(""); // Wartość wpisanego tekstu w filtrach
 
   // Ładujemy dane z pliku JSON
   useEffect(() => {
     fetch("/dental_products.json")
       .then((response) => response.json())
       .then((data) => {
-        setProducts(data); // Ustawiamy produkty
-        setFilteredProducts(data); // Ustawiamy początkowe produkty jako filtrowane
+        if (Array.isArray(data)) {
+          setProducts(data); // Ustawiamy produkty
+          setFilteredProducts(data); // Ustawiamy początkowe produkty jako filtrowane
+        } else {
+          console.error("Fetched data is not an array", data);
+        }
       })
       .catch((error) => console.error("Błąd w ładowaniu danych:", error));
   }, []);
@@ -41,125 +46,116 @@ const ProductList = () => {
   };
 
   // Funkcja do filtrowania produktów
-  const filterProducts = (key, value) => {
-    const filtered = products.filter((product) => product[key].toLowerCase().includes(value.toLowerCase()));
-    setFilteredProducts(filtered);
+  const handleSearch = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchTerm(value);
+
+    // Filtrowanie całej listy produktów, a nie tylko widocznych na stronie
+    setFilteredProducts(
+      products.filter((product) => {
+        const nameMatch = product.name && product.name.toLowerCase().includes(value);
+        const supplierMatch = product.supplier && product.supplier.toLowerCase().includes(value);
+        const categoryMatch = product.category && product.category.toLowerCase().includes(value);
+
+        return nameMatch || supplierMatch || categoryMatch;
+      })
+    );
+    setPage(1); // Resetujemy stronę po zmianie filtra
   };
 
-  // Funkcja do przełączania aktywnego filtra
-  const toggleFilter = (key) => {
-    if (filterActive === key) {
-      setFilterActive(null); // Jeśli kliknęliśmy na ten sam filtr, to go usuwamy
-    } else {
-      setFilterActive(key); // W przeciwnym razie ustawiamy ten filtr jako aktywny
-    }
+  // Obliczanie produktów na danej stronie
+  const paginate = () => {
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = page * itemsPerPage;
+    return filteredProducts.slice(startIndex, endIndex);
   };
 
-  // Funkcja do obsługi kliknięcia poza oknem filtra (zamknięcie okna)
-  const handleClickOutside = (event) => {
-    if (filterInputRef.current && !filterInputRef.current.contains(event.target)) {
-      setFilterActive(null); // Zamknięcie filtra
-    }
+  // Funkcja do przechodzenia do poprzedniej strony
+  const goToPreviousPage = () => {
+    if (page > 1) setPage(page - 1);
   };
 
-  useEffect(() => {
-    document.addEventListener("click", handleClickOutside); // Nasłuchujemy kliknięć poza filtrami
-    return () => {
-      document.removeEventListener("click", handleClickOutside); // Usuwamy nasłuchiwacz przy unmount
-    };
-  }, []);
+  // Funkcja do przechodzenia do następnej strony
+  const goToNextPage = () => {
+    if (page * itemsPerPage < filteredProducts.length) setPage(page + 1);
+  };
 
   return (
     <div className="product-list-container">
       <h1>Lista Produktów</h1>
+
+      {/* Filtr input */}
+      <div className="filter-input">
+        <input 
+          type="text" 
+          placeholder="Wyszukaj produkt, dostawcę lub kategorię..." 
+          value={searchTerm} 
+          onChange={handleSearch} 
+        />
+      </div>
+
       <table>
         <thead>
           <tr>
-            {/* Kolumna Nazwa */}
             <th
               className={sortConfig.key === "name" ? `sort-${sortConfig.direction}` : ""}
               onClick={() => sortProducts("name")}
-              onDoubleClick={() => toggleFilter("name")}
             >
               Nazwa
-              {/* Ikona rozwinięcia filtra przy kliknięciu */}
-              {filterActive === "name" && (
-                <div className="filter-dropdown active" ref={filterInputRef}>
-                  <input
-                    type="text"
-                    onChange={(e) => filterProducts("name", e.target.value)}
-                    placeholder="Filtruj po nazwie..."
-                  />
-                </div>
-              )}
             </th>
-
-            {/* Kolumna Cena */}
             <th
               className={sortConfig.key === "price" ? `sort-${sortConfig.direction}` : ""}
               onClick={() => sortProducts("price")}
             >
               Cena
             </th>
-
-            {/* Kolumna Ilość */}
             <th
               className={sortConfig.key === "stock" ? `sort-${sortConfig.direction}` : ""}
               onClick={() => sortProducts("stock")}
             >
               Ilość
             </th>
-
-            {/* Kolumna Dostawca */}
             <th
               className={sortConfig.key === "supplier" ? `sort-${sortConfig.direction}` : ""}
               onClick={() => sortProducts("supplier")}
-              onDoubleClick={() => toggleFilter("supplier")}
             >
               Dostawca
-              {filterActive === "supplier" && (
-                <div className="filter-dropdown active" ref={filterInputRef}>
-                  <input
-                    type="text"
-                    onChange={(e) => filterProducts("supplier", e.target.value)}
-                    placeholder="Filtruj po dostawcy..."
-                  />
-                </div>
-              )}
             </th>
-
-            {/* Kolumna Kategoria */}
             <th
               className={sortConfig.key === "category" ? `sort-${sortConfig.direction}` : ""}
               onClick={() => sortProducts("category")}
-              onDoubleClick={() => toggleFilter("category")}
             >
               Kategoria
-              {filterActive === "category" && (
-                <div className="filter-dropdown active" ref={filterInputRef}>
-                  <input
-                    type="text"
-                    onChange={(e) => filterProducts("category", e.target.value)}
-                    placeholder="Filtruj po kategorii..."
-                  />
-                </div>
-              )}
             </th>
           </tr>
         </thead>
         <tbody>
-          {/* Renderowanie produktów */}
-          {filteredProducts.map((product) => (
-            <tr key={product.product_id} className={product.stock < 5 ? "low-stock" : "high-stock"}>
-              <td>{product.name}</td>
-              <td>{product.price}</td>
-              <td>{product.stock}</td>
-              <td>{product.supplier}</td>
-              <td>{product.category}</td>
-            </tr>
-          ))}
+          {paginate().length > 0 ? (
+            paginate().map((product) => (
+              <tr key={product.product_id} className={product.stock < 5 ? "low-stock" : "high-stock"}>
+                <td>{product.name}</td>
+                <td>{product.price}</td>
+                <td>{product.stock}</td>
+                <td>{product.supplier}</td>
+                <td>{product.category}</td>
+              </tr>
+            ))
+          ) : (
+            <tr><td colSpan="5">Brak produktów do wyświetlenia</td></tr>
+          )}
         </tbody>
       </table>
+
+      {/* Paginacja */}
+      <div className="pagination">
+        <button onClick={goToPreviousPage} disabled={page === 1}>
+          Poprzednia
+        </button>
+        <span>Strona {page}</span>
+        <button onClick={goToNextPage} disabled={page * itemsPerPage >= filteredProducts.length}>
+          Następna
+        </button>
+      </div>
     </div>
   );
 };

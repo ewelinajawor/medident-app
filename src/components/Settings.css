@@ -1,7 +1,7 @@
 /* Główny kontener strony Ustawienia */
 .settings-container {
   padding: 40px;
-  background: linear-gradient(135deg, #f0f4f7 0%, #e1f5fe 100%); /* Gradient podobny do reszty aplikacji */
+  background: white; /* Białe tło */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -43,12 +43,14 @@
   text-align: center;
 }
 
-/* Kontener przycisków */
+/* Kontener przycisków (przyciski w pionie) */
 .settings-options {
   display: flex;
-  justify-content: center;
+  flex-direction: column; /* Ustawienie przycisków w pionie */
   gap: 16px; /* Odstępy między przyciskami */
-  flex-wrap: wrap; /* Przyciski będą się układać w kolejne linie w małych ekranach */
+  align-items: center; /* Wyrównanie przycisków do środka */
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 /* Styl dla przycisków */

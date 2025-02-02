@@ -77,9 +77,11 @@ h2 {
   border-bottom: 1px solid #ddd;
 }
 
-.quantity-edit {
-  width: 60px;
+/* Modyfikacja szerokości kolumny Ilość, aby zajmowała resztę ekranu */
+.shopping-list .quantity-edit {
+  width: 100%;
   text-align: center;
+  max-width: 100px; /* Można dostosować maksymalną szerokość */
 }
 
 /* Przycisk usuwania produktu */

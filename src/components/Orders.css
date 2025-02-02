@@ -30,7 +30,6 @@
   background: linear-gradient(145deg, #66004d, #220066); /* Gradient fioletowy */
   -webkit-background-clip: text;
   background-clip: text;
-  /* Gradient w nagłówku */
 }
 
 /* Zakładki nawigacyjne */
@@ -39,6 +38,7 @@
   justify-content: center;
   margin-bottom: 20px;
   gap: 10px;
+  transition: all 0.5s ease-in-out; /* Płynne przejścia */
 }
 
 .tab-button {
@@ -100,13 +100,29 @@
 
 .status-in-progress {
   color: #E67E22; /* Pomarańczowy */
+  font-weight: bold;
 }
 
 .status-delivered {
   color: #1ABC9C; /* Miętowy zielony */
+  font-weight: bold;
 }
 
-/* Modyfikacja zamówienia */
-.modify-order {
-  text-align: center;
+.status-icon {
+  margin-right: 8px;
+}
+
+/* Filtry w historii zamówień */
+.filters {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+/* Stylizacja przycisków na urządzenia mobilne */
+@media (max-width: 600px) {
+  .action-btn, .tab-button {
+    font-size: 14px;
+    padding: 10px 15px;
+  }
 }

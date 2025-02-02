@@ -50,6 +50,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  color: #fff; /* Jasny kolor tekstu */
 }
 
 /* Animacja załadowania kafelków */
@@ -94,6 +95,11 @@
 .tile-offers {
   background: linear-gradient(145deg, #4fd1c5, #220066);
   color: white;
+}
+
+/* Styl dla nagłówków w kafelkach */
+.tile h3 {
+  color: #fff; /* Kolor białego tekstu dla nagłówka */
 }
 
 /* Przyciski pod kafelkami */

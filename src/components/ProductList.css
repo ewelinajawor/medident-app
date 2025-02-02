@@ -1,130 +1,110 @@
-/* Stylizacja kontenera z tabelą */
+/* Style kontenera listy produktów */
 .product-list-container {
-  margin: 20px;
-  padding: 20px;
-  background: linear-gradient(135deg, #f0f8ff, #e0e0e0);
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  animation: fadeIn 1s ease-out;
+  width: 80%;
+  margin: 20px auto;
+  font-family: Arial, sans-serif;
+  color: #333;
 }
 
+/* Nagłówek */
 h1 {
   text-align: center;
-  color: #333;
-  font-size: 26px; /* Zwiększenie rozmiaru */
-  margin-bottom: 20px;
+  color: #660066;
 }
 
-/* Tabela */
+/* Style dla tabeli produktów */
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
-  border-radius: 8px;
-  overflow: hidden;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Nagłówki tabeli */
-th.sortable {
-  cursor: pointer;
+/* Style dla komórek tabeli */
+th, td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  font-size: 16px;
   position: relative;
-  padding-right: 20px; /* miejsce na ikonę */
-  padding: 12px;
-  text-align: left;
-  font-size: 16px;
-  transition: background-color 0.3s ease-in-out;
 }
 
-th.filter-active {
-  background-color: #e0e0e0; /* Tło, gdy filtr jest aktywny */
-  color: #333; /* Zmieniamy kolor tekstu */
+th {
+  background-color: #660066;
+  color: white;
+  cursor: pointer;
 }
 
-th .filter-icon {
-  position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 18px;
+/* Style dla przycisków sortowania */
+th.sort-asc::after {
+  content: ' 🔼';
 }
 
-/* Komórki tabeli */
+th.sort-desc::after {
+  content: ' 🔽';
+}
+
+/* Style dla komórek tabeli */
 td {
-  padding: 12px;
-  text-align: left;
-  font-size: 16px;
-  transition: background-color 0.3s ease-in-out;
-}
-
-td.low-stock {
-  background: #ffcccc; /* Czerwony dla niskich zapasów */
+  background-color: #f9f9f9;
 }
 
 td.high-stock {
-  background: #c8e6c9; /* Zielony dla wysokich zapasów */
+  background-color: #e8f5e9;
 }
 
-/* Wiersze tabeli */
-table tr:nth-child(even) {
-  background: #f2f2f2;
+td.low-stock {
+  background-color: #ffebee;
 }
 
-table tr:hover {
-  background: #d9f7d9;
+/* Style dla paginacji */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
 }
 
-/* Styl dropdown do filtrów */
-.filter-dropdown {
-  display: none;
-}
-
-.filter-dropdown.active {
-  display: block;
-  position: absolute;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  padding: 8px;
-  z-index: 1;
-  top: 30px;
-  left: 0;
-}
-
-.filter-dropdown input {
-  width: 150px;
-  padding: 5px;
-}
-
-/* Przyciski */
-button {
-  background-color: #4CAF50;
+.pagination button {
+  padding: 10px 20px;
+  background: #220b4e;
   color: white;
-  padding: 10px 15px;
   border: none;
-  border-radius: 6px; /* Lekko zaokrąglone przyciski */
+  border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  font-size: 16px; /* Większa czcionka */
-  margin: 5px 0;
+  font-size: 16px;
+  margin: 0 10px;
 }
 
-button:hover {
-  background-color: #45a049;
+.pagination button:hover {
+  background: #660066;
 }
 
-button.add-to-list {
-  background-color: #ff9800;
+.pagination span {
+  font-size: 16px;
+  color: #333;
 }
 
-button.add-to-list:hover {
-  background-color: #e68900;
+/* Style dla inputów filtrów */
+.filter-input {
+  margin-bottom: 10px;
+  text-align: center;
 }
 
-/* Animacja przy wczytywaniu */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.filter-input input {
+  padding: 8px;
+  width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.filter-input input:focus {
+  outline: none;
+  border-color: #660066;
+}
+
+input::placeholder {
+  color: #aaa;
 }
