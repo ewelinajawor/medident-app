@@ -29,10 +29,10 @@
 /* Kafelki */
 .tiles {
   display: flex;
-  justify-content: space-between; /* Rozmieszczenie kafelków równomiernie */
+  justify-content: space-between;
   gap: 20px;
   margin-top: 30px;
-  flex-wrap: nowrap; /* Zapewnia, że kafelki nie będą się zawijały */
+  flex-wrap: nowrap; /* Kafelki nie będą się zawijały */
 }
 
 /* Styl dla pojedynczego kafelka */
@@ -41,7 +41,7 @@
   border: 1px solid #ddd;
   border-radius: 10px;
   padding: 20px;
-  width: 23%; /* Zmniejszamy szerokość, by zmieściły się w jednym rzędzie */
+  width: 23%; /* Szerokość kafelków */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -50,7 +50,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  color: #fff; /* Jasny kolor tekstu */
+  color: #fff;
 }
 
 /* Animacja załadowania kafelków */
@@ -73,33 +73,23 @@
 
 /* Kolory kafelków z gradientem */
 .tile-ok {
-  background: linear-gradient(145deg, #660066, #220b4e);
-  color: white;
+  background: linear-gradient(145deg, #660066, #220b4e); /* Odcienie fioletu */
 }
 
 .tile-warning {
-  background: linear-gradient(145deg, #66004d, #220066);
-  color: white;
+  background: linear-gradient(145deg, #66004d, #220066); /* Fioletowo-czerwony */
 }
 
 .tile-critical {
-  background: linear-gradient(145deg, #4b0082, #66004d);
-  color: white;
+  background: linear-gradient(145deg, #4b0082, #66004d); /* Ciemny fiolet */
 }
 
 .tile-upcoming-expenses {
-  background: linear-gradient(145deg, #004747, #220066);
-  color: white;
+  background: linear-gradient(145deg, #004747, #220066); /* Fioletowo-niebieski */
 }
 
 .tile-offers {
-  background: linear-gradient(145deg, #4fd1c5, #220066);
-  color: white;
-}
-
-/* Styl dla nagłówków w kafelkach */
-.tile h3 {
-  color: #fff; /* Kolor białego tekstu dla nagłówka */
+  background: linear-gradient(145deg, #4fd1c5, #220066); /* Zielony do fioletowego */
 }
 
 /* Przyciski pod kafelkami */
@@ -132,4 +122,47 @@
 /* Focus na przyciskach */
 .dashboard-container button:focus {
   outline: none;
+}
+
+/* Powiadomienia */
+.notifications-container {
+  background-color: #f4f7fb;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeIn 1s ease-in-out;
+}
+
+.notification {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(145deg, #660066, #220b4e); /* Dopasowanie koloru do aplikacji */
+  color: white;
+  padding: 10px 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.notification:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.notification .close-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 20px;
+  transition: color 0.2s ease;
+}
+
+.notification .close-btn:hover {
+  color: #ffcc00;
 }

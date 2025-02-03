@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './Dashboard.css';
+import Notifications from './Notifications'; // Importowanie komponentu powiadomień
 
 function Dashboard({ username }) {
   // Przykładowe dane
@@ -27,19 +28,21 @@ function Dashboard({ username }) {
           <p>Stan zapasów: {inventoryStatus}</p>
           <p>Poziom zapasów: {inventoryLevel}</p>
           <Link to="/inventory">
-            <button>Zarządzaj zapasami</button>
+            <button className="tile-button">Zarządzaj zapasami</button>
           </Link>
         </div>
 
         <div className="tile tile-warning">
           <h3>Lista zamówień</h3>
           <p>Ostatnie zamówienie: {orderCount} zamówień w {orderStatus}</p>
-          <Link to="/shopping-list">
-            <button>Lista zakupów</button>
-          </Link>
-          <Link to="/orders">
-            <button>Przejdź do zamówień</button>
-          </Link>
+          <div className="tile-buttons">
+            <Link to="/shopping-list">
+              <button className="tile-button">Lista zakupów</button>
+            </Link>
+            <Link to="/orders">
+              <button className="tile-button">Przejdź do zamówień</button>
+            </Link>
+          </div>
         </div>
 
         <div className="tile tile-upcoming-expenses">
@@ -47,7 +50,7 @@ function Dashboard({ username }) {
           <p>Stan oszczędności: {savingsStatus}</p>
           <p>Kwota: {savingsAmount} PLN</p>
           <Link to="/savings">
-            <button>Przejdź do oszczędności</button>
+            <button className="tile-button">Przejdź do oszczędności</button>
           </Link>
         </div>
 
@@ -56,10 +59,13 @@ function Dashboard({ username }) {
           <p>Otrzymano {offersAmount} ofert</p>
           <p>Status: {offersStatus}</p>
           <Link to="/offers">
-            <button>Analizuj oferty</button>
+            <button className="tile-button">Analizuj oferty</button>
           </Link>
         </div>
       </div>
+
+      {/* Powiadomienia o produktach poniżej kafelków */}
+      <Notifications />
     </div>
   );
 }

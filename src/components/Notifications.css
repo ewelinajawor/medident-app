@@ -1,17 +1,16 @@
+/* Przykładowy plik CSS dla powiadomień */
+
+/* Kontener powiadomień */
 .notifications-container {
-  padding: 20px;
   background-color: #f4f7fb;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   animation: fadeIn 1s ease-in-out;
-}
-
-.notifications-container h2 {
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 20px;
-  text-align: center;
 }
 
 /* Animacja załadowania powiadomień */
@@ -24,43 +23,68 @@
   }
 }
 
-.notifications-list {
-  list-style: none;
-  padding: 0;
+/* Tabela powiadomień */
+.notifications-table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.notification {
-  font-size: 16px;
-  padding: 12px;
-  margin-bottom: 10px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  transition: background-color 0.3s ease;
+.notifications-table th,
+.notifications-table td {
+  padding: 15px;
+  text-align: left;
+  border: 1px solid #ddd;
+  border-radius: 5px;
 }
 
-.notification-icon {
-  margin-right: 10px;
-  font-size: 20px;
+.notifications-table th {
+  background-color: #660066;
+  color: white;
+  font-weight: bold;
+}
+
+.notifications-table td {
+  background-color: #fff;
+  color: #333;
 }
 
 /* Kolory powiadomień */
-.notification.warning {
-  background-color: #fff9c4; /* Jasny żółty */
-  color: #fbc02d; /* Ciemniejszy żółty */
+.notification-info {
+  background-color: #4fd1c5; /* Zielony, neutralny */
+  color: white;
 }
 
-.notification.critical {
-  background-color: #ffebee; /* Jasny odcień czerwieni */
-  color: #d32f2f; /* Głęboka, intensywna czerwień */
+.notification-warning {
+  background-color: #f79c42; /* Pomarańczowy */
+  color: white;
 }
 
-.notification.info {
-  background-color: #b3e5fc; /* Jaśniejszy niebieski */
-  color: #039be5; /* Jasny niebieski */
+.notification-critical {
+  background-color: #ff4d4d; /* Czerwony */
+  color: white;
 }
 
-/* Efekt najechania */
+.notification-success {
+  background-color: #28a745; /* Zielony */
+  color: white;
+}
+
+/* Efekt przy najechaniu na powiadomienie */
 .notification:hover {
-  background-color: #f1f1f1;
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Przycisk zamknięcia powiadomienia */
+.notification .close-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 20px;
+  transition: color 0.2s ease;
+}
+
+.notification .close-btn:hover {
+  color: #ffcc00;
 }

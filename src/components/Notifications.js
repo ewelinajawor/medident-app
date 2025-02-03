@@ -1,29 +1,37 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './Notifications.css';
 
 function Notifications() {
-  const [notifications, setNotifications] = useState([
-    { id: 1, message: 'Niski poziom zapasów: Rękawice jednorazowe', type: 'warning' },
-    { id: 2, message: 'Zapas szczoteczek do zębów w normie', type: 'info' },
-    { id: 3, message: 'Konieczność uzupełnienia zapasu materiałów stomatologicznych', type: 'critical' },
-    { id: 4, message: 'Zapas środków czystości: Zadowalający', type: 'info' },
-    { id: 5, message: 'Zapas płynów dezynfekujących - wkrótce się skończy', type: 'warning' },
-  ]);
+  // Przykładowe dane o produktach
+  const lowStockProducts = [
+    { id: 1, name: 'Masa wyciskowa A', quantity: 3, minStock: 5 },
+    { id: 2, name: 'Narzędzie protetyczne X', quantity: 1, minStock: 2 },
+    // Możesz dodać więcej produktów w niskim stanie
+  ];
 
   return (
     <div className="notifications-container">
-      <h2>Powiadomienia</h2>
-      <ul className="notifications-list">
-        {notifications.map((notification) => (
-          <li key={notification.id} className={`notification ${notification.type}`}>
-            <span className="notification-icon">
-              {notification.type === 'warning' && '⚠️'}
-              {notification.type === 'critical' && '❗'}
-            </span>
-            {notification.message}
-          </li>
-        ))}
-      </ul>
+      <h3>Powiadomienia o produktach</h3>
+      {lowStockProducts.length > 0 ? (
+        <ul>
+          {lowStockProducts.map((product) => (
+            <li key={product.id}>
+              <p>
+                {product.name} - Pozostało: {product.quantity}/{product.minStock}
+              </p>
+              <button
+                className="add-to-shopping-list"
+                onClick={() => alert(`Produkt ${product.name} dodany do listy zakupów`)}
+              >
+                Dodaj do listy zakupów
+              </button>
+              <p className="automatic-note">Automatycznie dodane z powodu niskiego zapasu</p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>Brak produktów do dodania do listy zakupów</p>
+      )}
     </div>
   );
 }
