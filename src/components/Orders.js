@@ -87,16 +87,22 @@ function Orders() {
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.map((order) => (
-                <tr key={order.id}>
-                  <td>{order.date}</td>
-                  <td>{order.items.join(', ')}</td>
-                  <td className={order.status === 'W trakcie' ? 'status-in-progress' : 'status-delivered'}>
-                    {order.status}
-                  </td>
-                  <td>{order.amount}</td>
+              {filteredOrders.length === 0 ? (
+                <tr>
+                  <td colSpan="4" style={{ textAlign: 'center' }}>Brak zamówień do wyświetlenia</td>
                 </tr>
-              ))}
+              ) : (
+                filteredOrders.map((order) => (
+                  <tr key={order.id}>
+                    <td>{order.date}</td>
+                    <td>{order.items.join(', ')}</td>
+                    <td className={order.status === 'W trakcie' ? 'status-in-progress' : 'status-delivered'}>
+                      {order.status}
+                    </td>
+                    <td>{order.amount}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

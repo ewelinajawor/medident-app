@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';  // useState, useEffect
+import React, { useState, useEffect } from 'react'; 
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Dashboard from "./components/Dashboard";
@@ -9,7 +9,7 @@ import ShoppingList from "./components/ShoppingList";
 import Orders from "./components/Orders";
 import Suppliers from "./components/Suppliers";
 import ProductList from "./components/ProductList";
-import AddProduct from "./components/AddProduct";  // Import formularza
+import AddProduct from "./components/AddProduct";  
 
 function App() {
   useEffect(() => {
@@ -22,7 +22,7 @@ function App() {
     };
 
     checkScroll();
-    window.addEventListener('resize', checkScroll); // Sprawdzanie po zmianie rozmiaru okna
+    window.addEventListener('resize', checkScroll);
 
     return () => {
       window.removeEventListener('resize', checkScroll);
@@ -37,6 +37,15 @@ function App() {
     { id: 3, name: "Marrodent", email: "marek.fajkis@marrodent.pl", phone: "+33 8152013", nip: "9372343899" },
   ]);
 
+  // Stan dla listy zakupów
+  const [shoppingList, setShoppingList] = useState([]);
+
+  // Funkcja do dodawania produktów do listy zakupów
+  const addToShoppingList = (product) => {
+    // Dodanie tylko wybranego produktu do shoppingList
+    setShoppingList(prevList => [...prevList, product]);
+  };
+
   return (
     <Router>
       <div className="app-container">
@@ -47,10 +56,19 @@ function App() {
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/shopping-list" element={<ShoppingList suppliers={suppliers} />} />
+            <Route
+              path="/shopping-list"
+              element={<ShoppingList shoppingList={shoppingList} />}
+            />
             <Route path="/orders" element={<Orders />} />
-            <Route path="/suppliers" element={<Suppliers suppliers={suppliers} setSuppliers={setSuppliers} />} />
-            <Route path="/product-list" element={<ProductList />} />
+            <Route
+              path="/suppliers"
+              element={<Suppliers suppliers={suppliers} setSuppliers={setSuppliers} />}
+            />
+            <Route
+              path="/product-list"
+              element={<ProductList addToShoppingList={addToShoppingList} />}
+            />
             <Route path="/add-product" element={<AddProduct />} />
           </Routes>
         </div>

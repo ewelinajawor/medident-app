@@ -28,7 +28,7 @@ const ShoppingList = () => {
 
     const loadProducts = async () => {
       const fetchedProducts = await fetchProductsFromAPI();
-      setProductOptions(fetchedProducts.map(product => ({
+      setProductOptions(fetchedProducts.map((product) => ({
         value: product.name, label: product.name
       })));
     };
