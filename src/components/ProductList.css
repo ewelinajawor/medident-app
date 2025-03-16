@@ -1,58 +1,104 @@
+:root {
+  --gradient-navy: linear-gradient(145deg, #2C3E50, #34495E); /* Granatowy gradient */
+}
+
 /* Style kontenera listy produktów */
 .product-list-container {
-  width: 80%;
+  width: 90%;
   margin: 20px auto;
   font-family: Arial, sans-serif;
   color: #333;
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-left: 120px; /* Margines dla navbara */
 }
 
 /* Nagłówek */
 h1 {
   text-align: center;
-  color: #660066;
+  color: #2C3E50;
+  margin-bottom: 20px;
 }
 
-/* Stylowanie pola do filtrowania */
-.filter-input {
+/* Filtry */
+.filters {
   margin-bottom: 20px;
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
 }
 
-.filter-input input {
-  padding: 10px;
-  width: 300px;
+.filters label {
+  font-size: 14px;
+}
+
+.filters select {
+  padding: 5px;
   border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 16px;
+  border-radius: 4px;
+  font-size: 14px;
 }
 
-.filter-input input:focus {
-  outline: none;
-  border-color: #660066;
-}
-
-/* Przycisk dodawania nowego produktu */
-.add-product-button {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.add-product-button button {
-  padding: 10px 20px;
-  background-color: #660066;
+.filter-button {
+  background: var(--gradient-navy);
   color: white;
   border: none;
-  border-radius: 5px;
+  padding: 8px 12px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.add-product-button button:hover {
-  background-color: #220b4e;
+.filter-button:hover {
+  background: #2C3E50;
+  transform: scale(1.05);
 }
 
-/* Style dla tabeli produktów */
+/* Menu filtrowania */
+.filter-menu {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.filter-group {
+  margin-bottom: 10px;
+}
+
+.filter-group label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+  color: #333;
+}
+
+.filter-group input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.filter-group input:focus {
+  outline: none;
+  border-color: #A7D129;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Tabela */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -61,33 +107,28 @@ table {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Style dla komórek tabeli */
 th, td {
-  padding: 15px;
+  padding: 10px;
   text-align: left;
   border-bottom: 1px solid #ddd;
-  font-size: 16px;
+  font-size: 14px;
   position: relative;
 }
 
 th {
-  background-color: #660066;
+  background: var(--gradient-navy);
   color: white;
   cursor: pointer;
 }
 
-/* Style dla przycisków sortowania */
-th.sort-asc::after {
-  content: ' 🔼';
-}
-
-th.sort-desc::after {
-  content: ' 🔽';
+th:hover {
+  background: #2C3E50;
 }
 
 /* Style dla komórek tabeli */
 td {
   background-color: #f9f9f9;
+  transition: background-color 0.3s ease;
 }
 
 td.high-stock {
@@ -98,7 +139,34 @@ td.low-stock {
   background-color: #ffebee;
 }
 
-/* Style dla paginacji */
+/* Przycisk dodawania do listy */
+.add-to-list-button {
+  background: var(--gradient-navy);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.add-to-list-button:hover {
+  background: #2C3E50;
+  transform: scale(1.05);
+}
+
+.auto-added {
+  color: #ff4444;
+  font-size: 12px;
+  margin-left: 10px;
+}
+
+/* Paginacja */
 .pagination {
   display: flex;
   justify-content: center;
@@ -107,21 +175,80 @@ td.low-stock {
 }
 
 .pagination button {
-  padding: 10px 20px;
-  background: #220b4e;
+  padding: 8px 12px;
+  background: var(--gradient-navy);
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 16px;
-  margin: 0 10px;
+  font-size: 14px;
+  margin: 0 5px;
+  transition: background 0.3s ease;
 }
 
 .pagination button:hover {
-  background: #660066;
+  background: #2C3E50;
+}
+
+.pagination button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
 }
 
 .pagination span {
-  font-size: 16px;
+  font-size: 14px;
   color: #333;
+  margin: 0 10px;
+}
+
+/* Powiadomienia i błędy */
+.notification {
+  background: var(--gradient-navy);
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  text-align: center;
+  animation: fadeIn 0.5s ease;
+}
+
+.error-message {
+  background-color: #ff4444;
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  text-align: center;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Responsywność */
+@media (max-width: 768px) {
+  .product-list-container {
+    margin-left: 20px;
+    width: 95%;
+  }
+
+  table {
+    font-size: 12px;
+  }
+
+  th, td {
+    padding: 8px;
+  }
+
+  .add-to-list-button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .pagination button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
 }

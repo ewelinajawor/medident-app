@@ -1,8 +1,6 @@
-/* Przykładowy plik CSS dla powiadomień */
-
 /* Kontener powiadomień */
 .notifications-container {
-  background-color: #f4f7fb;
+  background-color: #f4f7fb; /* Delikatny niebiesko-szary */
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 20px;
@@ -23,68 +21,51 @@
   }
 }
 
-/* Tabela powiadomień */
-.notifications-table {
-  width: 100%;
-  border-collapse: collapse;
+/* Lista powiadomień */
+.notifications-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
-.notifications-table th,
-.notifications-table td {
+/* Pojedyncze powiadomienie */
+.notification-item {
+  background-color: #ffffff; /* Białe tło */
+  border-radius: 10px;
   padding: 15px;
-  text-align: left;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-}
-
-.notifications-table th {
-  background-color: #660066;
-  color: white;
-  font-weight: bold;
-}
-
-.notifications-table td {
-  background-color: #fff;
-  color: #333;
-}
-
-/* Kolory powiadomień */
-.notification-info {
-  background-color: #4fd1c5; /* Zielony, neutralny */
-  color: white;
-}
-
-.notification-warning {
-  background-color: #f79c42; /* Pomarańczowy */
-  color: white;
-}
-
-.notification-critical {
-  background-color: #ff4d4d; /* Czerwony */
-  color: white;
-}
-
-.notification-success {
-  background-color: #28a745; /* Zielony */
-  color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* Efekt przy najechaniu na powiadomienie */
-.notification:hover {
-  transform: scale(1.05);
+.notification-item:hover {
+  transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* Przycisk zamknięcia powiadomienia */
-.notification .close-btn {
-  background: transparent;
-  border: none;
-  color: white;
-  cursor: pointer;
-  font-size: 20px;
-  transition: color 0.2s ease;
+/* Tekst powiadomienia */
+.notification-text {
+  margin: 0;
+  font-size: 14px;
+  color: #333; /* Ciemnoszary tekst */
 }
 
-.notification .close-btn:hover {
-  color: #ffcc00;
+/* Automatyczna notatka */
+.automatic-note {
+  margin: 0;
+  font-size: 12px;
+  color: #666; /* Szary tekst */
+  font-style: italic;
+}
+
+/* Komunikat "Brak produktów" */
+.notifications-container p {
+  text-align: center;
+  color: #666; /* Szary tekst */
 }

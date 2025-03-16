@@ -13,19 +13,13 @@ function Notifications() {
     <div className="notifications-container">
       <h3>Powiadomienia o produktach</h3>
       {lowStockProducts.length > 0 ? (
-        <ul>
+        <ul className="notifications-list">
           {lowStockProducts.map((product) => (
-            <li key={product.id}>
-              <p>
+            <li key={product.id} className="notification-item">
+              <p className="notification-text">
                 {product.name} - Pozostało: {product.quantity}/{product.minStock}
               </p>
-              <button
-                className="add-to-shopping-list"
-                onClick={() => alert(`Produkt ${product.name} dodany do listy zakupów`)}
-              >
-                Dodaj do listy zakupów
-              </button>
-              <p className="automatic-note">Automatycznie dodane z powodu niskiego zapasu</p>
+              <p className="automatic-note">Produkt został automatycznie dodany do listy zakupów.</p>
             </li>
           ))}
         </ul>

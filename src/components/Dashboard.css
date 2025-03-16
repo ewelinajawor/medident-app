@@ -1,168 +1,135 @@
-/* Kontener główny */
+:root {
+  --primary-color: #2C3E50; /* Granat */
+  --accent-color: #3498DB; /* Niebieski */
+  --background-color: #ECF0F1; /* Jasny szary */
+  --tile-background: linear-gradient(135deg, #FFFFFF, #F5F7FA); /* Delikatny gradient */
+  --text-color: #2C3E50; /* Granatowy */
+  --light-text-color: #FFFFFF; /* Biały */
+  --gradient-blue: linear-gradient(135deg, #3498DB, #2C3E50);
+  --gradient-navy: linear-gradient(135deg, #2C3E50, #34495E);
+  --border-radius: 16px; /* Bardziej zaokrąglone krawędzie */
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
 .dashboard-container {
-  padding: 40px;
-  background-color: #f4f7fb;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  animation: fadeIn 1s ease-in-out;
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 20px;
+  padding-top: 80px; /* Dodatkowy padding, aby navbar nie zasłaniał kafelków */
+  text-align: center; /* Wyśrodkowanie nagłówka */
 }
 
-/* Animacja załadowania dashboardu */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.welcome-message {
+  color: var(--primary-color); /* Granatowy */
+  font-size: 32px; /* Większy rozmiar */
+  margin-bottom: 30px; /* Większy odstęp */
 }
 
-/* Nagłówek */
-.dashboard-container h2 {
-  font-size: 32px;
-  font-weight: bold;
-  color: #333;
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.tile {
+  background: var(--tile-background);
+  border-radius: var(--border-radius);
+  padding: 25px; /* Więcej przestrzeni wewnątrz kafelka */
+  box-shadow: var(--box-shadow);
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.tile:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.tile-icon {
+  margin-bottom: 15px; /* Odstęp między ikoną a tekstem */
+}
+
+.tile h3 {
+  color: var(--primary-color); /* Granatowy */
+  margin-bottom: 15px; /* Większy odstęp */
+  font-size: 24px; /* Większy rozmiar */
+}
+
+.tile-button {
+  background: var(--gradient-blue);
+  color: var(--light-text-color);
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Wyśrodkowanie tekstu i ikon */
+  gap: 10px;
+  width: 100%; /* Pełna szerokość */
+  margin-top: 15px; /* Większy odstęp */
+}
+
+.tile-button:hover {
+  background: var(--gradient-navy);
+  transform: scale(1.05);
+}
+
+.quick-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: center; /* Wyśrodkowanie przycisków szybkich akcji */
+}
+
+.quick-action-button {
+  background: var(--gradient-blue);
+  color: var(--light-text-color);
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quick-action-button:hover {
+  background: var(--gradient-navy);
+  transform: scale(1.05);
+}
+
+/* Sekcja wykresu */
+.chart-container {
+  margin-top: 40px;
+  padding: 20px;
+  background: var(--tile-background);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+}
+
+.chart-container h3 {
+  color: var(--primary-color);
+  font-size: 24px;
   margin-bottom: 20px;
   text-align: center;
 }
 
-/* Kafelki */
-.tiles {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin-top: 30px;
-  flex-wrap: nowrap; /* Kafelki nie będą się zawijały */
-}
-
-/* Styl dla pojedynczego kafelka */
-.tile {
-  background-color: #ffffff;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 20px;
-  width: 23%; /* Szerokość kafelków */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  animation: tileFadeIn 1s ease-out;
-  min-height: 150px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  color: #fff;
-}
-
-/* Animacja załadowania kafelków */
-@keyframes tileFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Efekt przy najechaniu na kafelek */
-.tile:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* Kolory kafelków z gradientem */
-.tile-ok {
-  background: linear-gradient(145deg, #660066, #220b4e); /* Odcienie fioletu */
-}
-
-.tile-warning {
-  background: linear-gradient(145deg, #66004d, #220066); /* Fioletowo-czerwony */
-}
-
-.tile-critical {
-  background: linear-gradient(145deg, #4b0082, #66004d); /* Ciemny fiolet */
-}
-
-.tile-upcoming-expenses {
-  background: linear-gradient(145deg, #004747, #220066); /* Fioletowo-niebieski */
-}
-
-.tile-offers {
-  background: linear-gradient(145deg, #4fd1c5, #220066); /* Zielony do fioletowego */
-}
-
-/* Przyciski pod kafelkami */
-.dashboard-container button {
-  background-color: #ffffff; /* Biały */
-  color: #220066; /* Kolor tekstu pasujący do palety */
-  padding: 12px 30px;
-  border-radius: 5px;
-  border: 1px solid #220066; /* Kontur przycisku */
-  cursor: pointer;
-  width: 100%;
-  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Delikatny cień */
-}
-
-/* Efekt przy najechaniu na przycisk */
-.dashboard-container button:hover {
-  background-color: #220066; /* Ciemniejszy odcień przycisku */
-  color: white; /* Zmiana koloru tekstu */
-  transform: translateY(-2px); /* Efekt delikatnego podniesienia */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Wyraźniejszy cień przy najechaniu */
-}
-
-/* Efekt przy kliknięciu przycisku */
-.dashboard-container button:active {
-  transform: translateY(0); /* Powrót do pierwotnej pozycji po kliknięciu */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Przywrócenie cienia po kliknięciu */
-}
-
-/* Focus na przyciskach */
-.dashboard-container button:focus {
-  outline: none;
-}
-
-/* Powiadomienia */
-.notifications-container {
-  background-color: #f4f7fb;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  animation: fadeIn 1s ease-in-out;
-}
-
-.notification {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: linear-gradient(145deg, #660066, #220b4e); /* Dopasowanie koloru do aplikacji */
-  color: white;
-  padding: 10px 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.notification:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-}
-
-.notification .close-btn {
-  background: transparent;
-  border: none;
-  color: white;
-  cursor: pointer;
-  font-size: 20px;
-  transition: color 0.2s ease;
-}
-
-.notification .close-btn:hover {
-  color: #ffcc00;
+.chart-wrapper {
+  height: 400px; /* Wysokość wykresu */
+  position: relative;
 }

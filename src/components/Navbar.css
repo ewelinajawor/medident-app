@@ -1,81 +1,123 @@
-/* Kontener nawigacji */
-.navbar {
-  background: linear-gradient(145deg, #660066, #300047); /* Gradient dla navbaru */
-  color: white;
-  padding: 10px 30px;  /* Mniejsze wypełnienie */
-  display: flex;
-  justify-content: flex-start; /* Wyrównanie do lewej */
-  align-items: center;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Delikatny cień */
-  animation: navbarFadeIn 1s ease-out; /* Animacja przy załadowaniu */
-  font-size: 16px; /* Mniejsza czcionka */
+:root {
+  --primary-color: #2C3E50; /* Granat */
+  --accent-color: #3498DB; /* Niebieski */
+  --background-color: #ECF0F1; /* Jasny szary */
+  --text-color: #2C3E50; /* Granatowy */
+  --light-text-color: #FFFFFF; /* Biały */
+  --gradient-navy: linear-gradient(145deg, #2C3E50, #34495E); /* Granatowy gradient */
+  --border-radius: 8px;
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
 }
 
-/* Animacja załadowania navbaru */
-@keyframes navbarFadeIn {
+/* Kontener menu bocznego */
+.sidebar {
+  background: var(--gradient-navy); /* Granatowy gradient */
+  color: white;
+  width: 60px; /* Szerokość menu w stanie zamkniętym */
+  height: 100vh; /* Pełna wysokość ekranu */
+  padding: 20px;
+  box-shadow: var(--box-shadow); /* Delikatny cień */
+  animation: sidebarFadeIn 1s ease-out; /* Animacja przy załadowaniu */
+  font-size: 16px; /* Mniejsza czcionka */
+  position: fixed; /* Menu zawsze widoczne */
+  top: 0;
+  left: 0;
+  z-index: 1000; /* Menu na wierzchu */
+  transition: width 0.3s ease; /* Płynna animacja szerokości */
+}
+
+/* Stan otwartego menu */
+.sidebar.open {
+  width: 250px; /* Szerokość menu w stanie otwartym */
+}
+
+/* Animacja załadowania menu bocznego */
+@keyframes sidebarFadeIn {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateX(-20px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(0);
   }
+}
+
+/* Przycisk do otwierania/zamykania menu */
+.menu-toggle {
+  font-size: 24px;
+  cursor: pointer;
+  color: white;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Logo */
+.sidebar .logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 30px; /* Odstęp od linków */
+  text-align: center;
+  white-space: nowrap; /* Zapobiega zawijaniu tekstu */
+  overflow: hidden; /* Ukrywa tekst w stanie zamkniętym */
 }
 
 /* Linki nawigacji */
-.navbar .nav-links {
+.sidebar .nav-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
-  gap: 20px; /* Odstęp pomiędzy linkami */
-  margin-left: auto; /* Wyrównanie linków do prawej */
+  flex-direction: column;
+  gap: 20px; /* Większy odstęp pomiędzy linkami */
 }
 
-.navbar a {
+.sidebar a {
   color: white;
   text-decoration: none;
-  padding: 8px 15px;
-  border-radius: 5px;
+  padding: 10px 15px;
+  border-radius: var(--border-radius);
   transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Odstęp między ikoną a tekstem */
+  white-space: nowrap; /* Zapobiega zawijaniu tekstu */
+  overflow: hidden; /* Ukrywa tekst w stanie zamkniętym */
 }
 
 /* Efekt przy najechaniu na link */
-.navbar a:hover {
-  background-color: #4fd1c5; /* Kolor pasujący do reszty palety */
-  transform: translateY(-2px); /* Efekt podniesienia */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Wyraźniejszy cień */
+.sidebar a:hover {
+  background-color: rgba(255, 255, 255, 0.1); /* Lekko białe tło */
+  transform: translateX(3px); /* Delikatne przesunięcie w prawo */
+  box-shadow: var(--box-shadow); /* Delikatny cień */
 }
 
 /* Efekt aktywnego linku (na stronie) */
-.navbar a.active {
-  background-color: #220066; /* Kolor tła aktywnego linku */
+.sidebar a.active {
+  background-color: var(--accent-color); /* Niebieski dla aktywnego linku */
   color: white;
-  transform: translateY(0); /* Zatrzymanie efektu podniesienia */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Cień dla aktywnego linku */
+  transform: translateX(3px); /* Delikatne przesunięcie w prawo */
+  box-shadow: var(--box-shadow); /* Cień dla aktywnego linku */
 }
 
-/* Ikona hamburgera dla responsywności */
-.navbar .hamburger {
-  display: none;
-}
-
-/* Styl dla ikony hamburgera przy mniejszych ekranach */
+/* Responsywność dla małych ekranów */
 @media screen and (max-width: 768px) {
-  .navbar .hamburger {
-    display: block;
-    cursor: pointer;
-    color: white;
-    font-size: 30px;
+  .sidebar {
+    width: 50px; /* Mniejsza szerokość na małych ekranach */
   }
 
-  .navbar .nav-links {
-    display: none;  /* Ukrywanie linków przy małych ekranach */
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
+  .sidebar.open {
+    width: 200px; /* Mniejsza szerokość w stanie otwartym */
   }
 
-  .navbar.open .nav-links {
-    display: flex;  /* Pokazywanie menu po kliknięciu na hamburger */
+  .sidebar .nav-links {
+    flex-direction: column; /* Linki w jednej kolumnie */
+    gap: 15px; /* Mniejszy odstęp */
+  }
+
+  .sidebar a {
+    padding: 8px 12px; /* Mniejsze wypełnienie */
   }
 }

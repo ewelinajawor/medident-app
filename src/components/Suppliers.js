@@ -52,7 +52,7 @@ const Suppliers = () => {
   };
 
   const validateEmail = (email) => {
-    return /^[a-zA-Z0-9._%+-]+@[a-zAz0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+    return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
   };
 
   const addSupplier = () => {

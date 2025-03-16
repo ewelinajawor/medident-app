@@ -1,71 +1,185 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { FaBox, FaClipboardList, FaPiggyBank, FaHandshake, FaShoppingCart, FaChartLine } from 'react-icons/fa';
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 import './Dashboard.css';
-import Notifications from './Notifications'; // Importowanie komponentu powiadomień
+
+// Zarejestruj wymagane elementy
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 function Dashboard({ username }) {
-  // Przykładowe dane
-  const inventoryStatus = "Wystarczająco";  // Stan zapasów
-  const inventoryLevel = 100;  // Poziom zapasów
+  // Dane dla wykresu
+  const chartData = {
+    labels: ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec'],
+    datasets: [
+      {
+        label: 'Liczba zamówień',
+        data: [12, 19, 3, 5, 2, 3],
+        backgroundColor: '#3498DB', // Niebieski
+        borderColor: '#2C3E50', // Granatowy
+        borderWidth: 1,
+      },
+      {
+        label: 'Oszczędności (w PLN)',
+        data: [500, 800, 1200, 900, 1500, 2000],
+        backgroundColor: '#1ABC9C', // Miętowy
+        borderColor: '#16A085', // Ciemniejszy miętowy
+        borderWidth: 1,
+      },
+    ],
+  };
 
-  const orderCount = 3;  // Liczba zamówień
-  const orderStatus = "W trakcie";  // Status zamówienia
-
-  const savingsStatus = "Dobre";  // Stan oszczędności
-  const savingsAmount = 1500;  // Kwota oszczędności
-
-  const offersStatus = "Oczekiwanie";  // Status ofert
-  const offersAmount = 2;  // Liczba ofert
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: '#ECF0F1', // Jasny szary dla siatki
+        },
+        ticks: {
+          color: '#2C3E50', // Granatowy dla tekstu na osi Y
+        },
+      },
+      x: {
+        grid: {
+          color: '#ECF0F1', // Jasny szary dla siatki
+        },
+        ticks: {
+          color: '#2C3E50', // Granatowy dla tekstu na osi X
+        },
+      },
+    },
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          color: '#2C3E50', // Granatowy dla tekstu legendy
+        },
+      },
+      title: {
+        display: true,
+        text: 'Statystyki zamówień i oszczędności',
+        color: '#2C3E50', // Granatowy dla tytułu
+        font: {
+          size: 18,
+        },
+      },
+      tooltip: {
+        backgroundColor: '#2C3E50', // Granatowe tło tooltipa
+        titleColor: '#FFFFFF', // Biały kolor tytułu tooltipa
+        bodyColor: '#FFFFFF', // Biały kolor tekstu tooltipa
+      },
+    },
+    animation: {
+      duration: 1000, // Dłuższa animacja
+      easing: 'easeInOutQuart', // Płynne przejście
+    },
+  };
 
   return (
     <div className="dashboard-container">
       <h2 className="welcome-message">Witaj, {username}!</h2>
 
+      {/* Sekcja szybkich akcji */}
+      <div className="quick-actions">
+        <Link to="/add-product" style={{ textDecoration: 'none' }}>
+          <button className="quick-action-button">
+            <FaBox /> Dodaj produkt
+          </button>
+        </Link>
+        <Link to="/create-order" style={{ textDecoration: 'none' }}>
+          <button className="quick-action-button">
+            <FaShoppingCart /> Złóż zamówienie
+          </button>
+        </Link>
+      </div>
+
       <div className="tiles">
-        {/* Kafelki */}
-        <div className="tile tile-ok">
+        {/* Kafelek Magazyn */}
+        <div className="tile tile-inventory">
+          <div className="tile-icon">
+            <FaBox size={48} /> {/* Większa ikona */}
+          </div>
           <h3>Magazyn</h3>
-          <p>Stan zapasów: {inventoryStatus}</p>
-          <p>Poziom zapasów: {inventoryLevel}</p>
-          <Link to="/inventory">
-            <button className="tile-button">Zarządzaj zapasami</button>
+          <Link to="/inventory" style={{ textDecoration: 'none' }}>
+            <button className="tile-button">
+              <FaBox /> Zarządzaj zapasami
+            </button>
           </Link>
         </div>
 
-        <div className="tile tile-warning">
-          <h3>Lista zamówień</h3>
-          <p>Ostatnie zamówienie: {orderCount} zamówień w {orderStatus}</p>
+        {/* Kafelek Zamówienia */}
+        <div className="tile tile-orders">
+          <div className="tile-icon">
+            <FaClipboardList size={48} /> {/* Większa ikona */}
+          </div>
+          <h3>Zamówienia</h3>
           <div className="tile-buttons">
-            <Link to="/shopping-list">
-              <button className="tile-button">Lista zakupów</button>
+            <Link to="/shopping-list" style={{ textDecoration: 'none' }}>
+              <button className="tile-button">
+                <FaShoppingCart /> Lista zakupów
+              </button>
             </Link>
-            <Link to="/orders">
-              <button className="tile-button">Przejdź do zamówień</button>
+            <Link to="/orders" style={{ textDecoration: 'none' }}>
+              <button className="tile-button" style={{ marginTop: '15px' }}>
+                <FaChartLine /> Przejdź do zamówień
+              </button>
             </Link>
           </div>
         </div>
 
-        <div className="tile tile-upcoming-expenses">
+        {/* Kafelek Oszczędności */}
+        <div className="tile tile-savings">
+          <div className="tile-icon">
+            <FaPiggyBank size={48} /> {/* Większa ikona */}
+          </div>
           <h3>Oszczędności</h3>
-          <p>Stan oszczędności: {savingsStatus}</p>
-          <p>Kwota: {savingsAmount} PLN</p>
-          <Link to="/savings">
-            <button className="tile-button">Przejdź do oszczędności</button>
+          <Link to="/savings" style={{ textDecoration: 'none' }}>
+            <button className="tile-button">
+              <FaPiggyBank /> Zarządzaj oszczędnościami
+            </button>
           </Link>
         </div>
 
+        {/* Kafelek Oferty */}
         <div className="tile tile-offers">
+          <div className="tile-icon">
+            <FaHandshake size={48} /> {/* Większa ikona */}
+          </div>
           <h3>Oferty</h3>
-          <p>Otrzymano {offersAmount} ofert</p>
-          <p>Status: {offersStatus}</p>
-          <Link to="/offers">
-            <button className="tile-button">Analizuj oferty</button>
+          <Link to="/offers" style={{ textDecoration: 'none' }}>
+            <button className="tile-button">
+              <FaHandshake /> Analizuj oferty
+            </button>
           </Link>
         </div>
       </div>
 
-      {/* Powiadomienia o produktach poniżej kafelków */}
-      <Notifications />
+      {/* Sekcja wykresu */}
+      <div className="chart-container">
+        <h3>Statystyki zamówień i oszczędności</h3>
+        <div className="chart-wrapper">
+          <Bar data={chartData} options={chartOptions} />
+        </div>
+      </div>
     </div>
   );
 }

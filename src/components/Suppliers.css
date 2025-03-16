@@ -1,103 +1,113 @@
-/* Ogólny kontener formularza i tabeli */
+:root {
+  --primary-color: #100e20; /* Ciemny granatowy */
+  --secondary-color: #241848; /* Nieco jaśniejszy granatowy */
+  --background-color: #ecf0f1; /* Jasne szare tło */
+  --text-color: #2c3e50; /* Ciemny szary tekst */
+  --error-color: #e74c3c; /* Czerwony */
+  --success-color: #27ae60; /* Zielony */
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-family: 'Arial', sans-serif;
+}
+
 .suppliers-container {
+  max-width: 800px;
+  margin: 0 auto;
   padding: 20px;
-  background-color: #f9f9f9;
+  background-color: white;
   border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.suppliers-container.dark {
+  background-color: var(--primary-color);
+  color: #ecf0f1;
 }
 
 h2 {
-  font-size: 24px;
-  color: #333;
-  margin-bottom: 20px;
+  color: var(--primary-color);
 }
 
 .primary-btn {
-  background-color: #660066;
+  padding: 10px 20px;
+  background-color: var(--primary-color);
   color: white;
   border: none;
-  padding: 10px 20px;
+  border-radius: 4px;
   cursor: pointer;
-  border-radius: 5px;
-  font-size: 16px;
-  transition: background-color 0.3s;
+  font-size: 14px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .primary-btn:hover {
-  background-color: #004747;
+  background-color: var(--secondary-color);
+  transform: scale(1.05);
+}
+
+.supplier-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
 .supplier-form input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 16px;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  font-size: 14px;
 }
 
 .supplier-form input.error {
-  border-color: red;
-}
-
-.supplier-form input:focus {
-  outline: none;
-  border-color: #660066;
+  border-color: var(--error-color);
 }
 
 .suppliers-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
-.suppliers-table th,
-.suppliers-table td {
-  padding: 10px;
+.suppliers-table th, .suppliers-table td {
+  padding: 12px;
   text-align: left;
   border-bottom: 1px solid #ddd;
 }
 
 .suppliers-table th {
-  background-color: #f1f1f1;
-  color: #333;
-}
-
-.suppliers-table tr:hover {
-  background-color: #f4f4f4;
-}
-
-.suppliers-table .edit-btn,
-.suppliers-table .delete-btn {
-  background-color: #660066;
+  background-color: var(--primary-color);
   color: white;
+}
+
+.edit-btn, .delete-btn {
   padding: 5px 10px;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  font-size: 14px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-.suppliers-table .edit-btn:hover {
-  background-color: #004747;
+.edit-btn {
+  background-color: var(--primary-color);
+  color: white;
+  margin-right: 5px;
 }
 
-.suppliers-table .delete-btn {
-  background-color: #e74c3c;
+.edit-btn:hover {
+  background-color: var(--secondary-color);
+  transform: scale(1.05);
 }
 
-.suppliers-table .delete-btn:hover {
+.delete-btn {
+  background-color: var(--error-color);
+  color: white;
+}
+
+.delete-btn:hover {
   background-color: #c0392b;
+  transform: scale(1.05);
 }
-
-.error {
-  color: red;
-  font-size: 14px;
-  margin-top: -10px;
-}
-
-.error-message {
-  color: red;
-  font-size: 14px;
-  margin-top: 5px;
-}
-

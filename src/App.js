@@ -9,7 +9,8 @@ import ShoppingList from "./components/ShoppingList";
 import Orders from "./components/Orders";
 import Suppliers from "./components/Suppliers";
 import ProductList from "./components/ProductList";
-import AddProduct from "./components/AddProduct";  
+import AddProduct from "./components/AddProduct";
+import Offers from "./components/Offers"; // Dodano import komponentu Offers
 
 function App() {
   useEffect(() => {
@@ -70,6 +71,7 @@ function App() {
               element={<ProductList addToShoppingList={addToShoppingList} />}
             />
             <Route path="/add-product" element={<AddProduct />} />
+            <Route path="/offers" element={<Offers />} /> {/* Dodano nową ścieżkę dla Offers */}
           </Routes>
         </div>
       </div>

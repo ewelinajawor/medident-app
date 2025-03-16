@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './Inventory.css';
+import { FaBox, FaTools, FaFlask, FaPlus, FaShoppingCart, FaSearch, FaTrash } from 'react-icons/fa'; // Dodano ikonę kosza
 
 function Inventory() {
   const [shoppingList, setShoppingList] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState(''); // Stan dla aktywnej kategorii
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState([
     { id: 1, name: 'Masa wyciskowa', category: 'Materiały', stock: 10, minStock: 5 },
     { id: 2, name: 'Narzędzia protetyczne', category: 'Sprzęt', stock: 3, minStock: 5 },
@@ -12,137 +14,146 @@ function Inventory() {
     { id: 5, name: 'Nożyczki chirurgiczne', category: 'Sprzęt', stock: 2, minStock: 5 },
   ]);
 
-  // Funkcja dodająca produkty do listy zakupów, które są poniżej minimalnego poziomu zapasów
+  // Dodaj produkty do listy zakupów
   const addToShoppingList = () => {
-    const newShoppingList = [];
-
-    products.forEach((product) => {
-      if (product.stock < product.minStock) {  // Zapewnia, że produkty poniżej minimalnego poziomu zapasów będą dodane
-        const quantity = product.minStock - product.stock;
-        // Sprawdzamy, czy produkt już istnieje na liście
-        const existingProductIndex = newShoppingList.findIndex((item) => item.name === product.name);
-        if (existingProductIndex !== -1) {
-          newShoppingList[existingProductIndex].quantity += quantity;
-        } else {
-          newShoppingList.push({ ...product, quantity, addedAutomatically: true });
-        }
-      }
-    });
-
+    const newShoppingList = products
+      .filter((product) => product.stock < product.minStock)
+      .map((product) => ({
+        ...product,
+        quantity: product.minStock - product.stock,
+        addedAutomatically: true,
+      }));
     setShoppingList(newShoppingList);
   };
 
-  // Funkcja do dodania produktu do listy zakupów ręcznie
+  // Dodaj produkt ręcznie
   const handleAddToShoppingList = (product) => {
-    const newShoppingList = [...shoppingList];
-    const existingProductIndex = newShoppingList.findIndex(item => item.name === product.name);
-
-    if (existingProductIndex !== -1) {
-      newShoppingList[existingProductIndex].quantity += 1; // Zwiększamy ilość dla istniejącego produktu
+    const existingProduct = shoppingList.find((item) => item.id === product.id);
+    if (existingProduct) {
+      setShoppingList((prev) =>
+        prev.map((item) =>
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        )
+      );
     } else {
-      newShoppingList.push({ ...product, quantity: 1, addedAutomatically: false });
+      setShoppingList((prev) => [...prev, { ...product, quantity: 1, addedAutomatically: false }]);
     }
-
-    setShoppingList(newShoppingList);
   };
 
-  // Zaktualizuj listę zakupów po załadowaniu komponentu
+  // Edytuj ilość produktu w liście zakupów
+  const handleEditQuantity = (id, quantity) => {
+    if (quantity < 1) return; // Nie pozwól na ujemną ilość
+    setShoppingList((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
+    );
+  };
+
+  // Usuń produkt z listy zakupów
+  const handleRemoveFromShoppingList = (id) => {
+    setShoppingList((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  // Filtruj produkty według kategorii i wyszukiwania
+  const filteredProducts = products.filter((product) => {
+    const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
+    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  // Efekt automatycznego dodawania produktów
   useEffect(() => {
     addToShoppingList();
   }, [products]);
-
-  // Zaktualizuj listę produktów według wybranej kategorii
-  const handleCategoryFilter = (category) => {
-    setSelectedCategory(category);
-  };
-
-  const filteredProducts = selectedCategory
-    ? products.filter((product) => product.category === selectedCategory)
-    : products;
 
   return (
     <div className="inventory">
       <h2 className="gradient-header">Zarządzanie zapasami</h2>
 
-      {/* Filtrowanie (Kategorie w poziomie) */}
-      <div className="filters">
-        <button className="gradient-btn" onClick={() => handleCategoryFilter('')}>Wszystkie</button>
-        <button className="gradient-btn" onClick={() => handleCategoryFilter('Materiały')}>Materiały</button>
-        <button className="gradient-btn" onClick={() => handleCategoryFilter('Sprzęt')}>Sprzęt</button>
-        <button className="gradient-btn" onClick={() => handleCategoryFilter('Środki')}>Środki</button>
+      {/* Wyszukiwarka */}
+      <div className="search-bar">
+        <FaSearch className="search-icon" />
+        <input
+          type="text"
+          placeholder="Wyszukaj produkt..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
-      {/* Tabela produktów */}
-      <table className="product-table">
-        <thead>
-          <tr>
-            <th className="gradient-header">Nazwa produktu</th>
-            <th className="gradient-header">Kategoria</th>
-            <th className="gradient-header">Poziom zapasów</th>
-            <th className="gradient-header">Minimalny poziom zapasów</th>
-            <th className="gradient-header">Dodaj do listy zakupów</th> {/* Nowa kolumna */}
-          </tr>
-        </thead>
-        <tbody>
-          {filteredProducts.map((product) => (
-            <tr
-              key={product.id}
-              className={product.stock < product.minStock ? 'low-stock' : 'sufficient-stock'}
-            >
-              <td>{product.name}</td>
-              <td>{product.category}</td>
-              <td>{product.stock}</td>
-              <td>{product.minStock}</td>
-              <td>
-                <button 
-                  className="gradient-btn" 
-                  onClick={() => handleAddToShoppingList(product)}
-                >
-                  Dodaj
-                </button>
-              </td> {/* Przycisk dodawania produktu */}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* Uzupełnij zapasy */}
-      <h3 className="gradient-header">Uzupełnij zapasy</h3>
-      <table className="shopping-list-table">
-        <thead>
-          <tr>
-            <th className="gradient-header">Nazwa produktu</th>
-            <th className="gradient-header">Ilość</th>
-            <th className="gradient-header">Dodane automatycznie</th>
-          </tr>
-        </thead>
-        <tbody>
-          {shoppingList.length > 0 ? (
-            shoppingList.map((item, index) => (
-              <tr
-                key={index}
-                className={`${item.addedAutomatically ? 'auto-added' : ''}`}
-              >
-                <td>{item.name}</td>
-                <td>{item.quantity}</td>
-                <td>{item.addedAutomatically ? 'Automatycznie dodane' : ''}</td>
-              </tr>
-            ))
-          ) : (
-            <tr><td colSpan="3">Brak produktów do dodania</td></tr>
-          )}
-        </tbody>
-      </table>
-
-      {/* Przycisk do uzupełnienia zapasów */}
-      <div className="add-all-button">
-        <button 
-          className="gradient-btn" 
-          onClick={addToShoppingList}
+      {/* Filtry kategorii */}
+      <div className="filters">
+        <button
+          className={`filter-btn ${selectedCategory === '' ? 'active' : ''}`}
+          onClick={() => setSelectedCategory('')}
         >
-          Uzupełnij zapasy
+          <FaBox /> Wszystkie
+        </button>
+        <button
+          className={`filter-btn ${selectedCategory === 'Materiały' ? 'active' : ''}`}
+          onClick={() => setSelectedCategory('Materiały')}
+        >
+          <FaBox /> Materiały
+        </button>
+        <button
+          className={`filter-btn ${selectedCategory === 'Sprzęt' ? 'active' : ''}`}
+          onClick={() => setSelectedCategory('Sprzęt')}
+        >
+          <FaTools /> Sprzęt
+        </button>
+        <button
+          className={`filter-btn ${selectedCategory === 'Środki' ? 'active' : ''}`}
+          onClick={() => setSelectedCategory('Środki')}
+        >
+          <FaFlask /> Środki
         </button>
       </div>
+
+      {/* Lista produktów */}
+      <div className="product-list">
+        {filteredProducts.map((product) => (
+          <div key={product.id} className={`product-card ${product.stock < product.minStock ? 'low-stock' : ''}`}>
+            <div className="product-info">
+              <h3>{product.name}</h3>
+              <p><strong>Kategoria:</strong> {product.category}</p>
+              <p><strong>Zapasy:</strong> {product.stock}/{product.minStock}</p>
+              <div className="progress-bar">
+                <div
+                  className="progress"
+                  style={{ width: `${(product.stock / product.minStock) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+            <button className="add-btn" onClick={() => handleAddToShoppingList(product)}>
+              <FaPlus /> Dodaj do listy
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Lista zakupów */}
+      <h3 className="gradient-header">Lista zakupów</h3>
+      <div className="shopping-list">
+        {shoppingList.length > 0 ? (
+          shoppingList.map((item) => (
+            <div key={item.id} className="shopping-item">
+              <p>{item.name} - {item.quantity} szt.</p>
+              <div className="shopping-item-actions">
+                <button onClick={() => handleEditQuantity(item.id, item.quantity + 1)}>+</button>
+                <button onClick={() => handleEditQuantity(item.id, item.quantity - 1)}>-</button>
+                <button onClick={() => handleRemoveFromShoppingList(item.id)}><FaTrash /></button>
+              </div>
+              {item.addedAutomatically && <span className="auto-tag">Automatycznie dodane</span>}
+            </div>
+          ))
+        ) : (
+          <p>Brak produktów do dodania</p>
+        )}
+      </div>
+
+      {/* Przycisk uzupełnienia zapasów */}
+      <button className="gradient-btn" onClick={addToShoppingList}>
+        <FaShoppingCart /> Uzupełnij zapasy
+      </button>
     </div>
   );
 }

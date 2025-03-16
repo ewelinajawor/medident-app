@@ -1,22 +1,38 @@
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
+import { saveAs } from "file-saver";
 import "./ShoppingList.css";
 
 const ShoppingList = () => {
-  const [products, setProducts] = useState([
-    { name: "Wypełnienie", quantity: 1, dateAdded: new Date().toLocaleDateString() },
-    { name: "Dezynfekcja", quantity: 2, dateAdded: new Date().toLocaleDateString() },
-    { name: "Wiertła stomatologiczne", quantity: 1, dateAdded: new Date().toLocaleDateString() },
-    { name: "Szczoteczki międzyzębowe", quantity: 5, dateAdded: new Date().toLocaleDateString() },
-    { name: "Strzykawki do wypełnień", quantity: 2, dateAdded: new Date().toLocaleDateString() },
-    { name: "Materiały kompozytowe", quantity: 3, dateAdded: new Date().toLocaleDateString() },
-  ]);
+  const [products, setProducts] = useState(
+    JSON.parse(localStorage.getItem("products")) || []
+  );
+  const [orderHistory, setOrderHistory] = useState(
+    JSON.parse(localStorage.getItem("orderHistory")) || []
+  );
+  const [notes, setNotes] = useState(localStorage.getItem("notes") || "");
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   const [productToAdd, setProductToAdd] = useState(null);
   const [quantityToAdd, setQuantityToAdd] = useState(1);
   const [selectedProviders, setSelectedProviders] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [productOptions, setProductOptions] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
+
+  useEffect(() => {
+    localStorage.setItem("products", JSON.stringify(products));
+  }, [products]);
+
+  useEffect(() => {
+    localStorage.setItem("orderHistory", JSON.stringify(orderHistory));
+  }, [orderHistory]);
+
+  useEffect(() => {
+    localStorage.setItem("notes", notes);
+  }, [notes]);
 
   useEffect(() => {
     const fetchSuppliers = async () => {
@@ -28,9 +44,21 @@ const ShoppingList = () => {
 
     const loadProducts = async () => {
       const fetchedProducts = await fetchProductsFromAPI();
-      setProductOptions(fetchedProducts.map((product) => ({
-        value: product.name, label: product.name
-      })));
+      const sortedProducts = fetchedProducts.sort((a, b) => a.name.localeCompare(b.name));
+      const productOptions = sortedProducts.map((product) => ({
+        value: product.name,
+        label: product.name,
+        category: product.category,
+        price: product.price,
+      }));
+      setProductOptions(productOptions);
+
+      const uniqueCategories = [...new Set(fetchedProducts.map((product) => product.category))].sort((a, b) => a.localeCompare(b));
+      const categoryOptions = uniqueCategories.map((category) => ({
+        value: category,
+        label: category,
+      }));
+      setCategories(categoryOptions);
     };
 
     loadProducts();
@@ -44,19 +72,26 @@ const ShoppingList = () => {
     ];
   };
 
-  const fetchProductsFromAPI = () => {
-    return [
-      { name: "Wypełnienie", quantity: 10 },
-      { name: "Dezynfekcja", quantity: 15 },
-      { name: "Wiertła stomatologiczne", quantity: 20 },
-      { name: "Szczoteczki międzyzębowe", quantity: 25 },
-      { name: "Strzykawki do wypełnień", quantity: 30 },
-      { name: "Materiały kompozytowe", quantity: 35 },
-    ];
+  const fetchProductsFromAPI = async () => {
+    try {
+      const response = await fetch("/dental_products.json");
+      if (!response.ok) {
+        throw new Error("Nie udało się załadować danych.");
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Błąd podczas pobierania danych:", error);
+      return [];
+    }
   };
 
   const handleSelectProduct = (selectedOption) => {
     setProductToAdd(selectedOption);
+  };
+
+  const handleSelectCategory = (selectedOption) => {
+    setSelectedCategory(selectedOption);
   };
 
   const handleSelectProviders = (selectedOptions) => {
@@ -76,7 +111,12 @@ const ShoppingList = () => {
       } else {
         setProducts([
           ...products,
-          { name: productToAdd.label, quantity: quantityToAdd, dateAdded: new Date().toLocaleDateString() },
+          { 
+            name: productToAdd.label, 
+            quantity: quantityToAdd, 
+            dateAdded: new Date().toLocaleDateString(), 
+            price: productToAdd.price || 0,
+          },
         ]);
       }
 
@@ -98,9 +138,9 @@ const ShoppingList = () => {
   };
 
   const handleRemoveProduct = (index) => {
-    setProducts(products.filter((_, i) => i !== index));
-    setProductToAdd(null);
-    setQuantityToAdd(1);
+    if (window.confirm("Czy na pewno chcesz usunąć ten produkt?")) {
+      setProducts(products.filter((_, i) => i !== index));
+    }
   };
 
   const handleSendOrder = () => {
@@ -109,105 +149,240 @@ const ShoppingList = () => {
       return;
     }
     const providersList = selectedProviders.map((provider) => provider.label).join(", ");
+    const orderSummary = {
+      date: new Date().toLocaleDateString(),
+      products: products,
+      totalCost: calculateTotalCost(),
+      notes: notes,
+      providers: providersList,
+    };
+    setOrderHistory([...orderHistory, orderSummary]);
+    setProducts([]);
+    setNotes("");
     alert(`Zamówienie zostało wysłane do: ${providersList}`);
   };
 
-  // Funkcja do obliczania całkowitej ilości produktów
-  const calculateTotalQuantity = () => {
-    return products.reduce((total, product) => total + product.quantity, 0);
+  const calculateTotalCost = () => {
+    return products.reduce((total, product) => total + product.quantity * (product.price || 0), 0);
   };
+
+  const handleSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+
+    const sortedProducts = [...products].sort((a, b) => {
+      if (a[key] < b[key]) {
+        return direction === 'ascending' ? -1 : 1;
+      }
+      if (a[key] > b[key]) {
+        return direction === 'ascending' ? 1 : -1;
+      }
+      return 0;
+    });
+
+    setProducts(sortedProducts);
+  };
+
+  const handleExportCSV = () => {
+    const csvContent = products.map(product => `${product.name},${product.quantity},${product.price}`).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
+    saveAs(blob, "lista_zakupow.csv");
+  };
+
+  const handleExportPDF = () => {
+    alert("Eksport do PDF jest w trakcie implementacji.");
+  };
+
+  const handleViewOrderDetails = (order) => {
+    setSelectedOrder(order);
+  };
+
+  const handleCloseOrderDetails = () => {
+    setSelectedOrder(null);
+  };
+
+  const filteredProductOptions = selectedCategory
+    ? productOptions.filter((product) => product.category === selectedCategory.value)
+    : productOptions;
 
   return (
     <div className="shopping-list-container">
       <h2>Lista zakupów</h2>
 
-      {/* Formularz dodawania produktu */}
-      <div className="product-form">
-        <Select
-          options={productOptions}
-          onChange={handleSelectProduct}
-          value={productToAdd}
-          placeholder="Wybierz produkt"
-          className="select-product"
-        />
-        <input
-          type="number"
-          min="1"
-          value={quantityToAdd}
-          onChange={(e) => setQuantityToAdd(parseInt(e.target.value))}
-          className="quantity-input"
-        />
-        <button onClick={handleAddProduct} className="add-product-btn">
-          Dodaj produkt
-        </button>
-      </div>
-
-      {/* Tabela produktów */}
-      <table className="shopping-list">
-        <thead>
-          <tr>
-            <th>Produkt</th>
-            <th>Ilość</th>
-            <th>Data dodania</th>
-            <th>Akcje</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((product, index) => (
-            <tr key={index} className="product-item">
-              <td>{product.name}</td>
-              <td className="quantity-column">
-                <input
-                  type="number"
-                  min="1"
-                  value={product.quantity}
-                  onChange={(e) => handleQuantityChange(index, parseInt(e.target.value))}
-                  className="quantity-edit"
-                />
-              </td>
-              <td>{product.dateAdded}</td>
-              <td>
-                <button className="remove-btn" onClick={() => handleRemoveProduct(index)}>
-                  Usuń
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* Podsumowanie zamówienia */}
-      <div className="order-summary">
-        <h3>Podsumowanie zamówienia</h3>
-        <div className="order-summary-list">
-          {products.map((product, index) => (
-            <div key={index} className="order-summary-item">
-              <span className="product-name">{product.name}</span>
-              <span className="product-quantity">
-                {" - "} {product.quantity} szt.
-              </span>
-            </div>
-          ))}
-        </div>
-        <div className="total-quantity">
-          <strong>Łączna ilość produktów: {calculateTotalQuantity()} szt.</strong>
+      {/* Sekcja dodawania produktów */}
+      <div className="section">
+        <div className="category-product-form">
+          <label>Kategoria:</label>
+          <Select
+            options={categories}
+            onChange={handleSelectCategory}
+            value={selectedCategory}
+            placeholder="Wybierz kategorię"
+            className="select-category"
+            isClearable
+          />
+          <label>Produkt:</label>
+          <Select
+            options={filteredProductOptions}
+            onChange={handleSelectProduct}
+            value={productToAdd}
+            placeholder="Wybierz produkt"
+            className="select-product"
+          />
+          <label>Ilość:</label>
+          <input
+            type="number"
+            min="1"
+            value={quantityToAdd}
+            onChange={(e) => setQuantityToAdd(parseInt(e.target.value))}
+            className="quantity-input"
+          />
+          <button onClick={handleAddProduct} className="add-product-btn">
+            <span>+</span> Dodaj produkt
+          </button>
         </div>
       </div>
 
-      {/* Formularz dostawców */}
-      <div className="provider-form">
-        <Select
-          options={suppliers}
-          isMulti
-          onChange={handleSelectProviders}
-          value={selectedProviders}
-          placeholder="Wybierz dostawcę"
-          className="select-provider"
-        />
-        <button onClick={handleSendOrder} className="send-order-btn">
-          Wyślij zamówienie
-        </button>
+      {/* Sekcja listy produktów */}
+      <div className="section">
+        <table className="shopping-list">
+          <tbody>
+            {products.map((product, index) => (
+              <tr key={index} className="product-item">
+                <td>{product.name}</td>
+                <td className="quantity-column">
+                  <input
+                    type="number"
+                    min="1"
+                    value={product.quantity}
+                    onChange={(e) => handleQuantityChange(index, parseInt(e.target.value))}
+                    className="quantity-edit"
+                  />
+                </td>
+                <td>{product.dateAdded}</td>
+                <td>{product.price || 0} zł</td>
+                <td>{product.quantity * (product.price || 0)} zł</td>
+                <td>
+                  <button className="remove-btn" onClick={() => handleRemoveProduct(index)}>
+                    🗑️ Usuń
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
+
+      {/* Sekcja łącznego kosztu */}
+      <div className="section">
+        <div className="total-cost">
+          <strong>Łączny koszt zamówienia: {calculateTotalCost()} zł</strong>
+        </div>
+      </div>
+
+      {/* Sekcja uwag */}
+      <div className="section">
+        <label>Uwagi:</label>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          className="notes-input"
+          placeholder="Dodaj uwagi do zamówienia..."
+        />
+      </div>
+
+      {/* Sekcja dostawców i wysyłania zamówienia */}
+      <div className="section">
+        <div className="provider-form">
+          <Select
+            options={suppliers}
+            isMulti
+            onChange={handleSelectProviders}
+            value={selectedProviders}
+            placeholder="Wybierz dostawcę"
+            className="select-provider"
+          />
+          <button onClick={handleSendOrder} className="send-order-btn">
+            📤 Wyślij zamówienie
+          </button>
+        </div>
+      </div>
+
+      {/* Sekcja eksportu */}
+      <div className="section">
+        <div className="export-buttons">
+          <button onClick={handleExportCSV} className="export-btn">
+            📄 Eksportuj do CSV
+          </button>
+          <button onClick={handleExportPDF} className="export-btn">
+            📄 Eksportuj do PDF
+          </button>
+        </div>
+      </div>
+
+      {/* Sekcja historii zamówień */}
+      <div className="section">
+        <h3>Historia zamówień</h3>
+        <div className="order-history">
+          {orderHistory.length === 0 ? (
+            <p>Brak historii zamówień</p>
+          ) : (
+            <>
+              <div className="order-history-headers">
+                <span><strong>Data zamówienia</strong></span>
+                <span><strong>Łączny koszt</strong></span>
+                <span><strong>Dostawca</strong></span>
+                <span><strong>Akcje</strong></span>
+              </div>
+              {orderHistory.map((order, index) => (
+                <div key={index} className="order-history-item" onClick={() => handleViewOrderDetails(order)}>
+                  <span>{order.date}</span>
+                  <span>{order.totalCost} zł</span>
+                  <span>{order.providers}</span>
+                  <span className="view-details-icon">🔍 Podgląd</span>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Modal z szczegółami zamówienia */}
+      {selectedOrder && (
+        <div className="order-details-modal">
+          <div className="modal-content">
+            <h3>Szczegóły zamówienia z dnia {selectedOrder.date}</h3>
+            <p><strong>Wysłane do:</strong> {selectedOrder.providers}</p>
+            <p><strong>Uwagi:</strong> {selectedOrder.notes}</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>Produkt</th>
+                  <th>Ilość</th>
+                  <th>Cena (szt.)</th>
+                  <th>Łączna cena</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedOrder.products.map((product, index) => (
+                  <tr key={index}>
+                    <td>{product.name}</td>
+                    <td>{product.quantity} szt.</td>
+                    <td>{product.price || 0} zł</td>
+                    <td>{product.quantity * (product.price || 0)} zł</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <button onClick={handleCloseOrderDetails} className="close-modal-btn">
+              Zamknij
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
