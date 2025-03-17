@@ -13,7 +13,7 @@ import {
 } from 'chart.js';
 import './Dashboard.css';
 
-// Zarejestruj wymagane elementy
+// Zarejestruj wymagane skale i elementy
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -87,10 +87,6 @@ function Dashboard({ username }) {
         titleColor: '#FFFFFF', // Biały kolor tytułu tooltipa
         bodyColor: '#FFFFFF', // Biały kolor tekstu tooltipa
       },
-    },
-    animation: {
-      duration: 1000, // Dłuższa animacja
-      easing: 'easeInOutQuart', // Płynne przejście
     },
   };
 
@@ -175,7 +171,6 @@ function Dashboard({ username }) {
 
       {/* Sekcja wykresu */}
       <div className="chart-container">
-        <h3>Statystyki zamówień i oszczędności</h3>
         <div className="chart-wrapper">
           <Bar data={chartData} options={chartOptions} />
         </div>

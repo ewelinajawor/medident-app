@@ -129,8 +129,8 @@
   border-radius: 5px;
   height: 10px;
   margin: 10px 0;
-  width: 100%; /* Dodano szerokość 100% */
-  overflow: hidden; /* Zapobiega wychodzeniu poza kontener */
+  width: 100%;
+  overflow: hidden;
 }
 
 .progress {

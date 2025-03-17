@@ -8,12 +8,13 @@ import {
   FaClipboardList,
   FaTruck,
   FaShoppingCart,
-  FaTooth,
-  FaFileContract, // Dodano ikonę dla ofert
+  FaFileContract,
+  FaBars,
+  FaTimes
 } from "react-icons/fa";
 import "./Navbar.css";
 
-const Navbar = () => {
+const Navbar = ({ clinicName, profilePicture }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -28,53 +29,54 @@ const Navbar = () => {
     >
       {/* Przycisk do otwierania/zamykania menu */}
       <div className="menu-toggle" onClick={toggleMenu}>
-        {isOpen ? "✕" : "☰"}
+        {isOpen ? <FaTimes /> : <FaBars />}
       </div>
 
-      {/* Logo */}
-      <div className="logo">
-        <FaTooth size={24} />
+      {/* Profil użytkownika */}
+      <div className="user-profile">
+        <img src={profilePicture} alt="Profil" className="profile-picture" />
+        <p className="clinic-name">{clinicName}</p>
       </div>
 
       {/* Linki nawigacji */}
       <ul className="nav-links">
         <li>
-          <Link to="/dashboard" className="nav-item" data-tooltip="Strona Główna">
+          <Link to="/dashboard" className="nav-item">
             <FaHome /> {isOpen && "Strona Główna"}
           </Link>
         </li>
         <li>
-          <Link to="/inventory" className="nav-item" data-tooltip="Magazyn">
+          <Link to="/inventory" className="nav-item">
             <FaBox /> {isOpen && "Magazyn"}
           </Link>
         </li>
         <li>
-          <Link to="/notifications" className="nav-item" data-tooltip="Powiadomienia">
+          <Link to="/notifications" className="nav-item">
             <FaBell /> {isOpen && "Powiadomienia"}
           </Link>
         </li>
         <li>
-          <Link to="/settings" className="nav-item" data-tooltip="Ustawienia">
+          <Link to="/settings" className="nav-item">
             <FaCog /> {isOpen && "Ustawienia"}
           </Link>
         </li>
         <li>
-          <Link to="/product-list" className="nav-item" data-tooltip="Zapas">
+          <Link to="/product-list" className="nav-item">
             <FaClipboardList /> {isOpen && "Zapas"}
           </Link>
         </li>
         <li>
-          <Link to="/suppliers" className="nav-item" data-tooltip="Dostawcy">
+          <Link to="/suppliers" className="nav-item">
             <FaTruck /> {isOpen && "Dostawcy"}
           </Link>
         </li>
         <li>
-          <Link to="/shopping-list" className="nav-item" data-tooltip="Lista Zakupów">
+          <Link to="/shopping-list" className="nav-item">
             <FaShoppingCart /> {isOpen && "Lista Zakupów"}
           </Link>
         </li>
         <li>
-          <Link to="/offers" className="nav-item" data-tooltip="Analizuj oferty">
+          <Link to="/offers" className="nav-item">
             <FaFileContract /> {isOpen && "Analizuj oferty"}
           </Link>
         </li>

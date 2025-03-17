@@ -1,0 +1,44 @@
+.admin-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+    padding-top: 80px;
+  }
+  
+  .admin-title {
+    font-size: 28px;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+  }
+  
+  .activity-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .activity-table th, .activity-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+  }
+  
+  .activity-table th {
+    background: var(--gradient-blue);
+    color: var(--light-text-color);
+  }
+  
+  .back-button {
+    background: var(--gradient-blue);
+    border: none;
+    color: var(--light-text-color);
+    padding: 10px 15px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  
+  .back-button:hover {
+    background: var(--gradient-navy);
+  }
+  

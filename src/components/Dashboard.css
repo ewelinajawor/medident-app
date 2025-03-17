@@ -24,32 +24,39 @@ body {
   max-width: 1200px;
   margin: 20px auto;
   padding: 20px;
-  padding-top: 80px; /* Dodatkowy padding, aby navbar nie zasłaniał kafelków */
-  text-align: center; /* Wyśrodkowanie nagłówka */
+  padding-top: 80px;
+  text-align: center;
 }
 
 .welcome-message {
-  color: var(--primary-color); /* Granatowy */
-  font-size: 32px; /* Większy rozmiar */
-  margin-bottom: 30px; /* Większy odstęp */
+  color: var(--primary-color);
+  font-size: 32px;
+  margin-bottom: 30px;
 }
 
+/* Kafelki w jednym rzędzie */
 .tiles {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 10px;
+  overflow-x: auto; /* Pozwala na przewijanie poziome */
+  padding-bottom: 10px;
 }
 
+/* Zmniejszone kafelki */
 .tile {
   background: var(--tile-background);
   border-radius: var(--border-radius);
-  padding: 25px; /* Więcej przestrzeni wewnątrz kafelka */
+  padding: 20px;
   box-shadow: var(--box-shadow);
   transition: var(--transition);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+  width: 220px; /* Zmniejszona szerokość */
+  flex-shrink: 0; /* Zapobiega zmniejszaniu */
 }
 
 .tile:hover {
@@ -58,13 +65,13 @@ body {
 }
 
 .tile-icon {
-  margin-bottom: 15px; /* Odstęp między ikoną a tekstem */
+  margin-bottom: 15px;
 }
 
 .tile h3 {
-  color: var(--primary-color); /* Granatowy */
-  margin-bottom: 15px; /* Większy odstęp */
-  font-size: 24px; /* Większy rozmiar */
+  color: var(--primary-color);
+  margin-bottom: 15px;
+  font-size: 24px;
 }
 
 .tile-button {
@@ -77,10 +84,10 @@ body {
   transition: var(--transition);
   display: flex;
   align-items: center;
-  justify-content: center; /* Wyśrodkowanie tekstu i ikon */
+  justify-content: center;
   gap: 10px;
-  width: 100%; /* Pełna szerokość */
-  margin-top: 15px; /* Większy odstęp */
+  width: 100%;
+  margin-top: 15px;
 }
 
 .tile-button:hover {
@@ -88,11 +95,12 @@ body {
   transform: scale(1.05);
 }
 
+/* Szybkie akcje */
 .quick-actions {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
-  justify-content: center; /* Wyśrodkowanie przycisków szybkich akcji */
+  justify-content: center;
 }
 
 .quick-action-button {
@@ -130,6 +138,14 @@ body {
 }
 
 .chart-wrapper {
-  height: 400px; /* Wysokość wykresu */
+  height: 400px;
   position: relative;
+}
+
+/* Responsywność: Na węższych ekranach przewijanie */
+@media (max-width: 900px) {
+  .tiles {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }

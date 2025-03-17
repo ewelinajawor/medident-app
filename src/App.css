@@ -1,74 +1,130 @@
-/* Global styles for the app */
-.App {
-  text-align: center;
+/* Import czcionki Nunito */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap');
+
+/* Ustawienia globalne */
+:root {
+  --primary-color: #2C3E50; /* Granat */
+  --accent-color: #3498DB; /* Niebieski */
+  --background-color: #BACFDA; /* Jasny szary */
+  --tile-background: linear-gradient(135deg, #ffffff, #f7f9fc); /* Delikatny gradient */
+  --text-color: #2C3E50; /* Granatowy */
+  --light-text-color: #FFFFFF; /* Biały */
+  --gradient-blue: linear-gradient(135deg, #3498DB, #2C3E50);
+  --gradient-navy: linear-gradient(135deg, #2C3E50, #34495E);
+  --border-radius: 16px; /* Bardziej zaokrąglone krawędzie */
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
 }
 
-/* Styling for general containers and content */
+/* Globalne ustawienia dla całej aplikacji */
+body {
+  font-family: 'Nunito', sans-serif; /* Ustawienie czcionki Nunito */
+  text-align: center;
+  background: var(--background-color);
+  min-height: 100vh;
+  margin: 0;
+}
+
+/* Styl dla kontenera aplikacji */
 .app-container {
   padding: 20px;
 }
 
+/* Główna zawartość */
 .main-content {
   padding: 20px;
-  background-color: #f4f4f4;
+  background: var(--tile-background);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
 }
 
-/* Table styling */
+/* Stylizacja tabeli */
 table {
   width: 100%;
   border-collapse: collapse;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--box-shadow);
 }
 
 th, td {
   padding: 12px;
   text-align: center;
   border: 1px solid #ddd;
+  font-family: 'Nunito', sans-serif; /* Zapewnienie, że tabela również używa Nunito */
 }
 
-/* Header and footer styles */
+/* Nagłówek */
 h1 {
-  color: #660066;
+  color: transparent;
+  background: var(--gradient-blue);
+  -webkit-background-clip: text;
+  background-clip: text;
+  font-weight: 700; /* Pogrubienie dla lepszej czytelności */
 }
 
-/* Row highlighting styles */
+/* Podświetlenie wierszy w tabeli */
 .low-stock {
-  background-color: #ffcccc;  /* Light red for low stock */
+  background-color: #e74c3c;  /* Czerwony dla niskiego zapasu */
+  color: var(--light-text-color);
 }
 
 .sufficient-stock {
-  background-color: #d4f7d4;  /* Light green for sufficient stock */
+  background-color: #27ae60;  /* Zielony dla wystarczającego zapasu */
+  color: var(--light-text-color);
 }
 
 .auto-added {
-  background-color: #ffffcc;  /* Light yellow for automatically added items */
+  background-color: #f1c40f;  /* Żółty dla automatycznie dodanych */
+  color: var(--text-color);
 }
 
-/* Button styling */
+/* Stylizacja przycisków */
 button {
   width: 100%;
   padding: 14px;
-  background-color: #388e3c;
-  color: white;
+  background: var(--gradient-navy);
+  color: var(--light-text-color);
   border: none;
-  border-radius: 5px;
+  border-radius: var(--border-radius);
   cursor: pointer;
   font-size: 16px;
-  transition: background-color 0.3s ease;
+  transition: var(--transition);
+  box-shadow: var(--box-shadow);
+  font-family: 'Nunito', sans-serif; /* Ustawienie Nunito dla przycisków */
 }
 
 button:hover {
-  background-color: #2e7d32;
+  background: var(--gradient-blue);
+  transform: translateY(-3px);
 }
 
-/* Focused state for inputs */
+/* Styl dla aktywnej zakładki */
+.active-tab {
+  background: var(--gradient-blue);
+  color: var(--light-text-color);
+}
+
+/* Stylizacja pól input */
+input {
+  padding: 10px;
+  border: 1px solid var(--primary-color);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  background: white;
+  transition: var(--transition);
+  font-family: 'Nunito', sans-serif; /* Nunito dla pól tekstowych */
+}
+
 input:focus {
-  border-color: #2e7d32;
+  border-color: var(--accent-color);
   outline: none;
+  box-shadow: 0 0 8px rgba(52, 152, 219, 0.5);
 }
 
-/* Error message styling */
+/* Styl błędów */
 .error {
-  color: red;
+  color: #e74c3c;
   font-size: 14px;
   margin-bottom: 10px;
 }

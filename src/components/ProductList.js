@@ -104,7 +104,7 @@ const ProductList = ({ addToShoppingList }) => {
 
   return (
     <div className="product-list-container">
-      <h1>Lista Produktów</h1>
+      <h1>Baza Produktów</h1>
       {error && <div className="error-message">{error}</div>}
       {notification && <div className="notification">{notification}</div>}
       <div className="filters">

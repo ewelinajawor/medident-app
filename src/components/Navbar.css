@@ -1,123 +1,130 @@
 :root {
-  --primary-color: #2C3E50; /* Granat */
-  --accent-color: #3498DB; /* Niebieski */
-  --background-color: #ECF0F1; /* Jasny szary */
-  --text-color: #2C3E50; /* Granatowy */
-  --light-text-color: #FFFFFF; /* Biały */
-  --gradient-navy: linear-gradient(145deg, #2C3E50, #34495E); /* Granatowy gradient */
+  --primary-color: #2C3E50;
+  --accent-color: #3498DB;
+  --background-color: #ECF0F1;
+  --text-color: #2C3E50;
+  --light-text-color: #FFFFFF;
+  --gradient-navy: linear-gradient(145deg, #2C3E50, #34495E);
   --border-radius: 8px;
   --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   --transition: all 0.3s ease;
 }
 
-/* Kontener menu bocznego */
 .sidebar {
-  background: var(--gradient-navy); /* Granatowy gradient */
+  background: var(--gradient-navy);
   color: white;
-  width: 60px; /* Szerokość menu w stanie zamkniętym */
-  height: 100vh; /* Pełna wysokość ekranu */
-  padding: 20px;
-  box-shadow: var(--box-shadow); /* Delikatny cień */
-  animation: sidebarFadeIn 1s ease-out; /* Animacja przy załadowaniu */
-  font-size: 16px; /* Mniejsza czcionka */
-  position: fixed; /* Menu zawsze widoczne */
+  width: 60px;
+  height: 100vh;
+  padding: 15px;
+  box-shadow: var(--box-shadow);
+  position: fixed;
   top: 0;
   left: 0;
-  z-index: 1000; /* Menu na wierzchu */
-  transition: width 0.3s ease; /* Płynna animacja szerokości */
+  z-index: 1000;
+  transition: width 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-/* Stan otwartego menu */
 .sidebar.open {
-  width: 250px; /* Szerokość menu w stanie otwartym */
+  width: 220px;
 }
 
-/* Animacja załadowania menu bocznego */
-@keyframes sidebarFadeIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/* Przycisk do otwierania/zamykania menu */
 .menu-toggle {
   font-size: 24px;
   cursor: pointer;
   color: white;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   text-align: center;
 }
 
-/* Logo */
-.sidebar .logo {
-  font-size: 24px;
-  font-weight: bold;
-  color: white;
-  margin-bottom: 30px; /* Odstęp od linków */
+/* Profil użytkownika */
+.user-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 15px;
   text-align: center;
-  white-space: nowrap; /* Zapobiega zawijaniu tekstu */
-  overflow: hidden; /* Ukrywa tekst w stanie zamkniętym */
+}
+
+.profile-pic {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+  transition: transform 0.3s ease;
+}
+
+.profile-pic:hover {
+  transform: scale(1.1);
+}
+
+.clinic-name {
+  font-size: 14px;
+  font-weight: bold;
+  margin-top: 5px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Pokazywanie nazwy gabinetu tylko w otwartym menu */
+.sidebar.open .clinic-name {
+  opacity: 1;
 }
 
 /* Linki nawigacji */
-.sidebar .nav-links {
+.nav-links {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 20px; /* Większy odstęp pomiędzy linkami */
+  gap: 10px;
 }
 
-.sidebar a {
+.nav-links a {
   color: white;
   text-decoration: none;
-  padding: 10px 15px;
+  padding: 8px 12px;
   border-radius: var(--border-radius);
   transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   align-items: center;
-  gap: 10px; /* Odstęp między ikoną a tekstem */
-  white-space: nowrap; /* Zapobiega zawijaniu tekstu */
-  overflow: hidden; /* Ukrywa tekst w stanie zamkniętym */
+  gap: 10px;
+  white-space: nowrap;
 }
 
-/* Efekt przy najechaniu na link */
-.sidebar a:hover {
-  background-color: rgba(255, 255, 255, 0.1); /* Lekko białe tło */
-  transform: translateX(3px); /* Delikatne przesunięcie w prawo */
-  box-shadow: var(--box-shadow); /* Delikatny cień */
+.nav-links a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateX(3px);
+  box-shadow: var(--box-shadow);
 }
 
-/* Efekt aktywnego linku (na stronie) */
-.sidebar a.active {
-  background-color: var(--accent-color); /* Niebieski dla aktywnego linku */
+.nav-links a.active {
+  background-color: var(--accent-color);
   color: white;
-  transform: translateX(3px); /* Delikatne przesunięcie w prawo */
-  box-shadow: var(--box-shadow); /* Cień dla aktywnego linku */
+  transform: translateX(3px);
+  box-shadow: var(--box-shadow);
 }
 
-/* Responsywność dla małych ekranów */
 @media screen and (max-width: 768px) {
   .sidebar {
-    width: 50px; /* Mniejsza szerokość na małych ekranach */
+    width: 50px;
   }
 
   .sidebar.open {
-    width: 200px; /* Mniejsza szerokość w stanie otwartym */
+    width: 180px;
   }
 
-  .sidebar .nav-links {
-    flex-direction: column; /* Linki w jednej kolumnie */
-    gap: 15px; /* Mniejszy odstęp */
+  .nav-links {
+    flex-direction: column;
+    gap: 10px;
   }
 
-  .sidebar a {
-    padding: 8px 12px; /* Mniejsze wypełnienie */
+  .nav-links a {
+    padding: 6px 10px;
   }
 }

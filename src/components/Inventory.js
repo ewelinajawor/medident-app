@@ -67,7 +67,7 @@ function Inventory() {
 
   return (
     <div className="inventory">
-      <h2 className="gradient-header">Zarządzanie zapasami</h2>
+      <h2 className="gradient-header">Stan magazynowy</h2>
 
       {/* Wyszukiwarka */}
       <div className="search-bar">

@@ -10,7 +10,10 @@ import Orders from "./components/Orders";
 import Suppliers from "./components/Suppliers";
 import ProductList from "./components/ProductList";
 import AddProduct from "./components/AddProduct";
-import Offers from "./components/Offers"; // Dodano import komponentu Offers
+import Offers from "./components/Offers"; 
+import EditProfile from "./components/EditProfile";
+import AdminPanel from "./components/AdminPanel";
+import "./App.css";
 
 function App() {
   useEffect(() => {
@@ -38,40 +41,55 @@ function App() {
     { id: 3, name: "Marrodent", email: "marek.fajkis@marrodent.pl", phone: "+33 8152013", nip: "9372343899" },
   ]);
 
-  // Stan dla listy zakupów
+  // ✅ Nazwa gabinetu - przechowywana globalnie
+  const [clinicName, setClinicName] = useState("Dentica Plus");
+
+  // ✅ Zdjęcie profilowe - przechowywane globalnie
+  const [profileImage, setProfileImage] = useState(null);
+
+  // ✅ Lista zakupów
   const [shoppingList, setShoppingList] = useState([]);
 
-  // Funkcja do dodawania produktów do listy zakupów
+  // ✅ Funkcja do dodawania produktów do listy zakupów
   const addToShoppingList = (product) => {
-    // Dodanie tylko wybranego produktu do shoppingList
     setShoppingList(prevList => [...prevList, product]);
   };
 
   return (
     <Router>
       <div className="app-container">
-        <Navbar />
+        {/* ✅ Navbar teraz pokazuje dynamiczną nazwę gabinetu */}
+        <Navbar clinicName={clinicName} />
         <div className="main-content">
           <Routes>
-            <Route path="/dashboard" element={<Dashboard username={username} />} />
+            <Route 
+              path="/dashboard" 
+              element={<Dashboard username={username} clinicName={clinicName} profileImage={profileImage} />} 
+            />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/settings" element={<Settings />} />
-            <Route
-              path="/shopping-list"
-              element={<ShoppingList shoppingList={shoppingList} />}
+            <Route 
+              path="/shopping-list" 
+              element={<ShoppingList shoppingList={shoppingList} />} 
             />
             <Route path="/orders" element={<Orders />} />
-            <Route
-              path="/suppliers"
-              element={<Suppliers suppliers={suppliers} setSuppliers={setSuppliers} />}
+            <Route 
+              path="/suppliers" 
+              element={<Suppliers suppliers={suppliers} setSuppliers={setSuppliers} />} 
             />
-            <Route
-              path="/product-list"
-              element={<ProductList addToShoppingList={addToShoppingList} />}
+            <Route 
+              path="/product-list" 
+              element={<ProductList addToShoppingList={addToShoppingList} />} 
             />
             <Route path="/add-product" element={<AddProduct />} />
-            <Route path="/offers" element={<Offers />} /> {/* Dodano nową ścieżkę dla Offers */}
+            <Route path="/offers" element={<Offers />} />
+            {/* ✅ Przekazujemy funkcje do zmiany nazwy gabinetu i zdjęcia */}
+            <Route 
+              path="/edit-profile" 
+              element={<EditProfile clinicName={clinicName} updateClinicName={setClinicName} profileImage={profileImage} updateProfileImage={setProfileImage} />} 
+            />
+            <Route path="/admin-panel" element={<AdminPanel />} />
           </Routes>
         </div>
       </div>

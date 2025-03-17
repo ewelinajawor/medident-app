@@ -1,0 +1,45 @@
+.low-stock-panel {
+    background: linear-gradient(145deg, #660066, #220b4e);
+    border-radius: 12px;
+    padding: 15px;
+    color: white;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .low-stock-panel h3 {
+    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    background: linear-gradient(145deg, #66004d, #220066);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .low-stock-panel ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .low-stock-panel li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  
+  .low-stock-panel li:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.02);
+  }
+  
+  .product-name {
+    font-weight: bold;
+  }
+  
+  .stock-status {
+    font-size: 14px;
+    color: #ffcc00;
+  }
+  
