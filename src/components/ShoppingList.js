@@ -204,13 +204,24 @@ const ShoppingList = () => {
     setSelectedOrder(null);
   };
 
+  const handleDeleteOrder = (index) => {
+    if (window.confirm("Czy na pewno chcesz usunąć to zamówienie?")) {
+      const updatedOrderHistory = orderHistory.filter((_, i) => i !== index);
+      setOrderHistory(updatedOrderHistory);
+    }
+  };
+
+  const handleRowClick = (order) => {
+    setSelectedOrder(order);
+  };
+
   const filteredProductOptions = selectedCategory
     ? productOptions.filter((product) => product.category === selectedCategory.value)
     : productOptions;
 
   return (
     <div className="shopping-list-container">
-      <h2>Lista zakupów</h2>
+      <h2 className="welcome-message">Lista zakupów</h2>
 
       {/* Sekcja dodawania produktów */}
       <div className="section">
@@ -223,6 +234,12 @@ const ShoppingList = () => {
             placeholder="Wybierz kategorię"
             className="select-category"
             isClearable
+            styles={{
+              control: (provided) => ({
+                ...provided,
+                width: "200px",
+              }),
+            }}
           />
           <label>Produkt:</label>
           <Select
@@ -240,8 +257,8 @@ const ShoppingList = () => {
             onChange={(e) => setQuantityToAdd(parseInt(e.target.value))}
             className="quantity-input"
           />
-          <button onClick={handleAddProduct} className="add-product-btn">
-            <span>+</span> Dodaj produkt
+          <button onClick={handleAddProduct} className="add-product-button">
+            <span>+</span> Dodaj
           </button>
         </div>
       </div>
@@ -249,29 +266,41 @@ const ShoppingList = () => {
       {/* Sekcja listy produktów */}
       <div className="section">
         <table className="shopping-list">
+          <thead>
+            <tr>
+              <th style={{ width: "40%" }}>Nazwa</th>
+              <th style={{ width: "15%" }}>Ilość</th>
+              <th style={{ width: "15%" }}>Data dodania</th>
+              <th style={{ width: "15%" }}>Cena (szt.)</th>
+              <th style={{ width: "15%" }}>Łączna cena</th>
+              <th style={{ width: "10%" }}>Akcje</th>
+            </tr>
+          </thead>
           <tbody>
-            {products.map((product, index) => (
-              <tr key={index} className="product-item">
-                <td>{product.name}</td>
-                <td className="quantity-column">
-                  <input
-                    type="number"
-                    min="1"
-                    value={product.quantity}
-                    onChange={(e) => handleQuantityChange(index, parseInt(e.target.value))}
-                    className="quantity-edit"
-                  />
-                </td>
-                <td>{product.dateAdded}</td>
-                <td>{product.price || 0} zł</td>
-                <td>{product.quantity * (product.price || 0)} zł</td>
-                <td>
-                  <button className="remove-btn" onClick={() => handleRemoveProduct(index)}>
-                    🗑️ Usuń
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {products
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((product, index) => (
+                <tr key={index} className="product-item">
+                  <td>{product.name}</td>
+                  <td className="quantity-column">
+                    <input
+                      type="number"
+                      min="1"
+                      value={product.quantity}
+                      onChange={(e) => handleQuantityChange(index, parseInt(e.target.value))}
+                      className="quantity-edit"
+                    />
+                  </td>
+                  <td>{product.dateAdded}</td>
+                  <td>{product.price || 0} zł</td>
+                  <td>{product.quantity * (product.price || 0)} zł</td>
+                  <td>
+                    <button className="remove-btn" onClick={() => handleRemoveProduct(index)}>
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
@@ -304,8 +333,15 @@ const ShoppingList = () => {
             value={selectedProviders}
             placeholder="Wybierz dostawcę"
             className="select-provider"
+            styles={{
+              control: (provided) => ({
+                ...provided,
+                width: "100%",
+                minWidth: "300px",
+              }),
+            }}
           />
-          <button onClick={handleSendOrder} className="send-order-btn">
+          <button onClick={handleSendOrder} className="tile-button">
             📤 Wyślij zamówienie
           </button>
         </div>
@@ -314,10 +350,10 @@ const ShoppingList = () => {
       {/* Sekcja eksportu */}
       <div className="section">
         <div className="export-buttons">
-          <button onClick={handleExportCSV} className="export-btn">
+          <button onClick={handleExportCSV} className="quick-action-button">
             📄 Eksportuj do CSV
           </button>
-          <button onClick={handleExportPDF} className="export-btn">
+          <button onClick={handleExportPDF} className="quick-action-button">
             📄 Eksportuj do PDF
           </button>
         </div>
@@ -338,11 +374,34 @@ const ShoppingList = () => {
                 <span><strong>Akcje</strong></span>
               </div>
               {orderHistory.map((order, index) => (
-                <div key={index} className="order-history-item" onClick={() => handleViewOrderDetails(order)}>
+                <div
+                  key={index}
+                  className="order-history-item"
+                  onClick={() => handleRowClick(order)}
+                >
                   <span>{order.date}</span>
                   <span>{order.totalCost} zł</span>
                   <span>{order.providers}</span>
-                  <span className="view-details-icon">🔍 Podgląd</span>
+                  <div className="order-actions">
+                    <button
+                      className="view-details-icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewOrderDetails(order);
+                      }}
+                    >
+                      🔍 Podgląd
+                    </button>
+                    <button
+                      className="delete-order-icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteOrder(index);
+                      }}
+                    >
+                      🗑️ Usuń
+                    </button>
+                  </div>
                 </div>
               ))}
             </>

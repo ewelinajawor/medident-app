@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { FaCartPlus, FaTrash } from "react-icons/fa"; // Ikona koszyka i kosza
 import "./Offers.css";
 
 const Offers = () => {
@@ -63,6 +64,13 @@ const Offers = () => {
     );
   };
 
+  // Funkcja do usuwania produktu z zamówienia
+  const handleRemoveProduct = (productId) => {
+    setSelectedProducts((prev) =>
+      prev.filter((item) => item.product.id !== productId)
+    );
+  };
+
   // Funkcja do wysyłania zamówienia
   const handleSendOrder = () => {
     const order = {
@@ -78,34 +86,99 @@ const Offers = () => {
     setSelectedProducts([]); // Wyczyść listę wybranych produktów
   };
 
+  // Funkcja do dodania całego zamówienia od danego dostawcy
+  const addAllSupplierProducts = (supplier) => {
+    const newSelectedProducts = supplier.products.map((product) => ({
+      product,
+      supplier: supplier.name,
+      quantity: 1, // Domyślna ilość to 1
+    }));
+    setSelectedProducts((prev) => [...prev, ...newSelectedProducts]);
+  };
+
+  // Funkcja do znajdowania najtańszych ofert
+  const findCheapestOffers = () => {
+    const allProducts = suppliers.flatMap((supplier) =>
+      supplier.products.map((product) => ({
+        ...product,
+        supplier: supplier.name,
+      }))
+    );
+
+    // Grupowanie produktów po nazwie i znajdowanie najtańszej oferty
+    const cheapestOffers = {};
+    allProducts.forEach((product) => {
+      if (
+        !cheapestOffers[product.name] ||
+        product.price < cheapestOffers[product.name].price
+      ) {
+        cheapestOffers[product.name] = product;
+      }
+    });
+
+    return Object.values(cheapestOffers);
+  };
+
+  // Najtańsze oferty
+  const cheapestOffers = findCheapestOffers();
+
   return (
     <div className="offers-container">
-      <h2>Analizuj oferty</h2>
+      {/* Sekcja z najtańszymi ofertami */}
+      <div className="cheapest-offers">
+        <h3>Najtańsze oferty</h3>
+        <div className="offers-grid">
+          {cheapestOffers.map((product) => (
+            <div key={product.id} className="offer-card">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={selectedProducts.some(
+                    (item) => item.product.id === product.id
+                  )}
+                  onChange={() => handleSelectProduct(product, product.supplier)}
+                />
+                {product.name} - {product.price} zł (od {product.supplier}){" "}
+                {product.gratis && `(gratis: ${product.gratis})`}
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
 
-      {/* Lista dostawców z ofertami */}
-      <div className="suppliers-list">
-        {suppliers.map((supplier) => (
-          <div key={supplier.id} className="supplier-card">
-            <h3>{supplier.name}</h3>
-            <ul>
-              {supplier.products.map((product) => (
-                <li key={product.id}>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={selectedProducts.some(
-                        (item) => item.product.id === product.id
-                      )}
-                      onChange={() => handleSelectProduct(product, supplier.name)}
-                    />
-                    {product.name} - {product.price} zł{" "}
-                    {product.gratis && `(gratis: ${product.gratis})`}
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+      {/* Lista wszystkich dostawców z ofertami */}
+      <div className="all-offers">
+        <h3>Wszystkie oferty</h3>
+        <div className="offers-grid">
+          {suppliers.map((supplier) => (
+            <div key={supplier.id} className="supplier-card">
+              <h4>{supplier.name}</h4>
+              <button
+                onClick={() => addAllSupplierProducts(supplier)}
+                className="add-all-button"
+              >
+                <FaCartPlus /> Dodaj całe zamówienie
+              </button>
+              <ul>
+                {supplier.products.map((product) => (
+                  <li key={product.id}>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={selectedProducts.some(
+                          (item) => item.product.id === product.id
+                        )}
+                        onChange={() => handleSelectProduct(product, supplier.name)}
+                      />
+                      {product.name} - {product.price} zł{" "}
+                      {product.gratis && `(gratis: ${product.gratis})`}
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Podsumowanie wybranych produktów */}
@@ -128,6 +201,12 @@ const Offers = () => {
                     />
                   </span>
                   <span>{(item.product.price * item.quantity).toFixed(2)} zł</span>
+                  <button
+                    onClick={() => handleRemoveProduct(item.product.id)}
+                    className="delete-order-icon"
+                  >
+                    <FaTrash />
+                  </button>
                 </li>
               ))}
             </ul>
