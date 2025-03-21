@@ -1,23 +1,79 @@
-/* Kontener powiadomień */
+:root {
+  --primary-color: #2C3E50; /* Granat */
+  --accent-color: #3498DB; /* Niebieski */
+  --background-color: #ECF0F1; /* Jasny szary */
+  --success-color: #2ECC71; /* Zielony */
+  --warning-color: #F1C40F; /* Żółty */
+  --danger-color: #E74C3C; /* Czerwony */
+  --border-radius: 8px; /* Zmniejszony promień */
+  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
+
+/* Kontener powiadomień - bardziej zwarty */
 .notifications-container {
-  background-color: #f4f7fb; /* Delikatny niebiesko-szary */
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  margin-top: 20px;
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: 15px; /* Zmniejszone wypełnienie */
+  margin: 15px auto; /* Dodane auto dla centrowania */
+  max-width: 800px; /* Maksymalna szerokość */
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  animation: fadeIn 1s ease-in-out;
+  gap: 15px; /* Zmniejszony odstęp */
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+/* Nagłówek z filtrami - bardziej zwarty */
+.notifications-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px; /* Zmniejszone wypełnienie */
+  margin-bottom: 5px; /* Dodany odstęp od treści */
+}
+
+.notifications-header h3 {
+  margin: 0;
+  color: var(--primary-color);
+  font-size: 18px; /* Zmniejszony rozmiar */
+}
+
+.filter-controls {
+  display: flex;
+  gap: 6px; /* Zmniejszony odstęp */
+}
+
+.filter-button {
+  background: #f0f4f7;
+  border: none;
+  border-radius: 15px; /* Zmniejszony promień */
+  padding: 4px 10px; /* Zmniejszone wypełnienie */
+  font-size: 12px; /* Zmniejszony rozmiar */
+  cursor: pointer;
+  color: var(--primary-color);
+  transition: var(--transition);
+}
+
+.filter-button:hover {
+  background: #e0e6ea;
+}
+
+.filter-button.active {
+  background: var(--accent-color);
+  color: white;
 }
 
 /* Animacja załadowania powiadomień */
 @keyframes fadeIn {
   from {
     opacity: 0;
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -28,44 +84,206 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 8px; /* Zmniejszony odstęp */
 }
 
-/* Pojedyncze powiadomienie */
+/* Pojedyncze powiadomienie - bardziej zwarte */
 .notification-item {
-  background-color: #ffffff; /* Białe tło */
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  border-radius: var(--border-radius);
+  padding: 10px; /* Zmniejszone wypełnienie */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  gap: 12px; /* Zmniejszony odstęp */
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  border-left: 3px solid #ddd; /* Cieńsza linia */
 }
 
-/* Efekt przy najechaniu na powiadomienie */
+.notification-item.low-stock {
+  border-left-color: var(--warning-color);
+}
+
+.notification-item.critical-stock {
+  border-left-color: var(--danger-color);
+}
+
+.notification-item.order-status {
+  border-left-color: var(--accent-color);
+}
+
+/* Efekt najechania - delikatniejszy */
 .notification-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px); /* Mniejsze przesunięcie */
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
 }
 
-/* Tekst powiadomienia */
+/* Kontener ikony */
+.notification-icon-wrapper {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 2px;
+}
+
+/* Ikony powiadomień - mniejsze */
+.notification-icon {
+  font-size: 16px; /* Zmniejszony rozmiar */
+  color: #95a5a6;
+}
+
+.notification-icon.low-stock {
+  color: var(--warning-color);
+}
+
+.notification-icon.critical-stock {
+  color: var(--danger-color);
+}
+
+.notification-icon.order-delivered {
+  color: var(--success-color);
+}
+
+.notification-icon.order-processing {
+  color: var(--accent-color);
+}
+
+/* Treść powiadomienia */
+.notification-content {
+  flex: 1;
+  min-width: 0; /* Zapobiega przepełnieniu */
+}
+
+.notification-title {
+  margin: 0 0 3px; /* Zmniejszony odstęp */
+  font-weight: 600;
+  color: var(--primary-color);
+  font-size: 14px; /* Zmniejszony rozmiar */
+}
+
 .notification-text {
   margin: 0;
-  font-size: 14px;
-  color: #333; /* Ciemnoszary tekst */
+  font-size: 13px; /* Zmniejszony rozmiar */
+  color: #666;
+  line-height: 1.3; /* Zmniejszona wysokość linii */
 }
 
-/* Automatyczna notatka */
-.automatic-note {
-  margin: 0;
-  font-size: 12px;
-  color: #666; /* Szary tekst */
-  font-style: italic;
+.critical-text {
+  color: var(--danger-color);
+  font-weight: 600;
 }
 
-/* Komunikat "Brak produktów" */
-.notifications-container p {
+.warning-text {
+  color: var(--warning-color);
+  font-weight: 600;
+}
+
+.notification-time {
+  margin: 3px 0 0; /* Zmniejszony odstęp */
+  font-size: 11px; /* Zmniejszony rozmiar */
+  color: #95a5a6;
+}
+
+/* Przyciski akcji */
+.notification-actions {
+  display: flex;
+  align-items: center;
+}
+
+.action-button {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 15px; /* Zmniejszony promień */
+  padding: 4px 10px; /* Zmniejszone wypełnienie */
+  font-size: 12px; /* Zmniejszony rozmiar */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px; /* Zmniejszony odstęp */
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.action-button:hover {
+  background: var(--primary-color);
+}
+
+.add-to-cart-button {
+  background: #45b97c;
+}
+
+.add-to-cart-button:hover {
+  background: #39a067;
+}
+
+.action-link {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-size: 12px; /* Zmniejszony rozmiar */
+  font-weight: 500;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.action-link:hover {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+/* Status */
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px; /* Zmniejszony odstęp */
+  font-size: 12px; /* Zmniejszony rozmiar */
+  padding: 3px 8px; /* Zmniejszone wypełnienie */
+  border-radius: 15px; /* Zmniejszony promień */
+  background: #f0f4f7;
+  color: #666;
+  white-space: nowrap;
+}
+
+.added-to-cart {
+  background: #e8f7ed;
+  color: var(--success-color);
+}
+
+/* Komunikat "Brak powiadomień" */
+.empty-notifications {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px; /* Zmniejszone wypełnienie */
+  color: #95a5a6;
   text-align: center;
-  color: #666; /* Szary tekst */
+  background: #f8fafc;
+  border-radius: var(--border-radius);
+}
+
+.empty-notifications p {
+  margin: 0;
+  font-size: 14px; /* Zmniejszony rozmiar */
+}
+
+/* Przycisk "Pokaż więcej" */
+.show-more-container {
+  display: flex;
+  justify-content: center;
+}
+
+.show-more-button {
+  background: none;
+  border: none;
+  color: var(--accent-color);
+  cursor: pointer;
+  font-size: 13px; /* Zmniejszony rozmiar */
+  font-weight: 500;
+  padding: 3px 8px; /* Zmniejszone wypełnienie */
+  border-radius: 15px; /* Zmniejszony promień */
+  transition: var(--transition);
+}
+
+.show-more-button:hover {
+  background: #f0f4f7;
 }

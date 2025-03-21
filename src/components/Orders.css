@@ -1,128 +1,618 @@
+:root {
+  --primary-color: #2C3E50; /* Granat */
+  --accent-color: #3498DB; /* Niebieski */
+  --background-color: #ECF0F1; /* Jasny szary */
+  --success-color: #2ECC71; /* Zielony */
+  --warning-color: #F1C40F; /* Żółty */
+  --danger-color: #E74C3C; /* Czerwony */
+  --border-radius: 8px;
+  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --gradient-navy: linear-gradient(145deg, #2C3E50, #34495E); /* Granatowy gradient */
+}
+
 /* Kontener główny ekran zamówień */
 .orders-container {
-  padding: 40px;
-  background: linear-gradient(135deg, #f0f4f7 0%, #e1f5fe 100%); /* Gradient podobny do reszty aplikacji */
-  border-radius: 15px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-family: 'Roboto', sans-serif;
-  animation: fadeIn 1s ease-in-out; /* Animacja podobna do reszty aplikacji */
+  width: 90%;
+  max-width: 1100px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: var(--background-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  font-family: Arial, sans-serif;
+  color: #333;
+  animation: fadeIn 0.5s ease-in-out;
 }
 
 /* Animacja */
 @keyframes fadeIn {
   from {
     opacity: 0;
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
 /* Nagłówek */
 .orders-container h2 {
-  font-size: 32px;
-  font-weight: 700;
-  color: transparent;
+  color: var(--primary-color);
+  margin-top: 0;
   margin-bottom: 20px;
+  font-size: 24px;
   text-align: center;
-  letter-spacing: 1px;
-  font-family: 'Poppins', sans-serif;
-  background: linear-gradient(145deg, #66004d, #220066); /* Gradient fioletowy */
-  -webkit-background-clip: text;
-  background-clip: text;
+}
+
+.orders-container h3 {
+  color: var(--primary-color);
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 20px;
 }
 
 /* Zakładki nawigacyjne */
 .tabs {
   display: flex;
   justify-content: center;
-  margin-bottom: 20px;
   gap: 10px;
-  transition: all 0.5s ease-in-out; /* Płynne przejścia */
+  margin-bottom: 20px;
 }
 
 .tab-button {
-  background: linear-gradient(45deg, #660066, #300047); /* Fioletowy gradient */
+  background: var(--gradient-navy);
   color: white;
-  padding: 10px 20px;
-  border-radius: 5px;
   border: none;
+  border-radius: var(--border-radius);
+  padding: 10px 15px;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-decoration: none;
 }
 
 .tab-button:hover {
-  background: linear-gradient(45deg, #4b004e, #66004d); /* Zmiana koloru przy najechaniu */
-  transform: scale(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 .tab-button.active {
-  background: linear-gradient(45deg, #4fd1c5, #220066); /* Aktywny przycisk */
+  background: var(--accent-color);
 }
 
-/* Tworzenie zamówienia */
-.create-order {
-  text-align: center;
+/* Sekcja filtrów */
+.filters-section {
+  margin-bottom: 20px;
 }
 
-.action-btn {
-  background: linear-gradient(45deg, #4fd1c5, #220066); /* Fioletowy dla przycisków */
-  color: white;
-  padding: 12px 20px;
-  border-radius: 5px;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease;
-}
-
-.action-btn:hover {
-  background: linear-gradient(45deg, #220066, #4fd1c5);
-  transform: scale(1.05);
-}
-
-/* Historia zamówień */
-.order-history table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-.order-history th, .order-history td {
-  padding: 12px;
-  text-align: center;
-  border: 1px solid #BDC3C7; /* Subtelna szarość */
-}
-
-.order-history th {
-  background-color: #1a2a6c; /* Granatowy podobny do reszty aplikacji */
-  color: white;
-}
-
-.status-in-progress {
-  color: #E67E22; /* Pomarańczowy */
-  font-weight: bold;
-}
-
-.status-delivered {
-  color: #1ABC9C; /* Miętowy zielony */
-  font-weight: bold;
-}
-
-.status-icon {
-  margin-right: 8px;
-}
-
-/* Filtry w historii zamówień */
 .filters {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding: 15px;
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.filter-group label {
+  font-size: 13px;
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.filter-group input,
+.filter-group select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  min-width: 150px;
+}
+
+.search-group input {
+  min-width: 200px;
+}
+
+.clear-filters-btn {
+  background: none;
+  border: 1px solid #ddd;
+  color: #777;
+  padding: 8px 12px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+  height: fit-content;
+}
+
+.clear-filters-btn:hover {
+  border-color: var(--danger-color);
+  color: var(--danger-color);
+}
+
+/* Ładowanie */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: #777;
+}
+
+.loading-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--accent-color);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
   margin-bottom: 15px;
 }
 
-/* Stylizacja przycisków na urządzenia mobilne */
-@media (max-width: 600px) {
-  .action-btn, .tab-button {
-    font-size: 14px;
-    padding: 10px 15px;
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Brak zamówień */
+.no-orders {
+  text-align: center;
+  padding: 30px;
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  color: #777;
+}
+
+.no-orders svg {
+  font-size: 28px;
+  color: var(--warning-color);
+  margin-bottom: 10px;
+}
+
+/* Podsumowanie zamówień */
+.orders-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  font-size: 14px;
+  color: #666;
+}
+
+/* Akcje zbiorcze */
+.bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bulk-actions span {
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+.bulk-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.bulk-action-btn:hover {
+  transform: translateY(-2px);
+}
+
+.bulk-action-btn.danger {
+  background: var(--danger-color);
+}
+
+/* Tabela zamówień */
+.order-table-container {
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.order-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.order-table th, 
+.order-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.order-table th {
+  background: var(--gradient-navy);
+  color: white;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.order-table tr {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.order-table tr:hover {
+  background-color: #f5f8fa;
+}
+
+.order-table tr.selected-row {
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+.order-table tr.selected-row:hover {
+  background-color: rgba(52, 152, 219, 0.15);
+}
+
+/* Checkbox zaznaczania */
+.checkbox-column {
+  width: 40px;
+  text-align: center;
+}
+
+.checkbox-container {
+  display: block;
+  position: relative;
+  padding-left: 28px;
+  margin-bottom: 0;
+  cursor: pointer;
+  user-select: none;
+  height: 20px;
+}
+
+.checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: #eee;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.checkbox-container:hover input ~ .checkmark {
+  background-color: #ccc;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+  background-color: var(--accent-color);
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.checkbox-container .checkmark:after {
+  left: 7px;
+  top: 3px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Status zamówienia */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.status-w-realizacji {
+  background-color: rgba(241, 196, 15, 0.2);
+  color: #d4ac0d;
+}
+
+.status-wysłane {
+  background-color: rgba(52, 152, 219, 0.2);
+  color: #2980b9;
+}
+
+.status-dostarczone {
+  background-color: rgba(46, 204, 113, 0.2);
+  color: #27ae60;
+}
+
+.status-icon {
+  font-size: 14px;
+}
+
+.status-icon.spinning {
+  animation: spin 2s linear infinite;
+  color: #d4ac0d;
+}
+
+.status-icon.sent {
+  color: #2980b9;
+}
+
+.status-icon.delivered {
+  color: #27ae60;
+}
+
+/* Podgląd produktów */
+.items-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 3px;
+}
+
+.item-preview {
+  font-size: 12px;
+  color: #666;
+}
+
+.more-items {
+  font-size: 12px;
+  color: var(--accent-color);
+  font-style: italic;
+}
+
+/* Kolumna kwoty */
+.amount-column {
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+/* Przyciski akcji w tabeli */
+.actions-column {
+  white-space: nowrap;
+}
+
+.table-action-btn {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.table-action-btn:hover {
+  background-color: #2980b9;
+}
+
+.details-btn {
+  background-color: var(--accent-color);
+}
+
+/* Paginacja */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  gap: 5px;
+}
+
+.pagination-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--accent-color);
+  color: white;
+  border-color: var(--accent-color);
+}
+
+.pagination-btn:disabled {
+  background: #f5f5f5;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.page-info {
+  margin: 0 10px;
+  font-size: 14px;
+  color: #666;
+}
+
+/* Modyfikacja zamówienia */
+.modify-order {
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: 20px;
+}
+
+.modify-order p {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #666;
+}
+
+.active-orders {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.active-order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: var(--border-radius);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.active-order-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.order-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.order-supplier {
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+.order-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  font-size: 13px;
+  color: #666;
+}
+
+.modify-btn {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  transition: transform 0.2s;
+}
+
+.modify-btn:hover {
+  transform: translateY(-2px);
+}
+
+.no-active-orders {
+  text-align: center;
+  padding: 30px;
+  color: #777;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 8px 15px;
+  margin-top: 15px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.action-btn:hover {
+  background: #2980b9;
+}
+
+/* Responsywność */
+@media (max-width: 768px) {
+  .orders-container {
+    width: 95%;
+    padding: 15px;
+  }
+  
+  .tabs {
+    flex-direction: column;
+  }
+  
+  .filters {
+    flex-direction: column;
+  }
+  
+  .table-action-btn {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  
+  .orders-summary {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .bulk-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .order-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .active-order-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .order-summary, .modify-btn {
+    align-self: flex-end;
   }
 }

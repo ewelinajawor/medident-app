@@ -1,134 +1,166 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Hook do nawigacji
-import InputMask from "react-input-mask";
+import { FaUser, FaCamera, FaClinicMedical, FaEnvelope, FaPhone } from "react-icons/fa";
 import "./EditProfile.css";
 
-function EditProfile({ userData = {}, onUpdate }) {
-  const navigate = useNavigate(); // Hook do nawigacji
+const EditProfile = () => {
+  // Stan początkowy - pobieramy z localStorage jeśli istnieje
+  const [profile, setProfile] = useState(() => {
+    const savedProfile = localStorage.getItem('userProfile');
+    return savedProfile ? JSON.parse(savedProfile) : {
+      clinicName: "Nazwa Gabinetu",
+      email: "kontakt@gabinet.pl",
+      phone: "+48 123 456 789",
+      profilePicture: "https://via.placeholder.com/150"
+    };
+  });
 
-  const [clinicName, setClinicName] = useState(userData.clinicName || "");
-  const [nip, setNip] = useState(userData.nip || "");
-  const [regon, setRegon] = useState(userData.regon || "");
-  const [address, setAddress] = useState(userData.address || "");
-  const [city, setCity] = useState(userData.city || "");
-  const [postalCode, setPostalCode] = useState(userData.postalCode || "");
-  const [bankAccount, setBankAccount] = useState(userData.bankAccount || "");
-  const [profileImage, setProfileImage] = useState(userData.profileImage || null);
-  const [showNotification, setShowNotification] = useState(false);
-  const [isModified, setIsModified] = useState(false);
+  // Stan dla podglądu zdjęcia
+  const [profilePicturePreview, setProfilePicturePreview] = useState(profile.profilePicture);
+  
+  // Stan dla powiadomienia
+  const [notification, setNotification] = useState({ show: false, type: "", message: "" });
 
-  // Sprawdza, czy dane zostały zmienione
-  useEffect(() => {
-    setIsModified(
-      clinicName !== userData.clinicName ||
-      nip !== userData.nip ||
-      regon !== userData.regon ||
-      address !== userData.address ||
-      city !== userData.city ||
-      postalCode !== userData.postalCode ||
-      bankAccount !== userData.bankAccount ||
-      profileImage !== userData.profileImage
-    );
-  }, [clinicName, nip, regon, address, city, postalCode, bankAccount, profileImage, userData]);
+  // Obsługa zmiany pól tekstowych
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setProfile({
+      ...profile,
+      [name]: value
+    });
+  };
 
-  // Obsługa zmiany zdjęcia profilowego
+  // Obsługa zmiany zdjęcia
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProfileImage(reader.result);
+        setProfilePicturePreview(reader.result);
+        // Nie aktualizujemy od razu profilu - dopiero po zapisaniu
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Obsługa zapisu danych
+  // Zapisanie zmian
   const handleSave = () => {
-    const updatedData = { clinicName, nip, regon, address, city, postalCode, bankAccount, profileImage };
-    if (onUpdate) onUpdate(updatedData);
+    // Aktualizacja zdjęcia w profilu
+    const updatedProfile = {
+      ...profile,
+      profilePicture: profilePicturePreview
+    };
+    
+    // Zapisanie w localStorage
+    localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+    
+    // Aktualizacja stanu lokalnego
+    setProfile(updatedProfile);
+    
+    // Wyzwolenie zdarzenia aby powiadomić inne komponenty
+    window.dispatchEvent(new Event('profileUpdated'));
 
-    setShowNotification(true);
+    // Pokazanie powiadomienia
+    setNotification({
+      show: true,
+      type: "success",
+      message: "Pomyślnie zaktualizowano profil!"
+    });
+
+    // Ukrycie powiadomienia po 3 sekundach
     setTimeout(() => {
-      setShowNotification(false);
-      navigate("/settings"); // Po zapisaniu wraca do ustawień
-    }, 1500);
-  };
-
-  // Powrót do ekranu ustawień
-  const handleCancel = () => {
-    navigate("/settings");
+      setNotification({ show: false, type: "", message: "" });
+    }, 3000);
   };
 
   return (
     <div className="edit-profile-container">
-      <h2>Edytuj profil</h2>
+      <h1 className="profile-title">
+        <FaUser className="title-icon" /> Edytuj Profil
+      </h1>
+      
+      {notification.show && (
+        <div className={`notification ${notification.type}`}>
+          {notification.message}
+        </div>
+      )}
+      
+      <div className="profile-form">
+        <div className="profile-picture-section">
+          <div className="profile-picture-container">
+            <img 
+              src={profilePicturePreview} 
+              alt="Zdjęcie Profilowe" 
+              className="profile-image" 
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "https://via.placeholder.com/150";
+              }}
+            />
+            <label htmlFor="profile-image-upload" className="image-upload-btn">
+              <FaCamera />
+              <span>Zmień</span>
+            </label>
+            <input 
+              type="file" 
+              id="profile-image-upload" 
+              accept="image/*" 
+              onChange={handleImageChange} 
+              style={{ display: 'none' }} 
+            />
+          </div>
+          <p className="image-hint">Kliknij na zdjęcie, aby zmienić</p>
+        </div>
 
-      {/* Zdjęcie profilowe */}
-      <div className="profile-image-container">
-        <label htmlFor="profileImageInput" className="profile-image-label">
-          {profileImage ? (
-            <img src={profileImage} alt="Profil" className="profile-image" />
-          ) : (
-            <div className="default-profile-icon">👤</div>
-          )}
-        </label>
-        <input id="profileImageInput" type="file" accept="image/*" onChange={handleImageChange} style={{ display: "none" }} />
-        <label htmlFor="profileImageInput" className="upload-button">Wybierz zdjęcie</label>
+        <div className="profile-info-section">
+          <div className="form-group">
+            <label>
+              <FaClinicMedical className="field-icon" />
+              Nazwa Gabinetu
+            </label>
+            <input
+              type="text"
+              name="clinicName"
+              value={profile.clinicName}
+              onChange={handleInputChange}
+              placeholder="Nazwa Twojego gabinetu"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>
+              <FaEnvelope className="field-icon" />
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={profile.email}
+              onChange={handleInputChange}
+              placeholder="Adres email"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>
+              <FaPhone className="field-icon" />
+              Telefon
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              value={profile.phone}
+              onChange={handleInputChange}
+              placeholder="Numer telefonu"
+            />
+          </div>
+
+          <button className="save-profile-btn" onClick={handleSave}>
+            Zapisz zmiany
+          </button>
+        </div>
       </div>
-
-      {/* Formularz */}
-      <div className="form-container">
-        <div className="input-group">
-          <label>Nazwa gabinetu</label>
-          <input type="text" value={clinicName} onChange={(e) => setClinicName(e.target.value)} placeholder="Wpisz nazwę gabinetu" />
-        </div>
-
-        <div className="input-group">
-          <label>NIP</label>
-          <InputMask mask="999-999-99-99" value={nip} onChange={(e) => setNip(e.target.value)} placeholder="Wpisz NIP" />
-        </div>
-
-        <div className="input-group">
-          <label>REGON</label>
-          <InputMask mask="999999999" value={regon} onChange={(e) => setRegon(e.target.value)} placeholder="Wpisz REGON" />
-        </div>
-
-        <div className="input-group">
-          <label>Adres</label>
-          <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Wpisz adres" />
-        </div>
-
-        <div className="input-group">
-          <label>Miasto</label>
-          <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Wpisz miasto" />
-        </div>
-
-        <div className="input-group">
-          <label>Kod pocztowy</label>
-          <InputMask mask="99-999" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="Wpisz kod pocztowy" />
-        </div>
-
-        <div className="input-group">
-          <label>Konto bankowe</label>
-          <InputMask mask="99 9999 9999 9999 9999 9999 9999" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} placeholder="Wpisz nr konta" />
-        </div>
-      </div>
-
-      {/* Przyciski */}
-      <div className="button-group">
-        <button className="save-button" onClick={handleSave} disabled={!isModified}>
-          Zapisz zmiany
-        </button>
-        <button className="cancel-button" onClick={handleCancel}>
-          Wróć do ekranu ustawień
-        </button>
-      </div>
-
-      {/* Powiadomienie */}
-      {showNotification && <div className="notification">✅ Zapisano zmiany!</div>}
     </div>
   );
-}
+};
 
 export default EditProfile;

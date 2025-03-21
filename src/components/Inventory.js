@@ -1,77 +1,245 @@
 import React, { useState, useEffect } from 'react';
 import './Inventory.css';
-import { FaBox, FaTools, FaFlask, FaPlus, FaShoppingCart, FaSearch, FaTrash } from 'react-icons/fa'; // Dodano ikonę kosza
 
 function Inventory() {
-  const [shoppingList, setShoppingList] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [products, setProducts] = useState([
-    { id: 1, name: 'Masa wyciskowa', category: 'Materiały', stock: 10, minStock: 5 },
-    { id: 2, name: 'Narzędzia protetyczne', category: 'Sprzęt', stock: 3, minStock: 5 },
-    { id: 3, name: 'Żel do wycisków', category: 'Materiały', stock: 8, minStock: 4 },
-    { id: 4, name: 'Środek do czyszczenia', category: 'Środki', stock: 15, minStock: 10 },
-    { id: 5, name: 'Nożyczki chirurgiczne', category: 'Sprzęt', stock: 2, minStock: 5 },
-  ]);
-
-  // Dodaj produkty do listy zakupów
-  const addToShoppingList = () => {
-    const newShoppingList = products
-      .filter((product) => product.stock < product.minStock)
-      .map((product) => ({
-        ...product,
-        quantity: product.minStock - product.stock,
-        addedAutomatically: true,
-      }));
-    setShoppingList(newShoppingList);
-  };
-
-  // Dodaj produkt ręcznie
-  const handleAddToShoppingList = (product) => {
-    const existingProduct = shoppingList.find((item) => item.id === product.id);
-    if (existingProduct) {
-      setShoppingList((prev) =>
-        prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-        )
-      );
+  // Stan dla wszystkich produktów z obsługą localStorage
+  const [products, setProducts] = useState(() => {
+    const savedProducts = localStorage.getItem('dentalInventory');
+    if (savedProducts) {
+      try {
+        return JSON.parse(savedProducts);
+      } catch (error) {
+        console.error("Błąd przy wczytywaniu danych:", error);
+        // Fallback do danych domyślnych
+        return [
+          { id: 1, name: 'Masa wyciskowa', category: 'Materiały', stock: 10, minStock: 5 },
+          { id: 2, name: 'Narzędzia protetyczne', category: 'Sprzęt', stock: 3, minStock: 5 },
+          { id: 3, name: 'Żel do wycisków', category: 'Materiały', stock: 8, minStock: 4 },
+          { id: 4, name: 'Środek do czyszczenia', category: 'Środki', stock: 15, minStock: 10 },
+          { id: 5, name: 'Nożyczki chirurgiczne', category: 'Sprzęt', stock: 2, minStock: 5 },
+        ];
+      }
     } else {
-      setShoppingList((prev) => [...prev, { ...product, quantity: 1, addedAutomatically: false }]);
+      // Dane domyślne, jeśli nie ma zapisanych
+      return [
+        { id: 1, name: 'Masa wyciskowa', category: 'Materiały', stock: 10, minStock: 5 },
+        { id: 2, name: 'Narzędzia protetyczne', category: 'Sprzęt', stock: 3, minStock: 5 },
+        { id: 3, name: 'Żel do wycisków', category: 'Materiały', stock: 8, minStock: 4 },
+        { id: 4, name: 'Środek do czyszczenia', category: 'Środki', stock: 15, minStock: 10 },
+        { id: 5, name: 'Nożyczki chirurgiczne', category: 'Sprzęt', stock: 2, minStock: 5 },
+      ];
     }
+  });
+
+  // Stan dla wybranej kategorii
+  const [selectedCategory, setSelectedCategory] = useState('');
+
+  // Stan dla zapytania wyszukiwania
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Stan dla edycji bezpośredniej ilości
+  const [editingId, setEditingId] = useState(null);
+  const [editQuantity, setEditQuantity] = useState({});
+
+  // Stan dla formularza dodawania produktu
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    category: 'Materiały',
+    stock: 0,
+    minStock: 0
+  });
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  // Stan dla produktów w koszyku zamówień
+  const [orderCart, setOrderCart] = useState([]);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+
+  // Stan dla ostatniej aktualizacji
+  const [lastUpdate, setLastUpdate] = useState(() => {
+    const lastSaved = localStorage.getItem('lastInventoryUpdate');
+    return lastSaved || new Date().toLocaleString();
+  });
+
+  // Efekt zapisujący dane przy każdej zmianie
+  useEffect(() => {
+    localStorage.setItem('dentalInventory', JSON.stringify(products));
+    const now = new Date().toLocaleString();
+    setLastUpdate(now);
+    localStorage.setItem('lastInventoryUpdate', now);
+  }, [products]);
+
+  // Funkcja określająca stan zapasów
+  const getStockStatus = (stock, minStock) => {
+    if (stock === 0) return 'empty';
+    if (stock < minStock * 0.5) return 'critical';
+    if (stock < minStock) return 'low';
+    if (stock < minStock * 2) return 'good';
+    return 'excess';
   };
 
-  // Edytuj ilość produktu w liście zakupów
-  const handleEditQuantity = (id, quantity) => {
-    if (quantity < 1) return; // Nie pozwól na ujemną ilość
-    setShoppingList((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
-    );
-  };
-
-  // Usuń produkt z listy zakupów
-  const handleRemoveFromShoppingList = (id) => {
-    setShoppingList((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  // Filtruj produkty według kategorii i wyszukiwania
+  // Filtruj produkty
   const filteredProducts = products.filter((product) => {
     const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
-  // Efekt automatycznego dodawania produktów
-  useEffect(() => {
-    addToShoppingList();
-  }, [products]);
+  // Oblicz liczbę produktów z niskim i krytycznym stanem
+  const lowStockProducts = products.filter((product) => product.stock < product.minStock).length;
+  const criticalStockProducts = products.filter((product) => product.stock < product.minStock * 0.5).length;
+  
+  // Produkty wymagające natychmiastowego zamówienia
+  const criticaProducts = products.filter(p => 
+    getStockStatus(p.stock, p.minStock) === 'critical' || getStockStatus(p.stock, p.minStock) === 'empty'
+  );
+
+  // Aktualizuj stan magazynowy
+  const handleUpdateStock = (id, newStock) => {
+    if (newStock >= 0) {
+      setProducts((prev) =>
+        prev.map((product) =>
+          product.id === id ? { ...product, stock: newStock } : product
+        )
+      );
+    }
+  };
+
+  // Funkcje obsługi bezpośredniej edycji ilości
+  const handleDirectEdit = (id, currentStock) => {
+    setEditingId(id);
+    setEditQuantity({ [id]: currentStock });
+  };
+
+  const handleQuantitySave = (id) => {
+    const newQuantity = parseInt(editQuantity[id] || 0);
+    if (newQuantity >= 0) {
+      handleUpdateStock(id, newQuantity);
+      setEditingId(null);
+    }
+  };
+
+  // Usuń produkt
+  const handleRemoveProduct = (id) => {
+    if (window.confirm("Czy na pewno chcesz usunąć ten produkt?")) {
+      setProducts((prev) => prev.filter((product) => product.id !== id));
+    }
+  };
+
+  // Funkcja dodająca nowy produkt
+  const handleAddProduct = (e) => {
+    e.preventDefault();
+    
+    // Walidacja formularza
+    if (!newProduct.name || newProduct.stock < 0 || newProduct.minStock < 0) {
+      alert('Proszę wypełnić wszystkie pola poprawnie.');
+      return;
+    }
+    
+    // Dodaj nowy produkt z unikalnym ID
+    const newId = Math.max(...products.map(p => p.id), 0) + 1;
+    setProducts([
+      ...products,
+      { ...newProduct, id: newId }
+    ]);
+    
+    // Resetuj formularz
+    setNewProduct({
+      name: '',
+      category: 'Materiały',
+      stock: 0,
+      minStock: 0
+    });
+    setShowAddForm(false);
+  };
+
+  // Funkcje zarządzania zamówieniami
+  const addToOrder = (product) => {
+    // Sprawdź, czy produkt już jest w koszyku
+    const existingProduct = orderCart.find(item => item.id === product.id);
+    
+    if (existingProduct) {
+      // Aktualizuj ilość, jeśli już jest w koszyku
+      setOrderCart(orderCart.map(item => 
+        item.id === product.id 
+          ? { ...item, orderQuantity: item.orderQuantity + (product.minStock - product.stock) } 
+          : item
+      ));
+    } else {
+      // Dodaj nowy produkt do koszyka
+      setOrderCart([
+        ...orderCart, 
+        { 
+          ...product, 
+          orderQuantity: product.minStock - product.stock > 0 ? product.minStock - product.stock : 1
+        }
+      ]);
+    }
+  };
+
+  const removeFromOrder = (productId) => {
+    setOrderCart(orderCart.filter(item => item.id !== productId));
+  };
+
+  const submitOrder = () => {
+    // Tutaj można dodać integrację z systemem zamówień
+    alert(`Zamówienie zostało wysłane!\nLiczba produktów: ${orderCart.length}`);
+    setOrderCart([]);
+    setShowOrderModal(false);
+  };
 
   return (
     <div className="inventory">
       <h2 className="gradient-header">Stan magazynowy</h2>
 
+      {/* Panel podsumowania */}
+      <div className="summary-panel">
+        <div className="summary-item low-stock">
+          <span>Produkty z niskim stanem:</span>
+          <strong>{lowStockProducts}</strong>
+        </div>
+        <div className="summary-item critical-stock">
+          <span>Produkty z krytycznym stanem:</span>
+          <strong>{criticalStockProducts}</strong>
+        </div>
+      </div>
+
+      {/* Przycisk zamówienia */}
+      <div className="order-manager">
+        <button 
+          className="view-order-button" 
+          onClick={() => setShowOrderModal(true)}
+          disabled={orderCart.length === 0}
+        >
+          🛒 Zamówienie ({orderCart.length})
+        </button>
+      </div>
+
+      {/* Inteligentne powiadomienie */}
+      {criticaProducts.length > 0 && (
+        <div className="smart-notification">
+          <div className="notification-icon">⚠️</div>
+          <div className="notification-content">
+            <h4>Uwaga! Produkty wymagające natychmiastowego zamówienia</h4>
+            <ul>
+              {criticaProducts.map(product => (
+                <li key={product.id}>
+                  {product.name} - stan: <strong>{product.stock}</strong> 
+                  (minimum: {product.minStock})
+                  <button 
+                    onClick={() => addToOrder(product)} 
+                    className="quick-order-btn"
+                  >
+                    Zamów teraz
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
       {/* Wyszukiwarka */}
       <div className="search-bar">
-        <FaSearch className="search-icon" />
         <input
           type="text"
           placeholder="Wyszukaj produkt..."
@@ -82,78 +250,247 @@ function Inventory() {
 
       {/* Filtry kategorii */}
       <div className="filters">
-        <button
-          className={`filter-btn ${selectedCategory === '' ? 'active' : ''}`}
-          onClick={() => setSelectedCategory('')}
+        <button onClick={() => setSelectedCategory('')}>Wszystkie</button>
+        <button onClick={() => setSelectedCategory('Materiały')}>Materiały</button>
+        <button onClick={() => setSelectedCategory('Sprzęt')}>Sprzęt</button>
+        <button onClick={() => setSelectedCategory('Środki')}>Środki</button>
+      </div>
+
+      {/* Przycisk dodawania produktu */}
+      <div className="add-product-button-container">
+        <button 
+          className="add-product-button"
+          onClick={() => setShowAddForm(true)}
         >
-          <FaBox /> Wszystkie
-        </button>
-        <button
-          className={`filter-btn ${selectedCategory === 'Materiały' ? 'active' : ''}`}
-          onClick={() => setSelectedCategory('Materiały')}
-        >
-          <FaBox /> Materiały
-        </button>
-        <button
-          className={`filter-btn ${selectedCategory === 'Sprzęt' ? 'active' : ''}`}
-          onClick={() => setSelectedCategory('Sprzęt')}
-        >
-          <FaTools /> Sprzęt
-        </button>
-        <button
-          className={`filter-btn ${selectedCategory === 'Środki' ? 'active' : ''}`}
-          onClick={() => setSelectedCategory('Środki')}
-        >
-          <FaFlask /> Środki
+          + Dodaj nowy produkt
         </button>
       </div>
 
-      {/* Lista produktów */}
-      <div className="product-list">
+      {/* Widok kafelkowy */}
+      <div className="product-grid">
         {filteredProducts.map((product) => (
-          <div key={product.id} className={`product-card ${product.stock < product.minStock ? 'low-stock' : ''}`}>
-            <div className="product-info">
-              <h3>{product.name}</h3>
-              <p><strong>Kategoria:</strong> {product.category}</p>
-              <p><strong>Zapasy:</strong> {product.stock}/{product.minStock}</p>
-              <div className="progress-bar">
-                <div
-                  className="progress"
-                  style={{ width: `${(product.stock / product.minStock) * 100}%` }}
-                ></div>
-              </div>
+          <div 
+            key={product.id} 
+            className={`product-tile ${getStockStatus(product.stock, product.minStock)}-stock`}
+          >
+            <h3>{product.name}</h3>
+            <p>Kategoria: {product.category}</p>
+            <p>Stan: {product.stock}/{product.minStock}</p>
+            <div className="progress-bar">
+              <div
+                className={`progress ${getStockStatus(product.stock, product.minStock)}-indicator`}
+                style={{ 
+                  width: `${Math.min((product.stock / product.minStock) * 100, 100)}%`
+                }}
+              ></div>
             </div>
-            <button className="add-btn" onClick={() => handleAddToShoppingList(product)}>
-              <FaPlus /> Dodaj do listy
+            {product.stock < product.minStock && <span className="warning-icon">⚠️</span>}
+            <div className="quantity-controls">
+              <button onClick={() => handleUpdateStock(product.id, product.stock - 1)}>-</button>
+              
+              {editingId === product.id ? (
+                <div className="direct-edit">
+                  <input
+                    type="number"
+                    min="0"
+                    value={editQuantity[product.id] || ''}
+                    onChange={(e) => setEditQuantity({ ...editQuantity, [product.id]: e.target.value })}
+                    onKeyDown={(e) => e.key === 'Enter' && handleQuantitySave(product.id)}
+                  />
+                  <button className="save-quantity" onClick={() => handleQuantitySave(product.id)}>✓</button>
+                </div>
+              ) : (
+                <span onClick={() => handleDirectEdit(product.id, product.stock)}>{product.stock}</span>
+              )}
+              
+              <button onClick={() => handleUpdateStock(product.id, product.stock + 1)}>+</button>
+            </div>
+            {product.stock < product.minStock && (
+              <button 
+                onClick={() => addToOrder(product)} 
+                className="order-btn"
+              >
+                🛒 Zamów
+              </button>
+            )}
+            <button onClick={() => handleRemoveProduct(product.id)} className="remove-btn">
+              🗑️ Usuń
             </button>
           </div>
         ))}
       </div>
 
-      {/* Lista zakupów */}
-      <h3 className="gradient-header">Lista zakupów</h3>
-      <div className="shopping-list">
-        {shoppingList.length > 0 ? (
-          shoppingList.map((item) => (
-            <div key={item.id} className="shopping-item">
-              <p>{item.name} - {item.quantity} szt.</p>
-              <div className="shopping-item-actions">
-                <button onClick={() => handleEditQuantity(item.id, item.quantity + 1)}>+</button>
-                <button onClick={() => handleEditQuantity(item.id, item.quantity - 1)}>-</button>
-                <button onClick={() => handleRemoveFromShoppingList(item.id)}><FaTrash /></button>
-              </div>
-              {item.addedAutomatically && <span className="auto-tag">Automatycznie dodane</span>}
-            </div>
-          ))
-        ) : (
-          <p>Brak produktów do dodania</p>
-        )}
+      {/* Tabela jako alternatywny widok */}
+      <h3>Tabela produktów</h3>
+      <table className="product-table">
+        <thead>
+          <tr>
+            <th>Nazwa</th>
+            <th>Kategoria</th>
+            <th>Stan</th>
+            <th>Min. stan</th>
+            <th>Akcje</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredProducts.map((product) => (
+            <tr key={product.id} className={getStockStatus(product.stock, product.minStock) + '-stock'}>
+              <td>{product.name}</td>
+              <td>{product.category}</td>
+              <td>{product.stock}</td>
+              <td>{product.minStock}</td>
+              <td>
+                {product.stock < product.minStock && (
+                  <button 
+                    onClick={() => addToOrder(product)}
+                    className="table-order-btn"
+                  >
+                    🛒
+                  </button>
+                )}
+                <button onClick={() => handleRemoveProduct(product.id)}>🗑️</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Informacja o ostatniej aktualizacji */}
+      <div className="inventory-footer">
+        <div className="last-update">
+          Ostatnia aktualizacja: {lastUpdate}
+        </div>
       </div>
 
-      {/* Przycisk uzupełnienia zapasów */}
-      <button className="gradient-btn" onClick={addToShoppingList}>
-        <FaShoppingCart /> Uzupełnij zapasy
-      </button>
+      {/* Modal formularza dodawania produktu */}
+      {showAddForm && (
+        <div className="modal-overlay">
+          <div className="add-product-form">
+            <h3>Dodaj nowy produkt</h3>
+            <form onSubmit={handleAddProduct}>
+              <div className="form-group">
+                <label>Nazwa produktu:</label>
+                <input
+                  type="text"
+                  value={newProduct.name}
+                  onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Kategoria:</label>
+                <select
+                  value={newProduct.category}
+                  onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
+                >
+                  <option value="Materiały">Materiały</option>
+                  <option value="Sprzęt">Sprzęt</option>
+                  <option value="Środki">Środki</option>
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label>Aktualny stan:</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={newProduct.stock}
+                  onChange={(e) => setNewProduct({...newProduct, stock: parseInt(e.target.value) || 0})}
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Minimalny stan:</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={newProduct.minStock}
+                  onChange={(e) => setNewProduct({...newProduct, minStock: parseInt(e.target.value) || 0})}
+                />
+              </div>
+              
+              <div className="form-buttons">
+                <button type="submit" className="save-button">Zapisz</button>
+                <button 
+                  type="button" 
+                  className="cancel-button"
+                  onClick={() => setShowAddForm(false)}
+                >
+                  Anuluj
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal zamówienia */}
+      {showOrderModal && (
+        <div className="modal-overlay">
+          <div className="order-modal">
+            <h3>Koszyk zamówień</h3>
+            
+            {orderCart.length === 0 ? (
+              <p>Koszyk jest pusty</p>
+            ) : (
+              <>
+                <table className="order-table">
+                  <thead>
+                    <tr>
+                      <th>Produkt</th>
+                      <th>Kategoria</th>
+                      <th>Ilość</th>
+                      <th>Akcje</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orderCart.map(item => (
+                      <tr key={item.id}>
+                        <td>{item.name}</td>
+                        <td>{item.category}</td>
+                        <td>
+                          <input 
+                            type="number" 
+                            min="1" 
+                            value={item.orderQuantity}
+                            onChange={(e) => {
+                              const qty = parseInt(e.target.value) || 1;
+                              setOrderCart(orderCart.map(p => 
+                                p.id === item.id ? {...p, orderQuantity: qty} : p
+                              ));
+                            }}
+                          />
+                        </td>
+                        <td>
+                          <button 
+                            onClick={() => removeFromOrder(item.id)}
+                            className="remove-from-order"
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                
+                <div className="form-buttons">
+                  <button onClick={submitOrder} className="submit-order">
+                    Wyślij zamówienie
+                  </button>
+                  <button 
+                    onClick={() => setShowOrderModal(false)} 
+                    className="cancel-button"
+                  >
+                    Anuluj
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
