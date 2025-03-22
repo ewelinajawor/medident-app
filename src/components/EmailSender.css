@@ -1,0 +1,308 @@
+/* EmailSender.css */
+.email-sender-container {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+  padding: 25px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.email-sender-container h2 {
+  margin-top: 0;
+  color: var(--primary-color);
+  font-size: 22px;
+  border-bottom: 2px solid var(--accent-color);
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+.error-message {
+  background-color: rgba(231, 76, 60, 0.1);
+  border-left: 4px solid var(--danger-color);
+  color: var(--danger-color);
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  font-weight: 500;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+.supplier-select {
+  width: 100%;
+}
+
+.order-summary {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.order-summary h3 {
+  margin-top: 0;
+  font-size: 16px;
+  color: var(--primary-color);
+  margin-bottom: 12px;
+}
+
+.summary-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.summary-label {
+  color: #666;
+}
+
+.summary-value {
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.summary-item.notes {
+  flex-direction: column;
+  border-top: 1px dashed #ddd;
+  padding-top: 10px;
+  margin-top: 5px;
+}
+
+.summary-item.notes .summary-value {
+  margin-top: 5px;
+  font-weight: normal;
+  font-style: italic;
+  color: #555;
+}
+
+.email-options {
+  margin-bottom: 20px;
+}
+
+.email-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.email-option input[type="checkbox"] {
+  margin-top: 3px;
+}
+
+.email-option span {
+  font-weight: 500;
+}
+
+.option-info {
+  font-weight: normal !important;
+  font-size: 13px;
+  color: #666;
+  margin-left: 5px;
+}
+
+.sending-results {
+  margin-bottom: 20px;
+}
+
+.sending-results h3 {
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: var(--primary-color);
+}
+
+.results-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.result-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 8px;
+}
+
+.result-item.success {
+  background-color: rgba(46, 204, 113, 0.1);
+}
+
+.result-item.error {
+  background-color: rgba(231, 76, 60, 0.1);
+}
+
+.result-icon {
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.result-item.success .result-icon {
+  color: var(--success-color);
+}
+
+.result-item.error .result-icon {
+  color: var(--danger-color);
+}
+
+.result-details {
+  flex: 1;
+}
+
+.result-supplier {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.result-message {
+  font-size: 13px;
+  color: #555;
+}
+
+.email-sender-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.cancel-button, .send-button, .close-button {
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.cancel-button {
+  background-color: #f1f2f3;
+  color: #333;
+}
+
+.cancel-button:hover {
+  background-color: #e5e6e7;
+}
+
+.send-button {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.send-button:hover {
+  background-color: #2980b9;
+}
+
+.close-button {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.close-button:hover {
+  background-color: #1a2530;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Success state */
+.email-sender-success {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+  padding: 25px;
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.email-sender-success h2 {
+  color: var(--success-color);
+  margin-top: 0;
+}
+
+.supplier-result-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 20px 0;
+}
+
+.supplier-result-item {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+.supplier-result-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.supplier-name {
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.supplier-email {
+  color: #666;
+  font-size: 14px;
+}
+
+.supplier-result-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-id {
+  font-size: 14px;
+  color: var(--accent-color);
+}
+
+.test-mode-badge {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .email-sender-container, 
+  .email-sender-success {
+    max-width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  
+  .supplier-result-info,
+  .supplier-result-status {
+    flex-direction: column;
+    gap: 5px;
+  }
+}

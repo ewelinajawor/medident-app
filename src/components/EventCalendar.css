@@ -1,0 +1,181 @@
+/* EventCalendar.css */
+.calendar-container {
+  background: white;
+  border-radius: var(--border-radius);
+  padding: 20px;
+  box-shadow: var(--box-shadow);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.calendar-header h3 {
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.add-event-button {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 8px 15px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.add-event-button:hover {
+  background: var(--primary-color);
+}
+
+.event-modal {
+  background: white;
+  border-radius: var(--border-radius);
+  padding: 25px;
+  width: 500px;
+  max-width: 90%;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+.form-group input, 
+.form-group select, 
+.form-group textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  font-family: inherit;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cancel-button, .add-button {
+  padding: 8px 15px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  border: none;
+}
+
+.cancel-button {
+  background: #f1f2f3;
+  color: #333;
+}
+
+.add-button {
+  background: var(--accent-color);
+  color: white;
+}
+
+/* Stylowanie wydarzeń w sekcji "Dzisiaj" */
+.event-item {
+  display: flex;
+  gap: 15px;
+  padding: 12px 15px;
+  background: #f8f9fa;
+  border-radius: var(--border-radius);
+  margin-bottom: 10px;
+}
+
+.event-inventory {
+  border-left: 4px solid #f1c40f;
+}
+
+.event-delivery {
+  border-left: 4px solid #2ecc71;
+}
+
+.event-meeting {
+  border-left: 4px solid #9b59b6;
+}
+
+.event-other {
+  border-left: 4px solid #3498db;
+}
+
+.event-time {
+  font-weight: bold;
+  color: var(--primary-color);
+  min-width: 60px;
+}
+
+.event-content {
+  flex: 1;
+}
+
+.event-title {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.event-description {
+  font-size: 13px;
+  color: #666;
+}
+
+/* Modal overlay dla dodawania wydarzenia */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Styl dla małego przycisku dodawania wydarzenia */
+.add-event-small-button {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.add-event-small-button:hover {
+  background: var(--primary-color);
+}
+
+/* Dostosowanie nagłówka panelu "Dzisiaj" */
+.today-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  color: var(--primary-color);
+}
+
+.today-header h3 {
+  margin: 0;
+  font-size: 18px;
+  flex-grow: 1;
+}

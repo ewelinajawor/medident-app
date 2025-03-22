@@ -23,6 +23,7 @@ import {
   ArcElement
 } from 'chart.js';
 import './Dashboard.css';
+import EventCalendar from './EventCalendar'; // Importujemy komponent kalendarza
 
 // Zarejestruj wymagane skale i elementy
 ChartJS.register(
@@ -76,11 +77,28 @@ function Dashboard({ username }) {
 
     // Pobieranie wydarzeń na dziś
     const fetchTodayEvents = () => {
-      const mockData = [
-        { id: 1, time: '10:00', title: 'Dostawa materiałów', type: 'delivery' },
-        { id: 2, time: '14:30', title: 'Inwentaryzacja', type: 'inventory' },
-      ];
-      setTodayEvents(mockData);
+      const storedEvents = JSON.parse(localStorage.getItem('calendarEvents')) || [];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      // Filtrujemy wydarzenia, które odbywają się dzisiaj
+      const todaysEvents = storedEvents.filter(event => {
+        const eventDate = new Date(event.start);
+        return eventDate >= today && eventDate < tomorrow;
+      });
+      
+      // Formatujemy wydarzenia do wyświetlenia
+      const formattedEvents = todaysEvents.map(event => ({
+        id: event.id,
+        time: new Date(event.start).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+        title: event.title,
+        type: event.type,
+        description: event.description
+      }));
+      
+      setTodayEvents(formattedEvents);
     };
 
     // Symulacja stanu magazynowego
@@ -97,6 +115,38 @@ function Dashboard({ username }) {
     fetchTodayEvents();
     fetchInventorySummary();
   }, []);
+
+  // Funkcja do aktualizacji dzisiejszych wydarzeń po dodaniu nowego
+  const handleEventAdded = (events) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    // Filtrujemy wydarzenia, które odbywają się dzisiaj
+    const todaysEvents = events.filter(event => {
+      const eventDate = new Date(event.start);
+      return eventDate >= today && eventDate < tomorrow;
+    });
+    
+    // Formatujemy wydarzenia do wyświetlenia
+    const formattedEvents = todaysEvents.map(event => ({
+      id: event.id,
+      time: new Date(event.start).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+      title: event.title,
+      type: event.type,
+      description: event.description
+    }));
+    
+    setTodayEvents(formattedEvents);
+    
+    // Pokazujemy powiadomienie o dodaniu wydarzenia
+    if (events.length > 0 && events[events.length - 1].title) {
+      setSuccessMessage(`Dodano nowe wydarzenie: "${events[events.length - 1].title}"`);
+      setShowSuccessAlert(true);
+      setTimeout(() => setShowSuccessAlert(false), 3000);
+    }
+  };
 
   // Funkcja do dodawania produktu do listy zakupów
   const addToShoppingList = (item) => {
@@ -258,6 +308,20 @@ function Dashboard({ username }) {
   // Obsługa zakładek
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'calendar':
+        return (
+          <div className="tab-content">
+            <h3 className="section-title">Kalendarz</h3>
+            {/* Alert sukcesu */}
+            {showSuccessAlert && (
+              <div className="success-alert">
+                <span className="success-icon">✓</span>
+                {successMessage}
+              </div>
+            )}
+            <EventCalendar onEventAdded={handleEventAdded} />
+          </div>
+        );
       case 'inventory':
         return (
           <div className="tab-content">
@@ -447,53 +511,69 @@ function Dashboard({ username }) {
             )}
           
             {/* Panel powiadomień i alertów */}
-            {(lowStockItems.length > 0 || pendingOrders.length > 0) && (
-              <div className="alerts-panel">
-                {lowStockItems.length > 0 && (
-                  <div className="alert alert-warning">
-                    <FaExclamationTriangle className="alert-icon" />
-                    <div className="alert-content">
-                      <h4>{lowStockItems.length} {lowStockItems.length === 1 ? 'produkt wymaga' : 'produkty wymagają'} uzupełnienia</h4>
-                      <div className="alert-actions">
-                        <Link to="#" onClick={() => setActiveTab('inventory')}>
-                          Sprawdź produkty
-                        </Link>
-                        <button 
-                          className="add-to-cart-button" 
-                          onClick={() => {
-                            // Dodaj wszystkie produkty z niskim stanem do listy zakupów
-                            lowStockItems.forEach(item => addToShoppingList(item));
-                            setSuccessMessage(`Dodano ${lowStockItems.length} produktów do listy zakupów`);
-                            setShowSuccessAlert(true);
-                            setTimeout(() => setShowSuccessAlert(false), 3000);
-                          }}
-                        >
-                          <FaShoppingCart /> Dodaj wszystkie do listy
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {pendingOrders.length > 0 && (
-                  <div className="alert alert-info">
-                    <FaBell className="alert-icon" />
-                    <div className="alert-content">
-                      <h4>{pendingOrders.length} {pendingOrders.length === 1 ? 'zamówienie oczekuje' : 'zamówienia oczekują'} na dostawę</h4>
-                      <Link to="#" onClick={() => setActiveTab('orders')}>
-                        Sprawdź zamówienia
+            <div className="alerts-panel">
+              {lowStockItems.length > 0 && (
+                <div className="alert alert-warning">
+                  <FaExclamationTriangle className="alert-icon" />
+                  <div className="alert-content">
+                    <h4>{lowStockItems.length} {lowStockItems.length === 1 ? 'produkt wymaga' : 'produkty wymagają'} uzupełnienia</h4>
+                    <div className="alert-actions">
+                      <Link to="#" onClick={() => setActiveTab('inventory')}>
+                        Sprawdź produkty
                       </Link>
+                      <button 
+                        className="add-to-cart-button" 
+                        onClick={() => {
+                          // Dodaj wszystkie produkty z niskim stanem do listy zakupów
+                          lowStockItems.forEach(item => addToShoppingList(item));
+                          setSuccessMessage(`Dodano ${lowStockItems.length} produktów do listy zakupów`);
+                          setShowSuccessAlert(true);
+                          setTimeout(() => setShowSuccessAlert(false), 3000);
+                        }}
+                      >
+                        <FaShoppingCart /> Dodaj wszystkie do listy
+                      </button>
                     </div>
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+              
+              {pendingOrders.length > 0 && (
+                <div className="alert alert-info">
+                  <FaBell className="alert-icon" />
+                  <div className="alert-content">
+                    <h4>{pendingOrders.length} {pendingOrders.length === 1 ? 'zamówienie oczekuje' : 'zamówienia oczekują'} na dostawę</h4>
+                    <Link to="#" onClick={() => setActiveTab('orders')}>
+                      Sprawdź zamówienia
+                    </Link>
+                  </div>
+                </div>
+              )}
+              
+              {todayEvents.length > 0 && (
+                <div className="alert alert-info">
+                  <FaCalendarAlt className="alert-icon" />
+                  <div className="alert-content">
+                    <h4>Masz {todayEvents.length} {todayEvents.length === 1 ? 'wydarzenie' : 'wydarzenia'} zaplanowane na dziś</h4>
+                    <Link to="#" onClick={() => setActiveTab('calendar')}>
+                      Przejdź do kalendarza
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
             
             {/* Kalendarz na dziś */}
             <div className="today-panel">
               <div className="today-header">
                 <FaCalendarAlt />
                 <h3>Dzisiaj - {new Date().toLocaleDateString()}</h3>
+                <button 
+                  className="add-event-small-button"
+                  onClick={() => setActiveTab('calendar')}
+                >
+                  <FaCalendarAlt /> Dodaj
+                </button>
               </div>
               
               {todayEvents.length > 0 ? (
@@ -501,12 +581,28 @@ function Dashboard({ username }) {
                   {todayEvents.map(event => (
                     <div key={event.id} className={`event-item event-${event.type}`}>
                       <div className="event-time">{event.time}</div>
-                      <div className="event-title">{event.title}</div>
+                      <div className="event-content">
+                        <div className="event-title">{event.title}</div>
+                        {event.description && (
+                          <div className="event-description">{event.description}</div>
+                        )}
+                      </div>
                     </div>
                   ))}
+                  <div className="event-actions">
+                    <button 
+                      className="secondary-button" 
+                      style={{ marginTop: '10px' }}
+                      onClick={() => setActiveTab('calendar')}
+                    >
+                      <FaCalendarAlt /> Zarządzaj kalendarzem
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <p className="empty-message">Brak zaplanowanych wydarzeń na dziś.</p>
+                <div>
+                  <p className="empty-message">Brak zaplanowanych wydarzeń na dziś.</p>
+                </div>
               )}
             </div>
             
@@ -514,40 +610,46 @@ function Dashboard({ username }) {
             <div className="tiles">
               {/* Kafelek Magazyn */}
               <div className="tile tile-inventory">
-                <div className="tile-icon">
-                  <FaBox size={48} />
-                </div>
-                <h3>Magazyn</h3>
-                <div className="tile-data">
-                  <div className="tile-stat">
-                    <span className="tile-label">Niski stan:</span>
-                    <span className="tile-value warning">{inventorySummary.low}</span>
+                <div className="tile-content">
+                  <div className="tile-icon">
+                    <FaBox size={48} />
                   </div>
-                  <div className="tile-stat">
-                    <span className="tile-label">Krytyczny:</span>
-                    <span className="tile-value danger">{inventorySummary.critical}</span>
+                  <h3>Magazyn</h3>
+                  <div className="tile-data">
+                    <div className="tile-stat">
+                      <span className="tile-label">Niski stan:</span>
+                      <span className="tile-value warning">{inventorySummary.low}</span>
+                    </div>
+                    <div className="tile-stat">
+                      <span className="tile-label">Krytyczny:</span>
+                      <span className="tile-value danger">{inventorySummary.critical}</span>
+                    </div>
                   </div>
                 </div>
-                <Link to="/inventory" style={{ textDecoration: 'none' }}>
-                  <button className="tile-button">
-                    <FaBox /> Zarządzaj zapasami
-                  </button>
-                </Link>
+                <div className="tile-button-wrapper">
+                  <Link to="/inventory" style={{ textDecoration: 'none' }}>
+                    <button className="tile-button">
+                      <FaBox /> Zarządzaj zapasami
+                    </button>
+                  </Link>
+                </div>
               </div>
 
               {/* Kafelek Zamówienia */}
               <div className="tile tile-orders">
-                <div className="tile-icon">
-                  <FaClipboardList size={48} />
-                </div>
-                <h3>Zamówienia</h3>
-                <div className="tile-data">
-                  <div className="tile-stat">
-                    <span className="tile-label">Oczekujące:</span>
-                    <span className="tile-value info">{pendingOrders.length}</span>
+                <div className="tile-content">
+                  <div className="tile-icon">
+                    <FaClipboardList size={48} />
+                  </div>
+                  <h3>Zamówienia</h3>
+                  <div className="tile-data">
+                    <div className="tile-stat">
+                      <span className="tile-label">Oczekujące:</span>
+                      <span className="tile-value info">{pendingOrders.length}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="tile-buttons">
+                <div className="tile-button-wrapper">
                   <Link to="/shopping-list" style={{ textDecoration: 'none' }}>
                     <button className="tile-button">
                       <FaShoppingCart /> Lista zakupów
@@ -556,42 +658,50 @@ function Dashboard({ username }) {
                 </div>
               </div>
 
-              {/* Kafelek Oszczędności */}
-              <div className="tile tile-savings">
-                <div className="tile-icon">
-                  <FaPiggyBank size={48} />
-                </div>
-                <h3>Oszczędności</h3>
-                <div className="tile-data">
-                  <div className="tile-stat">
-                    <span className="tile-label">Miesięcznie:</span>
-                    <span className="tile-value success">2000 zł</span>
+              {/* Kafelek Oferty (zamiast Kalendarza) */}
+              <div className="tile tile-offers">
+                <div className="tile-content">
+                  <div className="tile-icon">
+                    <FaHandshake size={48} />
+                  </div>
+                  <h3>Oferty</h3>
+                  <div className="tile-data">
+                    <div className="tile-stat">
+                      <span className="tile-label">Nowe:</span>
+                      <span className="tile-value info">3</span>
+                    </div>
                   </div>
                 </div>
-                <Link to="/savings" style={{ textDecoration: 'none' }}>
-                  <button className="tile-button">
-                    <FaPiggyBank /> Zarządzaj oszczędnościami
-                  </button>
-                </Link>
+                <div className="tile-button-wrapper">
+                  <Link to="/offers" style={{ textDecoration: 'none' }}>
+                    <button className="tile-button">
+                      <FaHandshake /> Analizuj oferty
+                    </button>
+                  </Link>
+                </div>
               </div>
 
-              {/* Kafelek Oferty */}
-              <div className="tile tile-offers">
-                <div className="tile-icon">
-                  <FaHandshake size={48} />
-                </div>
-                <h3>Oferty</h3>
-                <div className="tile-data">
-                  <div className="tile-stat">
-                    <span className="tile-label">Nowe:</span>
-                    <span className="tile-value info">3</span>
+              {/* Kafelek Oszczędności */}
+              <div className="tile tile-savings">
+                <div className="tile-content">
+                  <div className="tile-icon">
+                    <FaPiggyBank size={48} />
+                  </div>
+                  <h3>Oszczędności</h3>
+                  <div className="tile-data">
+                    <div className="tile-stat">
+                      <span className="tile-label">Miesięcznie:</span>
+                      <span className="tile-value success">2000 zł</span>
+                    </div>
                   </div>
                 </div>
-                <Link to="/offers" style={{ textDecoration: 'none' }}>
-                  <button className="tile-button">
-                    <FaHandshake /> Analizuj oferty
-                  </button>
-                </Link>
+                <div className="tile-button-wrapper">
+                  <Link to="/savings" style={{ textDecoration: 'none' }}>
+                    <button className="tile-button">
+                      <FaPiggyBank /> Zarządzaj oszczędnościami
+                    </button>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -622,6 +732,12 @@ function Dashboard({ username }) {
           onClick={() => setActiveTab('orders')}
         >
           Zamówienia
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'calendar' ? 'active' : ''}`}
+          onClick={() => setActiveTab('calendar')}
+        >
+          <FaCalendarAlt style={{ marginRight: '5px' }} /> Kalendarz
         </button>
       </div>
 
