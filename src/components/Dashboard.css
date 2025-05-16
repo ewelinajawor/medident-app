@@ -1,16 +1,16 @@
 :root {
-  --primary-color: #2C3E50; /* Granat */
-  --accent-color: #3498DB; /* Niebieski */
-  --background-color: #ECF0F1; /* Jasny szary */
-  --tile-background: linear-gradient(135deg, #FFFFFF, #F5F7FA); /* Delikatny gradient */
-  --text-color: #2C3E50; /* Granatowy */
-  --light-text-color: #FFFFFF; /* Biały */
+  --primary-color: #2C3E50;
+  --accent-color: #3498DB;
+  --background-color: #ECF0F1;
+  --tile-background: linear-gradient(135deg, #FFFFFF, #F5F7FA);
+  --text-color: #2C3E50;
+  --light-text-color: #FFFFFF;
   --gradient-blue: linear-gradient(135deg, #3498DB, #2C3E50);
   --gradient-navy: linear-gradient(135deg, #2C3E50, #34495E);
-  --success-color: #2ECC71; /* Zielony */
-  --warning-color: #F1C40F; /* Żółty */
-  --danger-color: #E74C3C; /* Czerwony */
-  --info-color: #3498DB; /* Niebieski */
+  --success-color: #2ECC71;
+  --warning-color: #F1C40F;
+  --danger-color: #E74C3C;
+  --info-color: #3498DB;
   --border-radius: 12px;
   --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   --transition: all 0.3s ease;
@@ -37,184 +37,12 @@ body {
   text-align: center;
 }
 
-/* Zakładki nawigacyjne */
-.dashboard-tabs {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 25px;
-}
-
-.tab-button {
-  background: white;
-  color: var(--primary-color);
-  border: none;
-  border-radius: var(--border-radius);
-  padding: 12px 25px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: 500;
-  transition: var(--transition);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-}
-
-.tab-button:hover {
-  background: #f5f9fa;
-  transform: translateY(-2px);
-}
-
-.tab-button.active {
-  background: var(--gradient-blue);
-  color: white;
-}
-
-/* Zawartość zakładki */
-.tab-content {
-  animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Tytuły sekcji */
-.section-title {
-  color: var(--primary-color);
-  font-size: 20px;
-  margin: 25px 0 15px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid var(--accent-color);
-}
-
-/* Panel alertów */
-.alerts-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 25px;
-}
-
-.alert {
-  padding: 15px;
-  border-radius: var(--border-radius);
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  box-shadow: var(--box-shadow);
-}
-
-.alert-warning {
-  background-color: #FFF3CD;
-  border-left: 4px solid var(--warning-color);
-}
-
-.alert-info {
-  background-color: #D1ECF1;
-  border-left: 4px solid var(--info-color);
-}
-
-.alert-icon {
-  font-size: 24px;
-  color: var(--primary-color);
-}
-
-.alert-content h4 {
-  margin: 0 0 5px;
-  color: var(--primary-color);
-}
-
-.alert-content a {
-  color: var(--accent-color);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.alert-content a:hover {
-  text-decoration: underline;
-}
-
-/* Panel wydarzeń na dziś */
-.today-panel {
-  background: white;
-  border-radius: var(--border-radius);
-  padding: 20px;
-  margin-bottom: 25px;
-  box-shadow: var(--box-shadow);
-}
-
-.today-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 15px;
-  color: var(--primary-color);
-}
-
-.today-header h3 {
-  margin: 0;
-  font-size: 18px;
-  flex-grow: 1;
-}
-
-.events-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.event-item {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 10px 15px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border-left: 3px solid var(--accent-color);
-}
-
-.event-delivery {
-  border-color: var(--info-color);
-}
-
-.event-inventory {
-  border-color: var(--warning-color);
-}
-
-.event-meeting {
-  border-color: var(--success-color);
-}
-
-.event-time {
-  font-weight: bold;
-  color: var(--primary-color);
-  min-width: 60px;
-}
-
-.event-title {
-  flex: 1;
-}
-
-.event-content {
-  flex: 1;
-}
-
-.event-description {
-  font-size: 13px;
-  color: #666;
-}
-
-/* Kafelki */
 .tiles {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
-  margin: 25px 0;
+  margin: 0 0 25px;
 }
 
 .tile {
@@ -228,7 +56,7 @@ body {
   align-items: center;
   text-align: center;
   width: 230px;
-  height: 320px; /* Stała wysokość dla wszystkich kafelków */
+  height: 280px;
   flex-shrink: 0;
 }
 
@@ -323,11 +151,64 @@ body {
   transform: scale(1.05);
 }
 
-.tile-buttons {
-  width: 100%;
+.dashboard-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 25px;
 }
 
-/* Przyciski akcji */
+.tab-button {
+  background: white;
+  color: var(--primary-color);
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 12px 25px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: var(--transition);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.tab-button:hover {
+  background: #f5f9fa;
+  transform: translateY(-2px);
+}
+
+.tab-button.active {
+  background: var(--gradient-blue);
+  color: white;
+}
+
+.tab-content {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.section-title {
+  color: var(--primary-color);
+  font-size: 20px;
+  margin: 25px 0 15px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--accent-color);
+}
+
+.empty-message {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-style: italic;
+}
+
 .action-buttons {
   display: flex;
   gap: 15px;
@@ -385,7 +266,25 @@ body {
   background: var(--primary-color);
 }
 
-/* Tabele */
+.add-event-small-button {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.add-event-small-button:hover {
+  background: var(--primary-color);
+}
+
 .dashboard-table {
   width: 100%;
   border-collapse: collapse;
@@ -424,7 +323,6 @@ body {
   background-color: rgba(241, 196, 15, 0.1);
 }
 
-/* Status badges */
 .status-badge {
   padding: 4px 8px;
   border-radius: 12px;
@@ -442,7 +340,6 @@ body {
   color: #f39c12;
 }
 
-/* Podsumowanie magazynu */
 .inventory-summary {
   display: flex;
   justify-content: center;
@@ -483,7 +380,6 @@ body {
   color: var(--danger-color);
 }
 
-/* Wykresy */
 .chart-wrapper {
   background: white;
   border-radius: var(--border-radius);
@@ -497,199 +393,24 @@ body {
   height: 300px;
 }
 
-.empty-message {
-  text-align: center;
-  padding: 20px;
-  color: #666;
-  font-style: italic;
-}
-
-/* Style dla alertu sukcesu */
-.success-alert {
-  background-color: rgba(46, 204, 113, 0.15);
-  border-left: 4px solid var(--success-color);
-  color: var(--success-color);
-  padding: 12px 15px;
-  margin-bottom: 20px;
-  border-radius: var(--border-radius);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  animation: fadeInOut 3s ease-in-out;
-}
-
-.success-icon {
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--success-color);
-  color: white;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-}
-
-@keyframes fadeInOut {
-  0% { opacity: 0; transform: translateY(-10px); }
-  10% { opacity: 1; transform: translateY(0); }
-  90% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-10px); }
-}
-
-/* Style dla przycisków w alertach */
-.alert-actions {
-  display: flex;
-  gap: 15px;
-  margin-top: 8px;
-  align-items: center;
-}
-
-.add-to-cart-button {
-  background-color: var(--accent-color);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: background-color 0.2s ease;
-}
-
-.add-to-cart-button:hover {
-  background-color: var(--primary-color);
-}
-
-/* Style dla przycisków w tabeli produktów */
-.low-stock-actions {
-  margin-bottom: 15px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.add-all-to-list-button {
-  background-color: var(--accent-color);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  padding: 8px 15px;
-  cursor: pointer;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: background-color 0.2s ease;
-}
-
-.add-all-to-list-button:hover {
-  background-color: var(--primary-color);
-}
-
-/* Dodanie kolumny "Brakuje" w tabeli */
-.dashboard-table .view-button {
-  margin-left: 5px;
-  background-color: var(--info-color);
-}
-
-.dashboard-table .view-button:hover {
-  background-color: var(--primary-color);
-}
-
-/* Style dla modalnego okna */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-/* Style dla kalendarza */
-.calendar-container {
-  background: white;
-  border-radius: var(--border-radius);
-  padding: 20px;
-  box-shadow: var(--box-shadow);
-  margin-bottom: 25px;
-}
-
-.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.calendar-header h3 {
-  margin: 0;
-  color: var(--primary-color);
-}
-
-.add-event-button {
-  background: var(--accent-color);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  padding: 8px 15px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.add-event-button:hover {
-  background: var(--primary-color);
-}
-
-/* Styl dla małego przycisku dodawania wydarzenia */
-.add-event-small-button {
-  background: var(--accent-color);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  padding: 5px 10px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.add-event-small-button:hover {
-  background: var(--primary-color);
-}
-
-/* Responsywność */
 @media screen and (max-width: 768px) {
   .tiles {
     flex-direction: column;
     align-items: center;
   }
-  
   .tile {
     width: 100%;
     max-width: 300px;
   }
-  
   .inventory-summary {
     flex-direction: column;
     align-items: center;
     gap: 15px;
   }
-  
   .action-buttons {
     flex-direction: column;
     align-items: center;
   }
-  
   .dashboard-tabs {
     flex-direction: column;
     gap: 5px;

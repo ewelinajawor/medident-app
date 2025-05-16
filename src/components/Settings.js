@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom"; 
-import { FaUserShield, FaUserEdit, FaBell, FaLock, FaCog } from "react-icons/fa";
+import { FaUserShield, FaUserEdit, FaBell, FaLock, FaCog, FaUsers } from "react-icons/fa";
 import "./Settings.css";
 
 const Settings = () => {
@@ -16,20 +16,27 @@ const Settings = () => {
     },
     {
       id: 2,
+      title: "Uprawnienia użytkowników",
+      icon: <FaUsers />,
+      onClick: () => navigate("/permissions"),
+      description: "Przydzielaj role i kontroluj dostęp do funkcji"
+    },
+    {
+      id: 3,
       title: "Edytuj Profil",
       icon: <FaUserEdit />,
       onClick: () => navigate("/edit-profile"),
       description: "Aktualizuj swoje dane osobowe i kontaktowe"
     },
     {
-      id: 3,
+      id: 4,
       title: "Zarządzaj Powiadomieniami",
       icon: <FaBell />,
       onClick: () => console.log("Powiadomienia"),
       description: "Dostosuj preferencje powiadomień email i aplikacji"
     },
     {
-      id: 4,
+      id: 5,
       title: "Zmień Hasło",
       icon: <FaLock />,
       onClick: () => console.log("Zmiana hasła"),
@@ -45,7 +52,7 @@ const Settings = () => {
       </div>
       
       <p className="settings-description">
-        Zarządzaj swoim profilem i preferencjami aplikacji poniżej.
+        Zarządzaj swoim profilem, uprawnieniami i preferencjami aplikacji poniżej.
       </p>
 
       <div className="settings-grid">

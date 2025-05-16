@@ -2,46 +2,41 @@ import React, { useState, useEffect } from 'react';
 import './Inventory.css';
 
 function Inventory() {
-  // Stan dla wszystkich produktów z obsługą localStorage
   const [products, setProducts] = useState(() => {
     const savedProducts = localStorage.getItem('dentalInventory');
     if (savedProducts) {
       try {
-        return JSON.parse(savedProducts);
+        // Convert the saved data to include the new visible and inTable properties
+        const parsedProducts = JSON.parse(savedProducts);
+        return parsedProducts.map((p) => ({
+          ...p,
+          visible: p.visible !== undefined ? p.visible : true,
+          inTable: p.inTable !== undefined ? p.inTable : false
+        }));
       } catch (error) {
-        console.error("Błąd przy wczytywaniu danych:", error);
-        // Fallback do danych domyślnych
         return [
-          { id: 1, name: 'Masa wyciskowa', category: 'Materiały', stock: 10, minStock: 5 },
-          { id: 2, name: 'Narzędzia protetyczne', category: 'Sprzęt', stock: 3, minStock: 5 },
-          { id: 3, name: 'Żel do wycisków', category: 'Materiały', stock: 8, minStock: 4 },
-          { id: 4, name: 'Środek do czyszczenia', category: 'Środki', stock: 15, minStock: 10 },
-          { id: 5, name: 'Nożyczki chirurgiczne', category: 'Sprzęt', stock: 2, minStock: 5 },
+          { id: 1, name: 'Masa wyciskowa', category: 'Materiały', stock: 10, minStock: 5, visible: true, inTable: false },
+          { id: 2, name: 'Narzędzia protetyczne', category: 'Sprzęt', stock: 3, minStock: 5, visible: true, inTable: false },
+          { id: 3, name: 'Żel do wycisków', category: 'Materiały', stock: 8, minStock: 4, visible: true, inTable: false },
+          { id: 4, name: 'Środek do czyszczenia', category: 'Środki', stock: 15, minStock: 10, visible: true, inTable: false },
+          { id: 5, name: 'Nożyczki chirurgiczne', category: 'Sprzęt', stock: 2, minStock: 5, visible: true, inTable: false },
         ];
       }
     } else {
-      // Dane domyślne, jeśli nie ma zapisanych
       return [
-        { id: 1, name: 'Masa wyciskowa', category: 'Materiały', stock: 10, minStock: 5 },
-        { id: 2, name: 'Narzędzia protetyczne', category: 'Sprzęt', stock: 3, minStock: 5 },
-        { id: 3, name: 'Żel do wycisków', category: 'Materiały', stock: 8, minStock: 4 },
-        { id: 4, name: 'Środek do czyszczenia', category: 'Środki', stock: 15, minStock: 10 },
-        { id: 5, name: 'Nożyczki chirurgiczne', category: 'Sprzęt', stock: 2, minStock: 5 },
+        { id: 1, name: 'Masa wyciskowa', category: 'Materiały', stock: 10, minStock: 5, visible: true, inTable: false },
+        { id: 2, name: 'Narzędzia protetyczne', category: 'Sprzęt', stock: 3, minStock: 5, visible: true, inTable: false },
+        { id: 3, name: 'Żel do wycisków', category: 'Materiały', stock: 8, minStock: 4, visible: true, inTable: false },
+        { id: 4, name: 'Środek do czyszczenia', category: 'Środki', stock: 15, minStock: 10, visible: true, inTable: false },
+        { id: 5, name: 'Nożyczki chirurgiczne', category: 'Sprzęt', stock: 2, minStock: 5, visible: true, inTable: false },
       ];
     }
   });
 
-  // Stan dla wybranej kategorii
   const [selectedCategory, setSelectedCategory] = useState('');
-
-  // Stan dla zapytania wyszukiwania
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Stan dla edycji bezpośredniej ilości
   const [editingId, setEditingId] = useState(null);
   const [editQuantity, setEditQuantity] = useState({});
-
-  // Stan dla formularza dodawania produktu
   const [newProduct, setNewProduct] = useState({
     name: '',
     category: 'Materiały',
@@ -49,18 +44,14 @@ function Inventory() {
     minStock: 0
   });
   const [showAddForm, setShowAddForm] = useState(false);
-
-  // Stan dla produktów w koszyku zamówień
-  const [orderCart, setOrderCart] = useState([]);
-  const [showOrderModal, setShowOrderModal] = useState(false);
-
-  // Stan dla ostatniej aktualizacji
   const [lastUpdate, setLastUpdate] = useState(() => {
     const lastSaved = localStorage.getItem('lastInventoryUpdate');
     return lastSaved || new Date().toLocaleString();
   });
+  const [issueModal, setIssueModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [issueQuantity, setIssueQuantity] = useState(1);
 
-  // Efekt zapisujący dane przy każdej zmianie
   useEffect(() => {
     localStorage.setItem('dentalInventory', JSON.stringify(products));
     const now = new Date().toLocaleString();
@@ -68,7 +59,6 @@ function Inventory() {
     localStorage.setItem('lastInventoryUpdate', now);
   }, [products]);
 
-  // Funkcja określająca stan zapasów
   const getStockStatus = (stock, minStock) => {
     if (stock === 0) return 'empty';
     if (stock < minStock * 0.5) return 'critical';
@@ -77,23 +67,19 @@ function Inventory() {
     return 'excess';
   };
 
-  // Filtruj produkty
+  // Filter products that should appear in the tile view
   const filteredProducts = products.filter((product) => {
     const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesCategory && matchesSearch && product.visible;
   });
 
-  // Oblicz liczbę produktów z niskim i krytycznym stanem
+  // Get products that should appear in the table view
+  const tableProducts = products.filter(product => product.inTable);
+
   const lowStockProducts = products.filter((product) => product.stock < product.minStock).length;
   const criticalStockProducts = products.filter((product) => product.stock < product.minStock * 0.5).length;
-  
-  // Produkty wymagające natychmiastowego zamówienia
-  const criticaProducts = products.filter(p => 
-    getStockStatus(p.stock, p.minStock) === 'critical' || getStockStatus(p.stock, p.minStock) === 'empty'
-  );
 
-  // Aktualizuj stan magazynowy
   const handleUpdateStock = (id, newStock) => {
     if (newStock >= 0) {
       setProducts((prev) =>
@@ -104,45 +90,36 @@ function Inventory() {
     }
   };
 
-  // Funkcje obsługi bezpośredniej edycji ilości
   const handleDirectEdit = (id, currentStock) => {
     setEditingId(id);
     setEditQuantity({ [id]: currentStock });
   };
 
   const handleQuantitySave = (id) => {
-    const newQuantity = parseInt(editQuantity[id] || 0);
+    const newQuantity = parseInt(String(editQuantity[id] || 0));
     if (newQuantity >= 0) {
       handleUpdateStock(id, newQuantity);
       setEditingId(null);
     }
   };
 
-  // Usuń produkt
   const handleRemoveProduct = (id) => {
     if (window.confirm("Czy na pewno chcesz usunąć ten produkt?")) {
       setProducts((prev) => prev.filter((product) => product.id !== id));
     }
   };
 
-  // Funkcja dodająca nowy produkt
   const handleAddProduct = (e) => {
     e.preventDefault();
-    
-    // Walidacja formularza
     if (!newProduct.name || newProduct.stock < 0 || newProduct.minStock < 0) {
       alert('Proszę wypełnić wszystkie pola poprawnie.');
       return;
     }
-    
-    // Dodaj nowy produkt z unikalnym ID
     const newId = Math.max(...products.map(p => p.id), 0) + 1;
     setProducts([
       ...products,
-      { ...newProduct, id: newId }
+      { ...newProduct, id: newId, visible: true, inTable: false }
     ]);
-    
-    // Resetuj formularz
     setNewProduct({
       name: '',
       category: 'Materiały',
@@ -152,39 +129,53 @@ function Inventory() {
     setShowAddForm(false);
   };
 
-  // Funkcje zarządzania zamówieniami
-  const addToOrder = (product) => {
-    // Sprawdź, czy produkt już jest w koszyku
-    const existingProduct = orderCart.find(item => item.id === product.id);
-    
-    if (existingProduct) {
-      // Aktualizuj ilość, jeśli już jest w koszyku
-      setOrderCart(orderCart.map(item => 
-        item.id === product.id 
-          ? { ...item, orderQuantity: item.orderQuantity + (product.minStock - product.stock) } 
-          : item
-      ));
-    } else {
-      // Dodaj nowy produkt do koszyka
-      setOrderCart([
-        ...orderCart, 
-        { 
-          ...product, 
-          orderQuantity: product.minStock - product.stock > 0 ? product.minStock - product.stock : 1
-        }
-      ]);
+  // Add product to table and hide from grid
+  const addToTable = (product) => {
+    setProducts(prev => 
+      prev.map(p => 
+        p.id === product.id 
+          ? { ...p, visible: false, inTable: true } 
+          : p
+      )
+    );
+  };
+
+  // Remove product from table and make visible in grid again
+  const removeFromTable = (product) => {
+    setProducts(prev => 
+      prev.map(p => 
+        p.id === product.id 
+          ? { ...p, visible: true, inTable: false } 
+          : p
+      )
+    );
+  };
+
+  // Function to handle issuing products
+  const handleIssueProduct = (product) => {
+    setSelectedProduct(product);
+    setIssueQuantity(1);
+    setIssueModal(true);
+  };
+
+  // Function to complete the issue process
+  const completeIssue = () => {
+    if (selectedProduct && issueQuantity > 0) {
+      // Check if quantity is valid
+      if (issueQuantity > selectedProduct.stock) {
+        alert('Nie można wydać więcej produktów niż jest na stanie.');
+        return;
+      }
+      
+      // Update the stock
+      const newStock = selectedProduct.stock - issueQuantity;
+      handleUpdateStock(selectedProduct.id, newStock);
+      
+      // Close the modal and reset values
+      setIssueModal(false);
+      setSelectedProduct(null);
+      setIssueQuantity(1);
     }
-  };
-
-  const removeFromOrder = (productId) => {
-    setOrderCart(orderCart.filter(item => item.id !== productId));
-  };
-
-  const submitOrder = () => {
-    // Tutaj można dodać integrację z systemem zamówień
-    alert(`Zamówienie zostało wysłane!\nLiczba produktów: ${orderCart.length}`);
-    setOrderCart([]);
-    setShowOrderModal(false);
   };
 
   return (
@@ -203,41 +194,6 @@ function Inventory() {
         </div>
       </div>
 
-      {/* Przycisk zamówienia */}
-      <div className="order-manager">
-        <button 
-          className="view-order-button" 
-          onClick={() => setShowOrderModal(true)}
-          disabled={orderCart.length === 0}
-        >
-          🛒 Zamówienie ({orderCart.length})
-        </button>
-      </div>
-
-      {/* Inteligentne powiadomienie */}
-      {criticaProducts.length > 0 && (
-        <div className="smart-notification">
-          <div className="notification-icon">⚠️</div>
-          <div className="notification-content">
-            <h4>Uwaga! Produkty wymagające natychmiastowego zamówienia</h4>
-            <ul>
-              {criticaProducts.map(product => (
-                <li key={product.id}>
-                  {product.name} - stan: <strong>{product.stock}</strong> 
-                  (minimum: {product.minStock})
-                  <button 
-                    onClick={() => addToOrder(product)} 
-                    className="quick-order-btn"
-                  >
-                    Zamów teraz
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
-
       {/* Wyszukiwarka */}
       <div className="search-bar">
         <input
@@ -248,17 +204,25 @@ function Inventory() {
         />
       </div>
 
-      {/* Filtry kategorii */}
-      <div className="filters">
-        <button onClick={() => setSelectedCategory('')}>Wszystkie</button>
-        <button onClick={() => setSelectedCategory('Materiały')}>Materiały</button>
-        <button onClick={() => setSelectedCategory('Sprzęt')}>Sprzęt</button>
-        <button onClick={() => setSelectedCategory('Środki')}>Środki</button>
-      </div>
+      {/* Filtry kategorii jako pozioma lista */}
+      <ul className="filters-list">
+        <li>
+          <button onClick={() => setSelectedCategory('')}>Wszystkie</button>
+        </li>
+        <li>
+          <button onClick={() => setSelectedCategory('Materiały')}>Materiały</button>
+        </li>
+        <li>
+          <button onClick={() => setSelectedCategory('Sprzęt')}>Sprzęt</button>
+        </li>
+        <li>
+          <button onClick={() => setSelectedCategory('Środki')}>Środki</button>
+        </li>
+      </ul>
 
       {/* Przycisk dodawania produktu */}
       <div className="add-product-button-container">
-        <button 
+        <button
           className="add-product-button"
           onClick={() => setShowAddForm(true)}
         >
@@ -269,8 +233,8 @@ function Inventory() {
       {/* Widok kafelkowy */}
       <div className="product-grid">
         {filteredProducts.map((product) => (
-          <div 
-            key={product.id} 
+          <div
+            key={product.id}
             className={`product-tile ${getStockStatus(product.stock, product.minStock)}-stock`}
           >
             <h3>{product.name}</h3>
@@ -279,7 +243,7 @@ function Inventory() {
             <div className="progress-bar">
               <div
                 className={`progress ${getStockStatus(product.stock, product.minStock)}-indicator`}
-                style={{ 
+                style={{
                   width: `${Math.min((product.stock / product.minStock) * 100, 100)}%`
                 }}
               ></div>
@@ -287,14 +251,13 @@ function Inventory() {
             {product.stock < product.minStock && <span className="warning-icon">⚠️</span>}
             <div className="quantity-controls">
               <button onClick={() => handleUpdateStock(product.id, product.stock - 1)}>-</button>
-              
               {editingId === product.id ? (
                 <div className="direct-edit">
                   <input
                     type="number"
                     min="0"
                     value={editQuantity[product.id] || ''}
-                    onChange={(e) => setEditQuantity({ ...editQuantity, [product.id]: e.target.value })}
+                    onChange={(e) => setEditQuantity({ ...editQuantity, [product.id]: parseInt(e.target.value) || 0 })}
                     onKeyDown={(e) => e.key === 'Enter' && handleQuantitySave(product.id)}
                   />
                   <button className="save-quantity" onClick={() => handleQuantitySave(product.id)}>✓</button>
@@ -302,26 +265,22 @@ function Inventory() {
               ) : (
                 <span onClick={() => handleDirectEdit(product.id, product.stock)}>{product.stock}</span>
               )}
-              
               <button onClick={() => handleUpdateStock(product.id, product.stock + 1)}>+</button>
             </div>
-            {product.stock < product.minStock && (
-              <button 
-                onClick={() => addToOrder(product)} 
-                className="order-btn"
+            <div className="product-actions">
+              <button
+                onClick={() => addToTable(product)}
+                className="add-to-table-btn"
               >
-                🛒 Zamów
+                Dodaj do tabeli
               </button>
-            )}
-            <button onClick={() => handleRemoveProduct(product.id)} className="remove-btn">
-              🗑️ Usuń
-            </button>
+            </div>
           </div>
         ))}
       </div>
 
       {/* Tabela jako alternatywny widok */}
-      <h3>Tabela produktów</h3>
+      <h3>Stan magazynowy</h3>
       <table className="product-table">
         <thead>
           <tr>
@@ -333,22 +292,29 @@ function Inventory() {
           </tr>
         </thead>
         <tbody>
-          {filteredProducts.map((product) => (
+          {tableProducts.map((product) => (
             <tr key={product.id} className={getStockStatus(product.stock, product.minStock) + '-stock'}>
               <td>{product.name}</td>
               <td>{product.category}</td>
               <td>{product.stock}</td>
               <td>{product.minStock}</td>
-              <td>
-                {product.stock < product.minStock && (
-                  <button 
-                    onClick={() => addToOrder(product)}
-                    className="table-order-btn"
-                  >
-                    🛒
-                  </button>
-                )}
-                <button onClick={() => handleRemoveProduct(product.id)}>🗑️</button>
+              <td className="table-actions">
+                <button 
+                  className="table-copy-btn"
+                  onClick={() => {
+                    const newId = Math.max(...products.map(p => p.id), 0) + 1;
+                    const productCopy = { ...product, id: newId, visible: true, inTable: false };
+                    setProducts(prev => [...prev, productCopy]);
+                  }}
+                >
+                  📋 Kopiuj
+                </button>
+                <button 
+                  className="table-issue-btn"
+                  onClick={() => handleIssueProduct(product)}
+                >
+                  📤 Wydaj
+                </button>
               </td>
             </tr>
           ))}
@@ -373,51 +339,45 @@ function Inventory() {
                 <input
                   type="text"
                   value={newProduct.name}
-                  onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+                  onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
                   required
                 />
               </div>
-              
               <div className="form-group">
                 <label>Kategoria:</label>
                 <select
                   value={newProduct.category}
-                  onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
+                  onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
                 >
                   <option value="Materiały">Materiały</option>
                   <option value="Sprzęt">Sprzęt</option>
                   <option value="Środki">Środki</option>
                 </select>
               </div>
-              
               <div className="form-group">
                 <label>Aktualny stan:</label>
                 <input
                   type="number"
                   min="0"
                   value={newProduct.stock}
-                  onChange={(e) => setNewProduct({...newProduct, stock: parseInt(e.target.value) || 0})}
+                  onChange={(e) => setNewProduct({ ...newProduct, stock: parseInt(e.target.value) || 0 })}
                 />
               </div>
-              
               <div className="form-group">
                 <label>Minimalny stan:</label>
                 <input
                   type="number"
                   min="0"
                   value={newProduct.minStock}
-                  onChange={(e) => setNewProduct({...newProduct, minStock: parseInt(e.target.value) || 0})}
+                  onChange={(e) => setNewProduct({ ...newProduct, minStock: parseInt(e.target.value) || 0 })}
                 />
               </div>
-              
               <div className="form-buttons">
-                <button type="submit" className="save-button">Zapisz</button>
-                <button 
-                  type="button" 
-                  className="cancel-button"
-                  onClick={() => setShowAddForm(false)}
-                >
+                <button type="button" onClick={() => setShowAddForm(false)} className="cancel-button">
                   Anuluj
+                </button>
+                <button type="submit" className="submit-button">
+                  Dodaj
                 </button>
               </div>
             </form>
@@ -425,69 +385,39 @@ function Inventory() {
         </div>
       )}
 
-      {/* Modal zamówienia */}
-      {showOrderModal && (
+      {/* Modal for issuing products */}
+      {issueModal && selectedProduct && (
         <div className="modal-overlay">
-          <div className="order-modal">
-            <h3>Koszyk zamówień</h3>
-            
-            {orderCart.length === 0 ? (
-              <p>Koszyk jest pusty</p>
-            ) : (
-              <>
-                <table className="order-table">
-                  <thead>
-                    <tr>
-                      <th>Produkt</th>
-                      <th>Kategoria</th>
-                      <th>Ilość</th>
-                      <th>Akcje</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orderCart.map(item => (
-                      <tr key={item.id}>
-                        <td>{item.name}</td>
-                        <td>{item.category}</td>
-                        <td>
-                          <input 
-                            type="number" 
-                            min="1" 
-                            value={item.orderQuantity}
-                            onChange={(e) => {
-                              const qty = parseInt(e.target.value) || 1;
-                              setOrderCart(orderCart.map(p => 
-                                p.id === item.id ? {...p, orderQuantity: qty} : p
-                              ));
-                            }}
-                          />
-                        </td>
-                        <td>
-                          <button 
-                            onClick={() => removeFromOrder(item.id)}
-                            className="remove-from-order"
-                          >
-                            ✕
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                
-                <div className="form-buttons">
-                  <button onClick={submitOrder} className="submit-order">
-                    Wyślij zamówienie
-                  </button>
-                  <button 
-                    onClick={() => setShowOrderModal(false)} 
-                    className="cancel-button"
-                  >
-                    Anuluj
-                  </button>
-                </div>
-              </>
-            )}
+          <div className="issue-product-form">
+            <h3>Wydaj produkt</h3>
+            <div className="product-issue-details">
+              <p><strong>Nazwa:</strong> {selectedProduct.name}</p>
+              <p><strong>Kategoria:</strong> {selectedProduct.category}</p>
+              <p><strong>Dostępny stan:</strong> {selectedProduct.stock}</p>
+            </div>
+            <div className="form-group">
+              <label>Ilość do wydania:</label>
+              <input
+                type="number"
+                min="1"
+                max={selectedProduct.stock}
+                value={issueQuantity}
+                onChange={(e) => setIssueQuantity(parseInt(e.target.value) || 1)}
+              />
+            </div>
+            <div className="form-buttons">
+              <button type="button" onClick={() => setIssueModal(false)} className="cancel-button">
+                Anuluj
+              </button>
+              <button 
+                type="button" 
+                className="submit-button"
+                onClick={completeIssue}
+                disabled={issueQuantity <= 0 || issueQuantity > selectedProduct.stock}
+              >
+                Wydaj
+              </button>
+            </div>
           </div>
         </div>
       )}

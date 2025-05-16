@@ -9,20 +9,19 @@
   --danger-color: #e74c3c;
   --light-text-color: #ffffff;
   --tile-background: #ffffff;
-  --border-radius: 10px;
-  --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  --transition: all 0.3s ease;
-  
-  /* Gradients */
+  --border-radius: 12px;
+  --box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  --transition: all 0.25s cubic-bezier(.4,0,.2,1);
+
   --gradient-navy: linear-gradient(135deg, #100e20 0%, #241848 100%);
   --gradient-blue: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
 }
 
 .settings-container {
-  max-width: 800px;
-  margin: 30px auto;
-  padding: 30px;
-  background-color: var(--tile-background);
+  max-width: 900px;
+  margin: 32px auto;
+  padding: 32px;
+  background: var(--tile-background);
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
   transition: var(--transition);
@@ -32,13 +31,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .settings-icon {
-  font-size: 28px;
+  font-size: 32px;
   color: var(--primary-color);
-  margin-right: 15px;
+  margin-right: 16px;
   animation: rotateGear 10s linear infinite;
 }
 
@@ -48,17 +47,17 @@
 }
 
 .settings-title {
-  font-size: 32px;
+  font-size: 34px;
   color: var(--primary-color);
   margin: 0;
   font-weight: 700;
 }
 
 .settings-description {
-  font-size: 16px;
+  font-size: 17px;
   color: var(--text-color);
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 32px;
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
@@ -66,14 +65,14 @@
 
 .settings-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
 }
 
 .settings-tile {
   background: var(--tile-background);
   border-radius: var(--border-radius);
-  padding: 25px;
+  padding: 28px 20px 24px 20px;
   box-shadow: var(--box-shadow);
   transition: var(--transition);
   cursor: pointer;
@@ -84,6 +83,7 @@
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(0, 0, 0, 0.05);
+  min-height: 180px;
 }
 
 .settings-tile::before {
@@ -100,8 +100,8 @@
 }
 
 .settings-tile:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.12);
 }
 
 .settings-tile:hover::before {
@@ -109,19 +109,19 @@
 }
 
 .settings-tile-icon {
-  font-size: 36px;
+  font-size: 38px;
   color: var(--accent-color);
-  margin-bottom: 15px;
+  margin-bottom: 16px;
   transition: var(--transition);
 }
 
 .settings-tile:hover .settings-tile-icon {
-  transform: scale(1.15);
+  transform: scale(1.12);
   color: var(--primary-color);
 }
 
 .settings-tile-title {
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 600;
   color: var(--primary-color);
   margin: 0 0 10px 0;
@@ -133,29 +133,92 @@
 }
 
 .settings-tile-description {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-color);
-  opacity: 0.8;
+  opacity: 0.85;
   margin: 0;
   transition: var(--transition);
 }
 
+/* Panel uprawnień (przykład stylu do /permissions) */
+.permissions-panel {
+  background: var(--background-color);
+  border-radius: var(--border-radius);
+  padding: 24px;
+  margin-top: 24px;
+  box-shadow: var(--box-shadow);
+}
+
+.permissions-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--tile-background);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.permissions-table th,
+.permissions-table td {
+  padding: 14px 12px;
+  text-align: left;
+  color: var(--text-color);
+}
+
+.permissions-table th {
+  background: var(--gradient-blue);
+  color: var(--light-text-color);
+  font-weight: 600;
+  border-bottom: 2px solid var(--accent-color);
+}
+
+.permissions-table tr:nth-child(even) {
+  background: #f7f9fa;
+}
+
+.permissions-role-select {
+  padding: 7px 12px;
+  border-radius: 6px;
+  border: 1px solid #d0d6e1;
+  background: #fff;
+  font-size: 15px;
+  color: var(--text-color);
+}
+
+.permissions-action-btn {
+  background: var(--accent-color);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 15px;
+  transition: background 0.2s;
+}
+
+.permissions-action-btn:hover {
+  background: var(--primary-color);
+}
+
 /* Responsywność */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .settings-container {
-    padding: 20px;
-    margin: 15px;
+    padding: 18px;
+    margin: 10px;
   }
-  
   .settings-grid {
     grid-template-columns: 1fr;
+    gap: 18px;
   }
-  
   .settings-title {
-    font-size: 28px;
+    font-size: 26px;
   }
-  
   .settings-tile {
-    padding: 20px;
+    padding: 18px;
+    min-height: 120px;
+  }
+  .permissions-panel {
+    padding: 12px;
   }
 }
