@@ -1,0 +1,92 @@
+.savings-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(102, 0, 102, 0.2);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #4B0082; /* ciemny fiolet */
+  }
+  
+  .savings-title {
+    text-align: center;
+    font-size: 2.4rem;
+    font-weight: 700;
+    margin-bottom: 30px;
+    color: #660066;
+  }
+  
+  .savings-summary {
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+  }
+  
+  .savings-card {
+    flex: 1 1 30%;
+    background-color: #F3E8FF;
+    border: 1px solid #D1B2FF;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 5px 12px rgba(102, 0, 102, 0.1);
+    text-align: center;
+  }
+  
+  .savings-card h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #660066;
+  }
+  
+  .savings-card p {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #330033;
+  }
+  
+  .savings-list {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  }
+  
+  .savings-list h3 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #660066;
+  }
+  
+  .savings-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .savings-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 1rem;
+    color: #330033;
+  }
+  
+  .savings-list li:last-child {
+    border-bottom: none;
+  }
+  
+  .chart-container {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  }
+  

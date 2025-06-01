@@ -13,6 +13,7 @@ import AddProduct from "./components/AddProduct";
 import Offers from "./components/Offers"; 
 import EditProfile from "./components/EditProfile";
 import AdminPanel from "./components/AdminPanel";
+import Savings from "./components/Savings";  // <-- nowy import
 import "./App.css";
 
 function App() {
@@ -41,16 +42,10 @@ function App() {
     { id: 3, name: "Marrodent", email: "marek.fajkis@marrodent.pl", phone: "+33 8152013", nip: "9372343899" },
   ]);
 
-  // ✅ Nazwa gabinetu - przechowywana globalnie
   const [clinicName, setClinicName] = useState("Dentica Plus");
-
-  // ✅ Zdjęcie profilowe - przechowywane globalnie
   const [profileImage, setProfileImage] = useState(null);
-
-  // ✅ Lista zakupów
   const [shoppingList, setShoppingList] = useState([]);
 
-  // ✅ Funkcja do dodawania produktów do listy zakupów
   const addToShoppingList = (product) => {
     setShoppingList(prevList => [...prevList, product]);
   };
@@ -58,7 +53,6 @@ function App() {
   return (
     <Router>
       <div className="app-container">
-        {/* ✅ Navbar teraz pokazuje dynamiczną nazwę gabinetu */}
         <Navbar clinicName={clinicName} />
         <div className="main-content">
           <Routes>
@@ -84,12 +78,13 @@ function App() {
             />
             <Route path="/add-product" element={<AddProduct />} />
             <Route path="/offers" element={<Offers />} />
-            {/* ✅ Przekazujemy funkcje do zmiany nazwy gabinetu i zdjęcia */}
             <Route 
               path="/edit-profile" 
               element={<EditProfile clinicName={clinicName} updateClinicName={setClinicName} profileImage={profileImage} updateProfileImage={setProfileImage} />} 
             />
             <Route path="/admin-panel" element={<AdminPanel />} />
+            {/* Nowa ścieżka do ekranu oszczędności */}
+            <Route path="/savings" element={<Savings />} />
           </Routes>
         </div>
       </div>

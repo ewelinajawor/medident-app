@@ -1,187 +1,122 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { FaExclamationTriangle, FaBell, FaCheck, FaShoppingCart } from 'react-icons/fa';
+import { FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
 import './Notifications.css';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 
-function Notifications() {
-  // Stan komponentu
-  const [notifications, setNotifications] = useState([]);
-  const [showAll, setShowAll] = useState(false);
-  const [filter, setFilter] = useState('all');
-  
-  // Symulacja danych o produktach
+dayjs.extend(relativeTime);
+
+const Notifications = () => {
   const lowStockProducts = [
-    { 
-      id: 1, 
-      name: 'Masa wyciskowa A', 
-      quantity: 3, 
-      minStock: 5, 
-      type: 'low-stock',
-      time: '2h temu',
-      status: 'added'
-    },
-    { 
-      id: 2, 
-      name: 'Narzędzie protetyczne X', 
-      quantity: 1, 
-      minStock: 2, 
+    {
+      id: 1,
       type: 'critical-stock',
-      time: '4h temu',
-      status: 'pending'
-    }
+      message: 'Masa wyciskowa A ma krytycznie niski poziom zapasów.',
+      date: '2025-05-31T08:00:00Z',
+    },
+    {
+      id: 2,
+      type: 'low-stock',
+      message: 'Igły zbliżają się do minimalnego poziomu.',
+      date: '2025-05-31T09:30:00Z',
+    },
   ];
 
   const orderNotifications = [
     {
-      id: 101,
-      name: 'Zamówienie #3245',
+      id: 3,
       type: 'order-status',
-      status: 'delivered',
-      time: '1h temu',
-      message: 'Dostarczono'
-    }
+      message: 'Zamówienie #456 zostało zrealizowane.',
+      date: '2025-05-31T10:00:00Z',
+    },
+    {
+      id: 4,
+      type: 'order-status',
+      message: 'Zamówienie #457 oczekuje na zatwierdzenie.',
+      date: '2025-05-31T11:00:00Z',
+    },
   ];
 
-  // Łączenie wszystkich powiadomień
+  const [notifications, setNotifications] = useState([]);
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [readNotifications, setReadNotifications] = useState([]);
+  const [sortNewestFirst, setSortNewestFirst] = useState(true);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const allNotifications = [...lowStockProducts, ...orderNotifications];
-    setNotifications(allNotifications);
+    setTimeout(() => {
+      setNotifications([...lowStockProducts, ...orderNotifications]);
+      setLoading(false);
+    }, 500);
   }, []);
 
-  // Filtrowanie powiadomień
-  const filteredNotifications = notifications.filter(notification => {
-    if (filter === 'all') return true;
-    if (filter === 'stock') return notification.type === 'low-stock' || notification.type === 'critical-stock';
-    return notification.type === filter;
-  });
-
-  // Wyświetlana lista powiadomień (wszystkie lub tylko kilka najnowszych)
-  const displayedNotifications = showAll 
-    ? filteredNotifications 
-    : filteredNotifications.slice(0, 3);
-
-  // Funkcja renderująca ikony zależnie od typu powiadomienia
-  const renderNotificationIcon = (type, status) => {
-    if (type === 'low-stock' || type === 'critical-stock') {
-      return <FaExclamationTriangle className={`notification-icon ${type}`} />;
-    } else if (type === 'order-status') {
-      if (status === 'delivered') {
-        return <FaCheck className="notification-icon order-delivered" />;
-      } else {
-        return <FaBell className="notification-icon order-processing" />;
-      }
+  const markAsRead = (id) => {
+    if (!readNotifications.includes(id)) {
+      setReadNotifications([...readNotifications, id]);
     }
-    return <FaBell className="notification-icon" />;
   };
 
-  // Funkcja renderująca przycisk akcji (bardziej kompaktowy)
-  const renderActionButton = (notification) => {
-    if (notification.type === 'low-stock' || notification.type === 'critical-stock') {
-      if (notification.status === 'pending') {
-        return (
-          <button className="action-button add-to-cart-button">
-            <FaShoppingCart /> Dodaj
-          </button>
-        );
-      } else {
-        return (
-          <span className="status-badge added-to-cart">
-            <FaCheck /> Dodano
-          </span>
-        );
-      }
-    } else if (notification.type === 'order-status') {
-      return (
-        <Link to={`/orders/${notification.id}`} className="action-link">
-          Szczegóły
-        </Link>
-      );
-    }
-    return null;
+  const toggleSortOrder = () => {
+    setSortNewestFirst(!sortNewestFirst);
   };
 
-  // Funkcja renderująca treść powiadomienia (bardziej zwięzłą)
-  const renderNotificationContent = (notification) => {
-    if (notification.type === 'low-stock' || notification.type === 'critical-stock') {
-      return (
-        <>
-          <p className="notification-title">{notification.name}</p>
-          <p className="notification-text">
-            Stan: <span className={notification.type === 'critical-stock' ? 'critical-text' : 'warning-text'}>
-              {notification.quantity}/{notification.minStock}
-            </span>
-          </p>
-        </>
-      );
-    } else if (notification.type === 'order-status') {
-      return (
-        <>
-          <p className="notification-title">{notification.name}</p>
-          <p className="notification-text">{notification.message}</p>
-        </>
-      );
-    }
-    return <p className="notification-text">{notification.name}</p>;
-  };
+  const filtered = notifications.filter((n) =>
+    activeFilter === 'all' ? true : n.type === activeFilter
+  );
+
+  const sorted = [...filtered].sort((a, b) =>
+    sortNewestFirst
+      ? new Date(b.date).getTime() - new Date(a.date).getTime()
+      : new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+
+  if (loading) return <div className="loading">⏳ Ładowanie powiadomień...</div>;
 
   return (
     <div className="notifications-container">
-      <div className="notifications-header">
-        <h3>Powiadomienia</h3>
-        <div className="filter-controls">
-          <button 
-            className={`filter-button ${filter === 'all' ? 'active' : ''}`}
-            onClick={() => setFilter('all')}
-          >
-            Wszystkie
-          </button>
-          <button 
-            className={`filter-button ${filter === 'stock' ? 'active' : ''}`}
-            onClick={() => setFilter('stock')}
-          >
-            Magazyn
-          </button>
-          <button 
-            className={`filter-button ${filter === 'order-status' ? 'active' : ''}`}
-            onClick={() => setFilter('order-status')}
-          >
-            Zamówienia
-          </button>
+      <h2>🔔 Powiadomienia</h2>
+
+      <div className="controls">
+        <div className="filters">
+          <button onClick={() => setActiveFilter('all')} className={activeFilter === 'all' ? 'active' : ''}>Wszystkie</button>
+          <button onClick={() => setActiveFilter('order-status')} className={activeFilter === 'order-status' ? 'active' : ''}>Zamówienia</button>
+          <button onClick={() => setActiveFilter('critical-stock')} className={activeFilter === 'critical-stock' ? 'active' : ''}>Krytyczne</button>
+          <button onClick={() => setActiveFilter('low-stock')} className={activeFilter === 'low-stock' ? 'active' : ''}>Niskie</button>
         </div>
+        <button className="sort" onClick={toggleSortOrder}>
+          Sortuj: {sortNewestFirst ? 'Najnowsze' : 'Najstarsze'}
+        </button>
       </div>
 
-      {displayedNotifications.length > 0 ? (
-        <ul className="notifications-list">
-          {displayedNotifications.map((notification) => (
-            <li key={notification.id} className={`notification-item ${notification.type}`}>
-              <div className="notification-icon-wrapper">
-                {renderNotificationIcon(notification.type, notification.status)}
-              </div>
-              <div className="notification-content">
-                {renderNotificationContent(notification)}
-                <p className="notification-time">{notification.time}</p>
-              </div>
-              <div className="notification-actions">
-                {renderActionButton(notification)}
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className="empty-notifications">
-          <p>Brak powiadomień</p>
-        </div>
-      )}
-
-      {notifications.length > 3 && (
-        <div className="show-more-container">
-          <button className="show-more-button" onClick={() => setShowAll(!showAll)}>
-            {showAll ? 'Pokaż mniej' : `Pokaż wszystkie (${notifications.length})`}
-          </button>
-        </div>
-      )}
+      <ul className="compact-list">
+        {sorted.map((notification) => (
+          <li
+            key={notification.id}
+            className={`compact-item ${readNotifications.includes(notification.id) ? 'read' : ''}`}
+            onClick={() => markAsRead(notification.id)}
+          >
+            <div className="icon">
+              {notification.type === 'order-status' ? (
+                <FaCheckCircle className="order-icon" />
+              ) : (
+                <FaExclamationTriangle
+                  className="stock-icon"
+                  style={{ color: notification.type === 'critical-stock' ? '#d10000' : '#ff9900' }}
+                />
+              )}
+            </div>
+            <div className="text">
+              <p className="message">{notification.message}</p>
+              <span className="time">{dayjs(notification.date).fromNow()}</span>
+            </div>
+            {!readNotifications.includes(notification.id) && (
+              <span className="badge">Nowe</span>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
-}
+};
 
 export default Notifications;
