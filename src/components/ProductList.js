@@ -1,51 +1,43 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  FaShoppingCart,
-  FaSearch,
-  FaSortUp,
-  FaSortDown,
-  FaAngleDoubleLeft,
-  FaAngleDoubleRight,
-  FaAngleLeft,
-  FaAngleRight,
-  FaFilter,
-  FaExclamationTriangle,
-  FaCheckCircle,
-  FaRegStar,
-  FaStar
-} from "react-icons/fa";
-import "./ProductList.css";
+import React, { useState, useEffect } from 'react';
+import { 
+  Search, 
+  Filter, 
+  Grid3X3, 
+  List, 
+  Plus, 
+  ChevronDown, 
+  ChevronUp, 
+  Package, 
+  Building2, 
+  Tag, 
+  ArrowUpDown,
+  X,
+  SlidersHorizontal,
+  Eye,
+  ShoppingCart
+} from 'lucide-react';
+import './ProductList.css';
 
 const ProductList = ({ addToShoppingList }) => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [page, setPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [sortConfig, setSortConfig] = useState({ key: "name", direction: "asc" });
-  const [searchTerms, setSearchTerms] = useState({ name: "", category: "", supplier: "" });
-  const [activeFilter, setActiveFilter] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid', 'table'
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
+  const [filters, setFilters] = useState({
+    categories: [],
+    suppliers: []
+  });
   const [showFilters, setShowFilters] = useState(false);
-  const [notification, setNotification] = useState(null);
-  const [error, setError] = useState(null);
+  const [showQuickView, setShowQuickView] = useState(null);
+  const [notification, setNotification] = useState('');
   const [loading, setLoading] = useState(true);
-  const [categories, setCategories] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedSuppliers, setSelectedSuppliers] = useState([]);
-  const [showLowStock, setShowLowStock] = useState(false);
-  const [favorites, setFavorites] = useState([]);
-  const [view, setView] = useState("table"); // table, cards
-  const navigate = useNavigate();
-  const filterRef = useRef(null);
+  const [error, setError] = useState(null);
 
+  // Load products from JSON
   useEffect(() => {
-    // Ładowanie ulubionych z localStorage
-    const savedFavorites = localStorage.getItem("favoriteProducts");
-    if (savedFavorites) {
-      setFavorites(JSON.parse(savedFavorites));
-    }
-
     setLoading(true);
     fetch("/dental_products.json")
       .then((response) => {
@@ -56,26 +48,14 @@ const ProductList = ({ addToShoppingList }) => {
       })
       .then((data) => {
         if (Array.isArray(data)) {
-          // Wzbogacanie danych produktów
-          const processedData = data.map(product => ({
+          const processedData = data.map((product) => ({
             ...product,
-            isFavorite: savedFavorites ? JSON.parse(savedFavorites).includes(product.product_id) : false,
-            stockStatus: product.stock < 5 ? "low" : product.stock < 10 ? "medium" : "high",
-            // Upewnij się, że price jest liczbą
-            price: product.price !== undefined && product.price !== null 
-              ? Number(product.price) 
-              : null
+            // Oczyszczanie nazwy produktu
+            name: product.name ? product.name.replace(/(N\/A\s(?:szt|op\.)|szt|op\.)/gi, "").trim() : "",
           }));
-          
+
           setProducts(processedData);
           setFilteredProducts(processedData);
-          
-          // Wyodrębnianie unikalnych kategorii i dostawców
-          const uniqueCategories = [...new Set(data.map(p => p.category))].filter(Boolean).sort();
-          const uniqueSuppliers = [...new Set(data.map(p => p.supplier))].filter(Boolean).sort();
-          
-          setCategories(uniqueCategories);
-          setSuppliers(uniqueSuppliers);
         } else {
           throw new Error("Dane nie są tablicą.");
         }
@@ -88,463 +68,508 @@ const ProductList = ({ addToShoppingList }) => {
       });
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (filterRef.current && !filterRef.current.contains(event.target)) {
-        setActiveFilter(null);
-      }
-    };
+  // Get unique categories and suppliers
+  const categories = [...new Set(products.map(p => p.category))].filter(Boolean).sort();
+  const suppliers = [...new Set(products.map(p => p.supplier))].filter(Boolean).sort();
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  // Zapisywanie ulubionych produktów
-  useEffect(() => {
-    localStorage.setItem("favoriteProducts", JSON.stringify(favorites));
-  }, [favorites]);
-
-  // Filtrowanie produktów
+  // Filter and sort products
   useEffect(() => {
     let result = [...products];
-    
-    // Filtrowanie po wyszukiwanych terminach
-    if (searchTerms.name || searchTerms.category || searchTerms.supplier) {
-      result = result.filter(product => 
-        (!searchTerms.name || (product.name && product.name.toLowerCase().includes(searchTerms.name.toLowerCase()))) &&
-        (!searchTerms.category || (product.category && product.category.toLowerCase().includes(searchTerms.category.toLowerCase()))) &&
-        (!searchTerms.supplier || (product.supplier && product.supplier.toLowerCase().includes(searchTerms.supplier.toLowerCase())))
+
+    // Search filter
+    if (searchTerm) {
+      result = result.filter(product =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.supplier.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
-    // Filtrowanie po wybranych kategoriach
-    if (selectedCategories.length > 0) {
-      result = result.filter(product => selectedCategories.includes(product.category));
+
+    // Category filter
+    if (filters.categories.length > 0) {
+      result = result.filter(product => filters.categories.includes(product.category));
     }
-    
-    // Filtrowanie po wybranych dostawcach
-    if (selectedSuppliers.length > 0) {
-      result = result.filter(product => selectedSuppliers.includes(product.supplier));
+
+    // Supplier filter
+    if (filters.suppliers.length > 0) {
+      result = result.filter(product => filters.suppliers.includes(product.supplier));
     }
-    
-    // Filtrowanie po niskim stanie magazynowym
-    if (showLowStock) {
-      result = result.filter(product => product.stock < 5);
-    }
-    
-    // Sortowanie
+
+    // Sort
     result.sort((a, b) => {
-      const key = sortConfig.key;
+      const aValue = a[sortConfig.key];
+      const bValue = b[sortConfig.key];
       
-      // Specjalne sortowanie dla ulubionych
-      if (key === "favorite") {
-        const favA = favorites.includes(a.product_id);
-        const favB = favorites.includes(b.product_id);
-        return sortConfig.direction === "asc" 
-          ? (favA === favB ? 0 : favA ? -1 : 1) 
-          : (favA === favB ? 0 : favA ? 1 : -1);
-      }
-      
-      // Standardowe sortowanie
-      if (a[key] === b[key]) return 0;
-      
-      const result = a[key] < b[key] ? -1 : 1;
-      return sortConfig.direction === "asc" ? result : -result;
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
     });
-    
+
     setFilteredProducts(result);
-  }, [products, searchTerms, sortConfig, selectedCategories, selectedSuppliers, showLowStock, favorites]);
+    setCurrentPage(1);
+  }, [products, searchTerm, filters, sortConfig]);
+
+  const handleSort = (key) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const handleFilterChange = (type, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [type]: prev[type].includes(value) 
+        ? prev[type].filter(item => item !== value)
+        : [...prev[type], value]
+    }));
+  };
+
+  const clearFilters = () => {
+    setFilters({ categories: [], suppliers: [] });
+    setSearchTerm('');
+  };
 
   const addToShoppingListHandler = (product) => {
-    addToShoppingList({ ...product, addedAutomatically: product.stock < 5 });
+    if (addToShoppingList) {
+      addToShoppingList({ ...product, addedAutomatically: product.stock < 5 });
+    }
     setNotification(`Dodano ${product.name} do listy zakupów!`);
-    setTimeout(() => setNotification(null), 3000);
+    setTimeout(() => setNotification(''), 3000);
   };
 
-  const sortProducts = (key) => {
-    let direction = sortConfig.key === key && sortConfig.direction === "asc" ? "desc" : "asc";
-    setSortConfig({ key, direction });
-  };
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const currentProducts = filteredProducts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-  const handleSearch = (event, field) => {
-    const value = event.target.value;
-    setSearchTerms(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleItemsPerPageChange = (e) => {
-    setItemsPerPage(Number(e.target.value));
-    setPage(1);
-  };
-
-  const toggleFilters = () => {
-    setShowFilters(!showFilters);
-  };
-
-  const toggleFavorite = (productId) => {
-    if (favorites.includes(productId)) {
-      setFavorites(favorites.filter(id => id !== productId));
-    } else {
-      setFavorites([...favorites, productId]);
-    }
-  };
-
-  const handleCategoryChange = (category) => {
-    if (selectedCategories.includes(category)) {
-      setSelectedCategories(selectedCategories.filter(c => c !== category));
-    } else {
-      setSelectedCategories([...selectedCategories, category]);
-    }
-  };
-
-  const handleSupplierChange = (supplier) => {
-    if (selectedSuppliers.includes(supplier)) {
-      setSelectedSuppliers(selectedSuppliers.filter(s => s !== supplier));
-    } else {
-      setSelectedSuppliers([...selectedSuppliers, supplier]);
-    }
-  };
-
-  const clearAllFilters = () => {
-    setSearchTerms({ name: "", category: "", supplier: "" });
-    setSelectedCategories([]);
-    setSelectedSuppliers([]);
-    setShowLowStock(false);
-    setSortConfig({ key: "name", direction: "asc" });
-  };
-
-  return (
-    <div className="product-list-container">
-      <div className="product-list-header">
-        <h1>Baza Produktów</h1>
-        <div className="view-toggle">
-          <button 
-            className={`toggle-button ${view === "table" ? "active" : ""}`} 
-            onClick={() => setView("table")}
-          >
-            Tabela
-          </button>
-          <button 
-            className={`toggle-button ${view === "cards" ? "active" : ""}`} 
-            onClick={() => setView("cards")}
-          >
-            Karty
-          </button>
-        </div>
-      </div>
-      
-      {error && <div className="error-message">{error}</div>}
-      {notification && <div className="notification">{notification}</div>}
-
-      <div className="filters-container">
-        <div className="filters-top">
-          <div className="search-box">
-            <FaSearch className="search-icon" />
-            <input
-              type="text"
-              placeholder="Szukaj produktu..."
-              value={searchTerms.name}
-              onChange={(e) => handleSearch(e, "name")}
-              className="main-search"
-            />
-          </div>
-          
-          <div className="filters-actions">
-            <label>
-              <select value={itemsPerPage} onChange={handleItemsPerPageChange}>
-                <option value={10}>10 na stronę</option>
-                <option value={20}>20 na stronę</option>
-                <option value={50}>50 na stronę</option>
-                <option value={100}>100 na stronę</option>
-              </select>
-            </label>
-            
-            <button onClick={toggleFilters} className="filter-button">
-              <FaFilter /> {showFilters ? "Ukryj filtry" : "Pokaż filtry"}
+  const ProductCard = ({ product }) => {
+    return (
+      <div className="product-card">
+        <div className="product-card-header">
+          <Package className="product-icon" />
+          <div className="product-card-actions">
+            <button
+              onClick={() => setShowQuickView(product)}
+              className="quick-view-btn"
+              title="Podgląd"
+            >
+              <Eye className="icon" />
             </button>
           </div>
         </div>
         
-        {showFilters && (
-          <div className="filter-menu">
-            <div className="filter-groups">
-              <div className="filter-column">
-                <h3>Kategorie</h3>
-                <div className="checkbox-list">
-                  {categories.map(category => (
-                    <label key={category} className="checkbox-item">
-                      <input 
-                        type="checkbox" 
-                        checked={selectedCategories.includes(category)}
-                        onChange={() => handleCategoryChange(category)}
-                      />
-                      {category}
-                    </label>
-                  ))}
-                </div>
+        <div className="product-card-body">
+          <h3 className="product-title">
+            {product.name}
+          </h3>
+          
+          <div className="product-details">
+            <div className="detail-item">
+              <Building2 className="detail-icon" />
+              <span className="detail-text">{product.supplier}</span>
+            </div>
+            <div className="detail-item">
+              <Tag className="detail-icon" />
+              <span className="detail-text">{product.category}</span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => addToShoppingListHandler(product)}
+            className="add-to-list-btn"
+          >
+            <Plus className="icon" />
+            Dodaj do listy
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const TableRow = ({ product }) => {
+    return (
+      <tr className="table-row">
+        <td className="table-cell table-cell-product">
+          <div className="table-product-info">
+            <div className="table-product-icon">
+              <Package className="icon" />
+            </div>
+            <div className="table-product-details">
+              <div className="table-product-name">{product.name}</div>
+            </div>
+          </div>
+        </td>
+        <td className="table-cell">{product.supplier}</td>
+        <td className="table-cell">{product.category}</td>
+        <td className="table-cell table-cell-actions">
+          <div className="table-actions">
+            <button
+              onClick={() => setShowQuickView(product)}
+              className="table-action-btn"
+              title="Podgląd"
+            >
+              <Eye className="icon" />
+            </button>
+            <button
+              onClick={() => addToShoppingListHandler(product)}
+              className="add-to-list-btn table-add-btn"
+            >
+              <Plus className="icon" />
+              Dodaj
+            </button>
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-content">
+          <div className="loading-spinner"></div>
+          <p className="loading-text">Ładowanie produktów...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="error-container">
+        <div className="error-content">
+          <div className="error-title">Błąd ładowania danych</div>
+          <p className="error-text">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="product-list-container">
+      <div className="container">
+        {/* Header */}
+        <div className="header">
+          <h1 className="main-title">Baza Produktów Gabinetu</h1>
+          <p className="subtitle">Wszystkie produkty używane w gabinecie dentystycznym</p>
+        </div>
+
+        {/* Filters and Search */}
+        <div className="filters-section">
+          <div className="filters-top">
+            {/* Search */}
+            <div className="search-container">
+              <Search className="search-icon" />
+              <input
+                type="text"
+                placeholder="Szukaj produktów..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input"
+              />
+            </div>
+
+            {/* Controls */}
+            <div className="controls">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`filters-toggle ${showFilters ? 'active' : ''}`}
+              >
+                <SlidersHorizontal className="icon" />
+                Filtry
+              </button>
+
+              <select
+                value={itemsPerPage}
+                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                className="items-per-page-select"
+              >
+                <option value={12}>12 na stronę</option>
+                <option value={24}>24 na stronę</option>
+                <option value={48}>48 na stronę</option>
+                <option value={96}>96 na stronę</option>
+              </select>
+
+              <div className="view-toggle">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                  title="Widok kafelków"
+                >
+                  <Grid3X3 className="icon" />
+                </button>
+                <button
+                  onClick={() => setViewMode('table')}
+                  className={`view-btn ${viewMode === 'table' ? 'active' : ''}`}
+                  title="Widok tabeli"
+                >
+                  <List className="icon" />
+                </button>
               </div>
-              
-              <div className="filter-column">
-                <h3>Dostawcy</h3>
-                <div className="checkbox-list">
-                  {suppliers.map(supplier => (
-                    <label key={supplier} className="checkbox-item">
-                      <input 
-                        type="checkbox" 
-                        checked={selectedSuppliers.includes(supplier)}
-                        onChange={() => handleSupplierChange(supplier)}
-                      />
-                      {supplier}
-                    </label>
-                  ))}
+            </div>
+          </div>
+
+          {/* Advanced Filters */}
+          {showFilters && (
+            <div className="filters-panel">
+              <div className="filters-grid">
+                <div className="filter-group">
+                  <label className="filter-label">Kategorie</label>
+                  <div className="filter-list">
+                    {categories.map(category => (
+                      <label key={category} className="filter-item">
+                        <input
+                          type="checkbox"
+                          checked={filters.categories.includes(category)}
+                          onChange={() => handleFilterChange('categories', category)}
+                          className="filter-checkbox"
+                        />
+                        <span className="filter-text">{category}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              
-              <div className="filter-column">
-                <h3>Dodatkowe filtry</h3>
-                <label className="checkbox-item">
-                  <input 
-                    type="checkbox" 
-                    checked={showLowStock}
-                    onChange={() => setShowLowStock(!showLowStock)}
-                  />
-                  Tylko produkty z niskim stanem
-                </label>
-                
+
+                <div className="filter-group">
+                  <label className="filter-label">Dostawcy</label>
+                  <div className="filter-list">
+                    {suppliers.map(supplier => (
+                      <label key={supplier} className="filter-item">
+                        <input
+                          type="checkbox"
+                          checked={filters.suppliers.includes(supplier)}
+                          onChange={() => handleFilterChange('suppliers', supplier)}
+                          className="filter-checkbox"
+                        />
+                        <span className="filter-text">{supplier}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="filter-actions">
-                  <button onClick={clearAllFilters} className="clear-filters">
+                  <button
+                    onClick={clearFilters}
+                    className="clear-filters-btn"
+                  >
                     Wyczyść wszystkie filtry
                   </button>
                 </div>
               </div>
             </div>
+          )}
+        </div>
+
+        {/* Results Info */}
+        <div className="results-info">
+          <div className="results-count">
+            Znaleziono <span className="count-number">{filteredProducts.length}</span> {
+              filteredProducts.length === 1 ? 'produkt' : 
+              filteredProducts.length < 5 ? 'produkty' : 'produktów'
+            }
+          </div>
+          
+          <div className="sort-controls">
+            <span className="sort-label">Sortuj według:</span>
+            <select
+              value={`${sortConfig.key}-${sortConfig.direction}`}
+              onChange={(e) => {
+                const [key, direction] = e.target.value.split('-');
+                setSortConfig({ key, direction });
+              }}
+              className="sort-select"
+            >
+              <option value="name-asc">Nazwa A-Z</option>
+              <option value="name-desc">Nazwa Z-A</option>
+              <option value="supplier-asc">Dostawca A-Z</option>
+              <option value="supplier-desc">Dostawca Z-A</option>
+              <option value="category-asc">Kategoria A-Z</option>
+              <option value="category-desc">Kategoria Z-A</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Products Display */}
+        {filteredProducts.length === 0 ? (
+          <div className="empty-state">
+            <Package className="empty-icon" />
+            <h3 className="empty-title">Brak produktów</h3>
+            <p className="empty-text">Nie znaleziono produktów spełniających kryteria wyszukiwania.</p>
+            {(searchTerm || filters.categories.length > 0 || filters.suppliers.length > 0) && (
+              <button
+                onClick={clearFilters}
+                className="empty-action"
+              >
+                Wyczyść filtry
+              </button>
+            )}
+          </div>
+        ) : viewMode === 'grid' ? (
+          <div className="products-grid">
+            {currentProducts.map(product => (
+              <ProductCard key={product.product_id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <div className="table-container">
+            <table className="products-table">
+              <thead className="table-header">
+                <tr>
+                  <th className="table-header-cell">
+                    <button onClick={() => handleSort('name')} className="sort-header">
+                      Nazwa produktu
+                      {sortConfig.key === 'name' && (
+                        <span className="sort-indicator">
+                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </button>
+                  </th>
+                  <th className="table-header-cell">
+                    <button onClick={() => handleSort('supplier')} className="sort-header">
+                      Dostawca
+                      {sortConfig.key === 'supplier' && (
+                        <span className="sort-indicator">
+                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </button>
+                  </th>
+                  <th className="table-header-cell">
+                    <button onClick={() => handleSort('category')} className="sort-header">
+                      Kategoria
+                      {sortConfig.key === 'category' && (
+                        <span className="sort-indicator">
+                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </button>
+                  </th>
+                  <th className="table-header-cell">Akcje</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentProducts.map(product => (
+                  <TableRow key={product.product_id} product={product} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="pagination">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="pagination-btn"
+            >
+              ←
+            </button>
+            
+            {[...Array(Math.min(5, totalPages))].map((_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`pagination-btn ${currentPage === pageNum ? 'active' : ''}`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+            
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="pagination-btn"
+            >
+              →
+            </button>
+          </div>
+        )}
+
+        {/* Quick View Modal */}
+        {showQuickView && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h2 className="modal-title">Szczegóły produktu</h2>
+                  <button
+                    onClick={() => setShowQuickView(null)}
+                    className="modal-close"
+                  >
+                    <X className="icon" />
+                  </button>
+                </div>
+                
+                <div className="modal-body">
+                  <div className="modal-image">
+                    <Package className="modal-icon" />
+                  </div>
+                  
+                  <div className="modal-details">
+                    <h3 className="modal-product-name">{showQuickView.name}</h3>
+                    
+                    <div className="modal-info">
+                      <div className="modal-info-item">
+                        <Building2 className="modal-info-icon" />
+                        <div>
+                          <span className="modal-info-label">Dostawca:</span>
+                          <p className="modal-info-value">{showQuickView.supplier}</p>
+                        </div>
+                      </div>
+                      <div className="modal-info-item">
+                        <Tag className="modal-info-icon" />
+                        <div>
+                          <span className="modal-info-label">Kategoria:</span>
+                          <p className="modal-info-value">{showQuickView.category}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="modal-actions">
+                      <button
+                        onClick={() => {
+                          addToShoppingListHandler(showQuickView);
+                          setShowQuickView(null);
+                        }}
+                        className="modal-add-btn"
+                      >
+                        <Plus className="icon" />
+                        Dodaj do listy zakupów
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Notification */}
+        {notification && (
+          <div className="notification">
+            <div className="notification-indicator"></div>
+            {notification}
           </div>
         )}
       </div>
-      
-      {loading ? (
-        <div className="loading-indicator">Ładowanie produktów...</div>
-      ) : (
-        <>
-          {view === "table" ? (
-            <div className="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th onClick={() => sortProducts("favorite")} className="favorite-column">
-                      <div className="header-content">
-                        <span>Ulubione</span>
-                        {sortConfig.key === "favorite" && (
-                          <span className="sort-icon">
-                            {sortConfig.direction === "asc" ? <FaSortUp /> : <FaSortDown />}
-                          </span>
-                        )}
-                      </div>
-                    </th>
-                    <th onClick={() => sortProducts("name")}>
-                      <div className="header-content">
-                        <span>Nazwa</span>
-                        {sortConfig.key === "name" && (
-                          <span className="sort-icon">
-                            {sortConfig.direction === "asc" ? <FaSortUp /> : <FaSortDown />}
-                          </span>
-                        )}
-                      </div>
-                    </th>
-                    <th onClick={() => sortProducts("price")}>
-                      <div className="header-content">
-                        <span>Cena</span>
-                        {sortConfig.key === "price" && (
-                          <span className="sort-icon">
-                            {sortConfig.direction === "asc" ? <FaSortUp /> : <FaSortDown />}
-                          </span>
-                        )}
-                      </div>
-                    </th>
-                    <th onClick={() => sortProducts("stock")}>
-                      <div className="header-content">
-                        <span>Stan</span>
-                        {sortConfig.key === "stock" && (
-                          <span className="sort-icon">
-                            {sortConfig.direction === "asc" ? <FaSortUp /> : <FaSortDown />}
-                          </span>
-                        )}
-                      </div>
-                    </th>
-                    <th onClick={() => sortProducts("supplier")}>
-                      <div className="header-content">
-                        <span>Dostawca</span>
-                        {sortConfig.key === "supplier" && (
-                          <span className="sort-icon">
-                            {sortConfig.direction === "asc" ? <FaSortUp /> : <FaSortDown />}
-                          </span>
-                        )}
-                      </div>
-                    </th>
-                    <th onClick={() => sortProducts("category")}>
-                      <div className="header-content">
-                        <span>Kategoria</span>
-                        {sortConfig.key === "category" && (
-                          <span className="sort-icon">
-                            {sortConfig.direction === "asc" ? <FaSortUp /> : <FaSortDown />}
-                          </span>
-                        )}
-                      </div>
-                    </th>
-                    <th>Akcje</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredProducts.length === 0 ? (
-                    <tr>
-                      <td colSpan="7" className="no-results">
-                        Nie znaleziono produktów spełniających kryteria wyszukiwania
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredProducts
-                      .slice((page - 1) * itemsPerPage, page * itemsPerPage)
-                      .map((product) => (
-                        <tr 
-                          key={product.product_id} 
-                          className={`product-row ${product.stock < 5 ? "low-stock" : product.stock < 10 ? "medium-stock" : ""}`}
-                        >
-                          <td className="favorite-cell">
-                            <button 
-                              onClick={() => toggleFavorite(product.product_id)}
-                              className="favorite-button"
-                            >
-                              {favorites.includes(product.product_id) ? (
-                                <FaStar className="favorite-icon active" />
-                              ) : (
-                                <FaRegStar className="favorite-icon" />
-                              )}
-                            </button>
-                          </td>
-                          <td>{product.name}</td>
-                          <td className="price-cell">
-                            {product.price !== undefined && product.price !== null 
-                              ? `${Number(product.price).toFixed(2)} zł` 
-                              : "N/A"}
-                          </td>
-                          <td className={`stock-cell ${product.stockStatus}-stock`}>
-                            {product.stock < 5 && <FaExclamationTriangle className="warning-icon" />}
-                            {product.stock}
-                          </td>
-                          <td>{product.supplier}</td>
-                          <td>{product.category}</td>
-                          <td className="actions-cell">
-                            <button 
-                              onClick={() => addToShoppingListHandler(product)} 
-                              className="add-to-list-button"
-                            >
-                              <FaShoppingCart /> Dodaj
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="products-grid">
-              {filteredProducts.length === 0 ? (
-                <div className="no-results">
-                  Nie znaleziono produktów spełniających kryteria wyszukiwania
-                </div>
-              ) : (
-                filteredProducts
-                  .slice((page - 1) * itemsPerPage, page * itemsPerPage)
-                  .map((product) => (
-                    <div 
-                      key={product.product_id} 
-                      className={`product-card ${product.stock < 5 ? "low-stock" : product.stock < 10 ? "medium-stock" : ""}`}
-                    >
-                      <div className="card-header">
-                        <button 
-                          onClick={() => toggleFavorite(product.product_id)}
-                          className="favorite-button"
-                        >
-                          {favorites.includes(product.product_id) ? (
-                            <FaStar className="favorite-icon active" />
-                          ) : (
-                            <FaRegStar className="favorite-icon" />
-                          )}
-                        </button>
-                        <span className="product-category">{product.category}</span>
-                      </div>
-                      
-                      <h3 className="product-name">{product.name}</h3>
-                      
-                      <div className="product-details">
-                        <div className="detail-item">
-                          <span className="detail-label">Cena:</span>
-                          <span className="detail-value">
-                            {product.price !== undefined && product.price !== null 
-                              ? `${Number(product.price).toFixed(2)} zł` 
-                              : "N/A"}
-                          </span>
-                        </div>
-                        
-                        <div className={`detail-item ${product.stockStatus}-stock`}>
-                          <span className="detail-label">Stan:</span>
-                          <span className="detail-value">
-                            {product.stock < 5 && <FaExclamationTriangle className="warning-icon" />}
-                            {product.stock}
-                          </span>
-                        </div>
-                        
-                        <div className="detail-item">
-                          <span className="detail-label">Dostawca:</span>
-                          <span className="detail-value">{product.supplier}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="card-actions">
-                        <button 
-                          onClick={() => addToShoppingListHandler(product)} 
-                          className="add-to-list-button"
-                        >
-                          <FaShoppingCart /> Dodaj do listy
-                        </button>
-                      </div>
-                    </div>
-                  ))
-              )}
-            </div>
-          )}
-          
-          {filteredProducts.length > 0 && (
-            <div className="pagination">
-              <button onClick={() => setPage(1)} disabled={page === 1}>
-                <FaAngleDoubleLeft />
-              </button>
-              <button onClick={() => setPage(page - 1)} disabled={page === 1}>
-                <FaAngleLeft />
-              </button>
-              <span>
-                Strona {page} z {Math.ceil(filteredProducts.length / itemsPerPage)} 
-                ({filteredProducts.length} {filteredProducts.length === 1 ? "produkt" : 
-                  filteredProducts.length < 5 ? "produkty" : "produktów"})
-              </span>
-              <button
-                onClick={() => setPage(page + 1)}
-                disabled={page * itemsPerPage >= filteredProducts.length}
-              >
-                <FaAngleRight />
-              </button>
-              <button
-                onClick={() => setPage(Math.ceil(filteredProducts.length / itemsPerPage))}
-                disabled={page * itemsPerPage >= filteredProducts.length}
-              >
-                <FaAngleDoubleRight />
-              </button>
-            </div>
-          )}
-        </>
-      )}
     </div>
   );
 };
