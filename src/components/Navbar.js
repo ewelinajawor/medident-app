@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   FaHome,
@@ -11,69 +11,56 @@ import {
   FaFileContract,
   FaBars,
   FaTimes,
-  FaChevronRight
+  FaChevronRight,
+  FaSignOutAlt
 } from "react-icons/fa";
 import "./Navbar.css";
 
-const Navbar = () => {
+// Przyjmujemy clinicName i profilePicture jako propsy
+const Navbar = ({ clinicName, profilePicture }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const location = useLocation();
-  const [profileData, setProfileData] = useState({
-    clinicName: "Gabinet Medyczny",
-    profilePicture: "https://via.placeholder.com/50"
-  });
 
-  // Pobranie danych profilu z localStorage
+  // Usunięto stan profileData oraz useEffect do synchronizacji z localStorage
+  // Dane profilu (clinicName, profilePicture) są teraz przekazywane jako propsy
+
+  // Śledzenie zmian rozmiaru okna z debouncingiem
   useEffect(() => {
-    const handleProfileUpdate = () => {
-      const savedProfile = localStorage.getItem('userProfile');
-      if (savedProfile) {
-        const parsedProfile = JSON.parse(savedProfile);
-        setProfileData({
-          clinicName: parsedProfile.clinicName || "Gabinet Medyczny",
-          profilePicture: parsedProfile.profilePicture || "https://via.placeholder.com/50"
-        });
-      }
+    const debounce = (func, delay) => {
+      let timeoutId;
+      return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          func.apply(this, args);
+        }, delay);
+      };
     };
 
-    // Wczytaj na początku
-    handleProfileUpdate();
-
-    // Nasłuchuj zmian w localStorage (dla przeglądarek obsługujących storage event)
-    window.addEventListener('storage', handleProfileUpdate);
-
-    // Nasłuchuj własnego zdarzenia (dla aktualizacji w tej samej karcie)
-    window.addEventListener('profileUpdated', handleProfileUpdate);
-
-    return () => {
-      window.removeEventListener('storage', handleProfileUpdate);
-      window.removeEventListener('profileUpdated', handleProfileUpdate);
-    };
-  }, []);
-
-  // Śledzenie zmian rozmiaru okna
-  useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
     };
 
-    window.addEventListener('resize', handleResize);
+    const debouncedHandleResize = debounce(handleResize, 250);
+    window.addEventListener('resize', debouncedHandleResize);
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', debouncedHandleResize);
     };
   }, []);
 
-  // Sprawdzenie, czy link jest aktywny
-  const isLinkActive = (path) => {
+  const isLinkActive = useCallback((path) => {
     return location.pathname === path;
-  };
+  }, [location.pathname]);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
 
-  // Struktura elementów nawigacji
+  const handleLogout = () => {
+    console.log("Użytkownik wylogowany");
+    // TODO: Implement actual logout logic (e.g., clear tokens, redirect)
+  };
+
   const navItems = [
     { path: "/dashboard", icon: <FaHome />, text: "Strona Główna" },
     { path: "/inventory", icon: <FaBox />, text: "Magazyn" },
@@ -85,54 +72,67 @@ const Navbar = () => {
     { path: "/offers", icon: <FaFileContract />, text: "Analizuj oferty" },
   ];
 
-  // Używamy hover tylko na większych ekranach
-  const sidebarProps = isMobile
+  const sidebarInteractionProps = isMobile
     ? {}
     : {
         onMouseEnter: () => setIsOpen(true),
         onMouseLeave: () => setIsOpen(false),
       };
 
+  // Domyślny obrazek, jeśli profilePicture nie zostanie przekazany lub jest null/undefined
+  const displayProfilePicture = profilePicture || "https://via.placeholder.com/50";
+  // Domyślna nazwa kliniki, jeśli clinicName nie zostanie przekazany
+  const displayClinicName = clinicName || "Gabinet Medyczny";
+
+
   return (
     <nav
       className={`sidebar ${isOpen ? "open" : ""}`}
-      {...sidebarProps}
+      {...sidebarInteractionProps}
     >
-      {/* Przycisk do otwierania/zamykania menu */}
-      <div className="menu-toggle" onClick={toggleMenu}>
+      <div
+        className="menu-toggle"
+        onClick={toggleMenu}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleMenu(); }}
+        aria-expanded={isOpen}
+        aria-controls="nav-links-list"
+        aria-label={isOpen ? "Zwiń menu" : "Rozwiń menu"}
+      >
         {isOpen ? <FaTimes /> : <FaBars />}
-        {isOpen && <span className="toggle-text">Zwiń menu</span>}
+        {isOpen && !isMobile && <span className="toggle-text">Zwiń menu</span>}
       </div>
 
-      {/* Profil użytkownika */}
       <div className="user-profile">
         <div className="profile-image-container">
-          <img 
-            src={profileData.profilePicture} 
-            alt="Profil" 
-            className="profile-pic" 
+          <img
+            src={displayProfilePicture} // Używamy propsa (z fallbackiem)
+            alt="Profil"
+            className="profile-pic"
             onError={(e) => {
               e.target.onerror = null;
-              e.target.src = "https://via.placeholder.com/50";
+              e.target.src = "https://via.placeholder.com/50"; // Ostateczny fallback
             }}
           />
         </div>
-        <div className="clinic-name">{profileData.clinicName}</div>
+        {/* Używamy propsa (z fallbackiem) */}
+        {isOpen && <div className="clinic-name">{displayClinicName}</div>}
       </div>
 
-      {/* Linki nawigacji */}
-      <ul className="nav-links">
+      <ul className="nav-links" id="nav-links-list">
         {navItems.map((item) => (
           <li key={item.path}>
-            <Link 
-              to={item.path} 
+            <Link
+              to={item.path}
               className={`nav-item ${isLinkActive(item.path) ? "active" : ""}`}
+              title={!isOpen ? item.text : undefined}
             >
               <span className="nav-icon">{item.icon}</span>
               {isOpen && (
                 <>
                   <span className="nav-text">{item.text}</span>
-                  <FaChevronRight className="chevron-icon" />
+                  <FaChevronRight className="chevron-icon" aria-hidden="true" />
                 </>
               )}
             </Link>
@@ -140,12 +140,24 @@ const Navbar = () => {
         ))}
       </ul>
 
-      {/* Wersja i prawa autorskie */}
-      {isOpen && (
-        <div className="sidebar-footer">
-          <span>MediDent v1.0</span>
-        </div>
-      )}
+      <div className="sidebar-footer">
+        {isOpen && (
+          <div className="footer-content-open">
+            <button onClick={handleLogout} className="logout-button nav-item" title="Wyloguj">
+              <span className="nav-icon"><FaSignOutAlt /></span>
+              <span className="nav-text">Wyloguj</span>
+            </button>
+            <div className="app-version">
+              <span>MediDent v1.0</span>
+            </div>
+          </div>
+        )}
+        {!isOpen && (
+          <button onClick={handleLogout} className="logout-button-collapsed nav-item" title="Wyloguj">
+            <span className="nav-icon"><FaSignOutAlt /></span>
+          </button>
+        )}
+      </div>
     </nav>
   );
 };

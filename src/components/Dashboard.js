@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  FaBox,
-  FaClipboardList,
-  FaPiggyBank,
-  FaHandshake,
-  FaShoppingCart,
-  FaCalendarAlt
+  FaBox,          // Ikona dla Magazynu
+  FaClipboardList, // Ikona dla Zamówień (może być też FaShoppingCart)
+  FaPiggyBank,   // Ikona dla Oszczędności/Raportów
+  FaHandshake,   // Ikona dla Ofert
+  FaShoppingCart, // Ikona dla Listy Zakupów/Zamówień
+  FaCalendarAlt,  // Ikona dla Kalendarza
+  FaChartBar,     // Ikona dla Raportów (alternatywa dla FaPiggyBank)
+  FaEye           // Ikona dla Przeglądu
 } from 'react-icons/fa';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import {
@@ -19,7 +21,17 @@ import {
   Legend,
   ArcElement
 } from 'chart.js';
+// Importujemy tutaj biblioteki Firebase, jeśli zdecydujesz się na ich użycie.
+// import { initializeApp } from 'firebase/app';
+// import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+// import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
+
+// Zamiast importować bezpośrednio, możesz stworzyć kontekst Firebase w głównym App.js
+// i przekazywać go do komponentów, tak jak było w poprzedniej propozycji,
+// aby uniknąć powtarzania inicjalizacji i problemów z uwierzytelnianiem.
+
 import './Dashboard.css';
+// Zauważ, że EventCalendar jest oddzielnym komponentem. To jest dobra praktyka!
 import EventCalendar from './EventCalendar';
 
 ChartJS.register(
@@ -34,6 +46,11 @@ ChartJS.register(
 
 function Dashboard({ username }) {
   const navigate = useNavigate();
+  // Stan dla danych z Firebase (jeśli zostanie wdrożony)
+  // const [db, setDb] = useState(null);
+  // const [userId, setUserId] = useState(null);
+  // const [loadingFirebase, setLoadingFirebase] = useState(true);
+
   const [lowStockItems, setLowStockItems] = useState([]);
   const [pendingOrders, setPendingOrders] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
@@ -44,11 +61,78 @@ function Dashboard({ username }) {
     critical: 0
   });
 
+  // Nowe stany dla filtrowania i sortowania zapasów
+  const [inventoryFilter, setInventoryFilter] = useState('');
+  const [inventorySortBy, setInventorySortBy] = useState('name'); // 'name', 'stock', 'category'
+  const [inventorySortOrder, setInventorySortOrder] = useState('asc'); // 'asc', 'desc'
+
+  // Nowy stan dla historii zmian
+  const [historyEvents, setHistoryEvents] = useState([]);
+
   useEffect(() => {
+    // --- PROPOZYCJA ZMIANY: Zamiast danych statycznych i localStorage, użyj Firebase Firestore ---
+    // Poniższe dane powinny być pobierane z Firebase Firestore w czasie rzeczywistym.
+    // To pozwoli na wspólną pracę, synchronizację między urządzeniami i trwałość danych.
+
+    // Przykład pobierania danych z Firestore (wymaga Firebase setup w App.js i przekazania db/userId przez Context)
+    /*
+    if (db && userId) {
+      // Pobieranie zapasów
+      const inventoryRef = collection(db, `artifacts/${__app_id}/users/${userId}/inventory`);
+      const unsubscribeInventory = onSnapshot(inventoryRef, (snapshot) => {
+        const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setLowStockItems(items.filter(item => item.currentStock <= item.minStockLevel));
+
+        let normal = 0, low = 0, critical = 0;
+        items.forEach(item => {
+          if (item.currentStock === 0) {
+            critical++;
+          } else if (item.currentStock <= item.minStockLevel) {
+            low++;
+          } else {
+            normal++;
+          }
+        });
+        setInventorySummary({ normal, low, critical });
+      });
+
+      // Pobieranie listy zakupów (publicznej kolekcji dla współpracy)
+      const shoppingListRef = collection(db, `artifacts/${__app_id}/public/data/shoppingList`);
+      const unsubscribeShoppingList = onSnapshot(query(shoppingListRef, where('purchased', '==', false)), (snapshot) => {
+        const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setPendingOrders(items);
+      });
+
+      // Pobieranie historii zmian
+      const historyRef = collection(db, `artifacts/${__app_id}/users/${userId}/history`);
+      const unsubscribeHistory = onSnapshot(historyRef, (snapshot) => {
+        const events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Sortowanie w pamięci, jeśli nie ma indeksów Firestore
+        events.sort((a, b) => b.timestamp.toDate() - a.timestamp.toDate());
+        setHistoryEvents(events);
+      });
+
+      return () => {
+        unsubscribeInventory();
+        unsubscribeShoppingList();
+        unsubscribeHistory();
+      };
+    }
+    */
+
+    // --- Twój obecny kod (dane statyczne i localStorage) ---
     setLowStockItems([
-      { id: 1, name: 'Masa wyciskowa', stock: 2, minStock: 5, category: 'Materiały', price: 50 },
-      { id: 2, name: 'Narzędzia protetyczne', stock: 1, minStock: 5, category: 'Sprzęt', price: 200 },
-      { id: 3, name: 'Nożyczki chirurgiczne', stock: 1, minStock: 3, category: 'Sprzęt', price: 75 },
+      { id: 1, name: 'Masa wyciskowa', stock: 2, minStock: 5, category: 'Materiały', price: 50, minStockLevel: 5, currentStock: 2 },
+      { id: 2, name: 'Narzędzia protetyczne', stock: 1, minStock: 5, category: 'Sprzęt', price: 200, minStockLevel: 5, currentStock: 1 },
+      { id: 3, name: 'Nożyczki chirurgiczne', stock: 1, minStock: 3, category: 'Sprzęt', price: 75, minStockLevel: 3, currentStock: 1 },
+      // Dodaj więcej przykładowych danych, aby lepiej testować filtrowanie i sortowanie
+      { id: 4, name: 'Rękawiczki nitrylowe', stock: 10, minStock: 20, category: 'Materiały jednorazowe', price: 10, minStockLevel: 20, currentStock: 10 },
+      { id: 5, name: 'Wiertła diamentowe', stock: 3, minStock: 5, category: 'Narzędzia', price: 150, minStockLevel: 5, currentStock: 3 },
+      { id: 6, name: 'Płyn do dezynfekcji', stock: 1, minStock: 5, category: 'Chemia', price: 30, minStockLevel: 5, currentStock: 1 },
+      { id: 7, name: 'Igły dentystyczne', stock: 0, minStock: 10, category: 'Materiały jednorazowe', price: 5, minStockLevel: 10, currentStock: 0 }, // Przykład krytycznego stanu
+      { id: 8, name: 'Wypełnienie kompozytowe', stock: 8, minStock: 10, category: 'Materiały', price: 120, minStockLevel: 10, currentStock: 8 },
+      { id: 9, name: 'Środek znieczulający', stock: 5, minStock: 15, category: 'Farmaceutyki', price: 80, minStockLevel: 15, currentStock: 5 },
+      { id: 10, name: 'Folie do RTG', stock: 15, minStock: 20, category: 'Diagnostyka', price: 40, minStockLevel: 20, currentStock: 15 },
     ]);
     setPendingOrders([
       { id: 1, date: '15.03.2025', supplier: 'Koldental', items: 5, status: 'W realizacji' },
@@ -70,13 +154,47 @@ function Dashboard({ username }) {
       type: event.type,
       description: event.description
     })));
-    setInventorySummary({
-      normal: 42,
-      low: 8,
-      critical: 3
-    });
-  }, []);
 
+    // Obliczanie inventorySummary na podstawie lowStockItems
+    const allItems = [
+      { id: 1, name: 'Masa wyciskowa', stock: 2, minStock: 5, category: 'Materiały', price: 50, minStockLevel: 5, currentStock: 2 },
+      { id: 2, name: 'Narzędzia protetyczne', stock: 1, minStock: 5, category: 'Sprzęt', price: 200, minStockLevel: 5, currentStock: 1 },
+      { id: 3, name: 'Nożyczki chirurgiczne', stock: 1, minStock: 3, category: 'Sprzęt', price: 75, minStockLevel: 3, currentStock: 1 },
+      { id: 4, name: 'Rękawiczki nitrylowe', stock: 10, minStock: 20, category: 'Materiały jednorazowe', price: 10, minStockLevel: 20, currentStock: 10 },
+      { id: 5, name: 'Wiertła diamentowe', stock: 3, minStock: 5, category: 'Narzędzia', price: 150, minStockLevel: 5, currentStock: 3 },
+      { id: 6, name: 'Płyn do dezynfekcji', stock: 1, minStock: 5, category: 'Chemia', price: 30, minStockLevel: 5, currentStock: 1 },
+      { id: 7, name: 'Igły dentystyczne', stock: 0, minStock: 10, category: 'Materiały jednorazowe', price: 5, minStockLevel: 10, currentStock: 0 },
+      { id: 8, name: 'Wypełnienie kompozytowe', stock: 8, minStock: 10, category: 'Materiały', price: 120, minStockLevel: 10, currentStock: 8 },
+      { id: 9, name: 'Środek znieczulający', stock: 5, minStock: 15, category: 'Farmaceutyki', price: 80, minStockLevel: 15, currentStock: 5 },
+      { id: 10, name: 'Folie do RTG', stock: 15, minStock: 20, category: 'Diagnostyka', price: 40, minStockLevel: 20, currentStock: 15 },
+      // Dodaj więcej elementów, które są w "dobrym stanie"
+      { id: 11, name: 'Szpatułki', stock: 50, minStock: 10, category: 'Narzędzia', price: 5 },
+      { id: 12, name: 'Waciki', stock: 100, minStock: 30, category: 'Materiały jednorazowe', price: 2 },
+    ];
+
+    let normalCount = 0;
+    let lowCount = 0;
+    let criticalCount = 0;
+
+    allItems.forEach(item => {
+      if (item.stock === 0) {
+        criticalCount++;
+      } else if (item.stock <= item.minStock) {
+        lowCount++;
+      } else {
+        normalCount++;
+      }
+    });
+
+    setInventorySummary({
+      normal: normalCount,
+      low: lowCount,
+      critical: criticalCount
+    });
+
+  }, []); // Pamiętaj, aby dodać zależności, jeśli używasz stanów w useEffect
+
+  // Funkcja do aktualizacji todayEvents po dodaniu/edycji wydarzenia w EventCalendar
   const handleEventAdded = (events) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -95,7 +213,54 @@ function Dashboard({ username }) {
     })));
   };
 
+  // --- PROPOZYCJA ZMIANY: Funkcja addToShoppingList powinna zapisywać do Firestore ---
+  // Powinna też logować tę akcję do kolekcji historii.
   const addToShoppingList = (item) => {
+    // Jeśli używasz Firebase:
+    /*
+    if (!db || !userId) {
+      // Pokaż modal błędu, że użytkownik nie jest zalogowany
+      return;
+    }
+    const shoppingListCollectionRef = collection(db, `artifacts/${__app_id}/public/data/shoppingList`);
+    const stockDifference = item.minStock - item.stock;
+    const quantityToAdd = stockDifference > 0 ? stockDifference : 1;
+
+    // Sprawdź, czy produkt już istnieje na liście zakupów, aby zaktualizować ilość, a nie dodawać duplikat
+    const existingQuery = query(shoppingListCollectionRef, where('productId', '==', item.id), where('purchased', '==', false));
+    getDocs(existingQuery).then(snapshot => {
+      if (!snapshot.empty) {
+        const existingDoc = snapshot.docs[0];
+        updateDoc(existingDoc.ref, {
+          quantity: existingDoc.data().quantity + quantityToAdd,
+          timestamp: new Date(),
+          addedBy: userId, // Aktualizuj, kto ostatnio zmodyfikował
+          addedByName: username // Możesz użyć username z propsów
+        });
+      } else {
+        addDoc(shoppingListCollectionRef, {
+          productId: item.id,
+          productName: item.name,
+          category: item.category,
+          quantity: quantityToAdd,
+          addedBy: userId,
+          addedByName: username, // Zapisz, kto dodał
+          timestamp: new Date(),
+          purchased: false,
+        });
+      }
+      // Logowanie do historii zmian
+      const historyCollectionRef = collection(db, `artifacts/${__app_id}/users/${userId}/history`);
+      addDoc(historyCollectionRef, {
+        action: 'added_to_shopping_list',
+        details: { itemName: item.name, quantity: quantityToAdd },
+        timestamp: new Date(),
+        userId: userId,
+      });
+    }).catch(error => console.error("Błąd dodawania do listy zakupów:", error));
+    */
+
+    // --- Twój obecny kod (localStorage) ---
     const currentShoppingList = JSON.parse(localStorage.getItem('products')) || [];
     const existingItemIndex = currentShoppingList.findIndex(
       (product) => product.name === item.name
@@ -110,26 +275,30 @@ function Dashboard({ username }) {
         category: item.category,
         quantity: quantityToAdd,
         dateAdded: new Date().toLocaleDateString(),
-        price: item.price || 0
+        price: item.price || 0,
+        // PROPOZYCJA: Dodaj pole 'addedBy' tutaj, ale będzie ono lokalne dla localStorage
+        // addedBy: username,
       };
       currentShoppingList.push(newItem);
     }
     localStorage.setItem('products', JSON.stringify(currentShoppingList));
   };
 
+  // --- PROPOZYCJA ZMIANY: Dane wykresów powinny być dynamiczne ---
+  // Powinny odzwierciedlać prawdziwe dane z Firebase, a nie statyczne.
   const orderChartData = {
     labels: ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec'],
     datasets: [
       {
         label: 'Liczba zamówień',
-        data: [12, 19, 3, 5, 2, 3],
+        data: [12, 19, 3, 5, 2, 3], // Te dane powinny pochodzić z historii zamówień
         backgroundColor: '#3498DB',
         borderColor: '#2C3E50',
         borderWidth: 1,
       },
       {
         label: 'Oszczędności (w PLN)',
-        data: [500, 800, 1200, 900, 1500, 2000],
+        data: [500, 800, 1200, 900, 1500, 2000], // Te dane powinny pochodzić z raportów oszczędności
         backgroundColor: '#1ABC9C',
         borderColor: '#16A085',
         borderWidth: 1,
@@ -198,6 +367,25 @@ function Dashboard({ username }) {
     },
   };
 
+  // --- PROPOZYCJA ZMIANY: Filtrowanie i sortowanie dla lowStockItems ---
+  // Zastosuj filtrowanie i sortowanie do lowStockItems przed renderowaniem.
+  const filteredAndSortedLowStockItems = lowStockItems
+    .filter(item =>
+      item.name.toLowerCase().includes(inventoryFilter.toLowerCase()) ||
+      item.category.toLowerCase().includes(inventoryFilter.toLowerCase())
+    )
+    .sort((a, b) => {
+      let comparison = 0;
+      if (inventorySortBy === 'name') {
+        comparison = a.name.localeCompare(b.name);
+      } else if (inventorySortBy === 'stock') {
+        comparison = a.stock - b.stock;
+      } else if (inventorySortBy === 'category') {
+        comparison = a.category.localeCompare(b.category);
+      }
+      return inventorySortOrder === 'asc' ? comparison : -comparison;
+    });
+
   const quickTiles = (
     <div className="tiles">
       <div className="tile tile-inventory">
@@ -230,6 +418,11 @@ function Dashboard({ username }) {
               <span className="tile-label">Oczekujące:</span>
               <span className="tile-value info">{pendingOrders.length}</span>
             </div>
+            {/* PROPOZYCJA: Dodaj statystykę "W realizacji" pobieraną z Firestore */}
+            {/* <div className="tile-stat">
+              <span className="tile-label">W realizacji:</span>
+              <span className="tile-value info">X</span>
+            </div> */}
           </div>
         </div>
         <div className="tile-button-wrapper">
@@ -245,7 +438,7 @@ function Dashboard({ username }) {
           <div className="tile-data">
             <div className="tile-stat">
               <span className="tile-label">Nowe:</span>
-              <span className="tile-value info">3</span>
+              <span className="tile-value info">3</span> {/* PROPOZYCJA: To też powinno być dynamiczne */}
             </div>
           </div>
         </div>
@@ -262,7 +455,7 @@ function Dashboard({ username }) {
           <div className="tile-data">
             <div className="tile-stat">
               <span className="tile-label">Miesięcznie:</span>
-              <span className="tile-value success">2000 zł</span>
+              <span className="tile-value success">2000 zł</span> {/* PROPOZYCJA: To też powinno być dynamiczne */}
             </div>
           </div>
         </div>
@@ -281,6 +474,7 @@ function Dashboard({ username }) {
         return (
           <div className="tab-content">
             <h3 className="section-title">Kalendarz</h3>
+            {/* PROPOZYCJA: EventCalendar powinien być zintegrowany z Firebase, aby wydarzenia były współdzielone i trwałe */}
             <EventCalendar onEventAdded={handleEventAdded} />
           </div>
         );
@@ -308,12 +502,39 @@ function Dashboard({ username }) {
               </div>
             </div>
             <h3 className="section-title">Produkty wymagające uwagi</h3>
-            {lowStockItems.length > 0 ? (
+
+            {/* PROPOZYCJA: Dodaj pola do filtrowania i sortowania */}
+            <div className="filter-sort-controls">
+              <input
+                type="text"
+                placeholder="Filtruj produkty..."
+                value={inventoryFilter}
+                onChange={(e) => setInventoryFilter(e.target.value)}
+                className="filter-input"
+              />
+              <select
+                value={inventorySortBy}
+                onChange={(e) => setInventorySortBy(e.target.value)}
+                className="sort-select"
+              >
+                <option value="name">Sortuj po nazwie</option>
+                <option value="stock">Sortuj po stanie</option>
+                <option value="category">Sortuj po kategorii</option>
+              </select>
+              <button
+                onClick={() => setInventorySortOrder(inventorySortOrder === 'asc' ? 'desc' : 'asc')}
+                className="sort-order-button"
+              >
+                {inventorySortOrder === 'asc' ? 'Rosnąco' : 'Malejąco'}
+              </button>
+            </div>
+
+            {filteredAndSortedLowStockItems.length > 0 ? (
               <div className="low-stock-table-container">
                 <div className="low-stock-actions">
                   <button
                     className="add-all-to-list-button"
-                    onClick={() => lowStockItems.forEach(item => addToShoppingList(item))}
+                    onClick={() => filteredAndSortedLowStockItems.forEach(item => addToShoppingList(item))}
                   >
                     <FaShoppingCart /> Dodaj wszystkie do listy
                   </button>
@@ -330,7 +551,7 @@ function Dashboard({ username }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {lowStockItems.map(item => {
+                    {filteredAndSortedLowStockItems.map(item => {
                       const shortage = item.minStock - item.stock;
                       return (
                         <tr key={item.id} className={item.stock < item.minStock * 0.5 ? 'critical-row' : 'warning-row'}>
@@ -341,7 +562,11 @@ function Dashboard({ username }) {
                           <td>{shortage > 0 ? shortage : 0}</td>
                           <td>
                             <button className="small-button" onClick={() => addToShoppingList(item)}>Zamów</button>
-                            <button className="small-button view-button" onClick={() => navigate('/shopping-list')}>Lista</button>
+                            {/* PROPOZYCJA: Dodaj przyciski do edycji i usuwania produktu */}
+                            {/* <button className="small-button edit-button">Edytuj</button> */}
+                            {/* <button className="small-button delete-button">Usuń</button> */}
+                            {/* PROPOZYCJA: Integracja z AI - sugestie zakupowe / opis produktu */}
+                            {/* <button className="small-button ai-button">Sugestie AI</button> */}
                           </td>
                         </tr>
                       );
@@ -401,6 +626,8 @@ function Dashboard({ username }) {
                           <Link to={`/orders/${order.id}`}>
                             <button className="small-button">Szczegóły</button>
                           </Link>
+                          {/* PROPOZYCJA: Dodaj przycisk "Oznacz jako zrealizowane" */}
+                          {/* <button className="small-button complete-order-button">Zrealizowano</button> */}
                         </td>
                       </tr>
                     ))}
@@ -417,6 +644,34 @@ function Dashboard({ username }) {
               <Link to="/orders">
                 <button className="secondary-button"><FaClipboardList /> Wszystkie zamówienia</button>
               </Link>
+            </div>
+          </div>
+        );
+      case 'reports':
+        return (
+          <div className="tab-content">
+            <h3 className="section-title">Raporty i Analizy</h3>
+            {/* PROPOZYCJA: Rozbuduj tę sekcję o faktyczne raporty oszczędności i historii zmian */}
+            <div className="report-section">
+              <h4>Raport Oszczędności</h4>
+              <p>Tutaj znajdzie się interaktywny raport oszczędności, np. dzięki zakupom hurtowym lub optymalizacji zapasów. Można by tu wizualizować dane z historii zakupów i porównywać ceny.</p>
+              {/* PROPOZYCJA: Wykresy i tabele z danymi o oszczędnościach */}
+            </div>
+            <div className="report-section">
+              <h4>Historia Zmian</h4>
+              {/* PROPOZYCJA: Wyświetl listę historyEvents z Firebase */}
+              {historyEvents.length > 0 ? (
+                <div className="history-list">
+                  {historyEvents.map(event => (
+                    <div key={event.id} className="history-item">
+                      <p>{event.action}: {event.details.itemName} ({new Date(event.timestamp.toDate()).toLocaleString()})</p>
+                      <p className="history-user">Przez: {event.userId}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="empty-message">Brak zarejestrowanych zmian.</p>
+              )}
             </div>
           </div>
         );
@@ -467,16 +722,24 @@ function Dashboard({ username }) {
       {quickTiles}
       <div className="dashboard-tabs">
         <button className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
-          Przegląd
+          <FaEye /> {/* Ikona dla Przeglądu */}
+          <span>Przegląd</span>
         </button>
         <button className={`tab-button ${activeTab === 'inventory' ? 'active' : ''}`} onClick={() => setActiveTab('inventory')}>
-          Magazyn
+          <FaBox /> {/* Ikona dla Magazynu */}
+          <span>Magazyn</span>
         </button>
         <button className={`tab-button ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}>
-          Zamówienia
+          <FaShoppingCart /> {/* Ikona dla Zamówień */}
+          <span>Zamówienia</span>
+        </button>
+        <button className={`tab-button ${activeTab === 'reports' ? 'active' : ''}`} onClick={() => setActiveTab('reports')}>
+          <FaChartBar /> {/* Ikona dla Raportów */}
+          <span>Raporty</span>
         </button>
         <button className={`tab-button ${activeTab === 'calendar' ? 'active' : ''}`} onClick={() => setActiveTab('calendar')}>
-          <FaCalendarAlt style={{ marginRight: '5px' }} /> Kalendarz
+          <FaCalendarAlt /> {/* Ikona dla Kalendarza */}
+          <span>Kalendarz</span>
         </button>
       </div>
       {renderTabContent()}

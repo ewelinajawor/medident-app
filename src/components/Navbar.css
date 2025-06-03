@@ -6,12 +6,31 @@
   --background-color: #ECF0F1;
   --text-color: #2C3E50;
   --light-text-color: #FFFFFF;
+  --danger-color: #e74c3c; /* Kolor dla np. wylogowania */
+  --danger-hover: #c0392b;
   --gradient-navy: linear-gradient(145deg, #2C3E50, #34495E);
   --gradient-active: linear-gradient(145deg, #3498DB, #2980B9);
   --border-radius: 8px;
   --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   --transition: all 0.3s ease;
+  /* Dodane dla focus-visible box-shadow */
+  --accent-color-rgb: 52, 152, 219; 
 }
+
+/* Globalne style dla lepszej dostępności fokusu */
+*:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.4);
+}
+/* Usunięcie domyślnego outline dla elementów, które mają własny styl :focus-visible */
+.menu-toggle:focus-visible,
+.nav-item:focus-visible,
+.logout-button:focus-visible,
+.logout-button-collapsed:focus-visible {
+  outline: none; /* Usunięcie domyślnego outline, bo mamy box-shadow lub inne style */
+}
+
 
 .sidebar {
   background: var(--gradient-navy);
@@ -32,8 +51,13 @@
 }
 
 .sidebar::-webkit-scrollbar {
-  width: 0px;
+  width: 0px; /* Ukrycie paska przewijania dla Webkit */
+  background: transparent; /* Dla Firefox */
 }
+.sidebar {
+  scrollbar-width: none; /* Dla Firefox */
+}
+
 
 .sidebar.open {
   width: 250px;
@@ -50,16 +74,24 @@
   padding: 8px;
   border-radius: var(--border-radius);
   transition: var(--transition);
+  background-color: transparent; /* Upewnij się, że tło jest przezroczyste */
+  border: none; /* Usuń ramkę, jeśli jest to button */
 }
 
 .menu-toggle:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
+.menu-toggle:focus-visible {
+  background-color: rgba(255, 255, 255, 0.15); /* Lepszy feedback dla focus */
+  box-shadow: 0 0 0 2px var(--accent-hover);
+}
+
 
 .toggle-text {
   margin-left: 15px;
   font-size: 14px;
   font-weight: 500;
+  white-space: nowrap; /* Zapobiega łamaniu tekstu */
 }
 
 /* User profile */
@@ -68,7 +100,7 @@
   flex-direction: column;
   align-items: center;
   margin-bottom: 30px;
-  padding: 10px;
+  padding: 10px 0; /* Dopasowanie paddingu */
   transition: var(--transition);
   border-radius: var(--border-radius);
 }
@@ -82,6 +114,7 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   transition: var(--transition);
   position: relative;
+  flex-shrink: 0; /* Zapobiega kurczeniu się kontenera obrazu */
 }
 
 .sidebar.open .profile-image-container {
@@ -108,7 +141,8 @@
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
-  max-width: 100%;
+  text-overflow: ellipsis; /* Dodaje ... jeśli tekst jest za długi */
+  max-width: calc(100% - 20px); /* Zapobiega wychodzeniu poza sidebar */
   opacity: 0;
   margin-top: 8px;
   transition: opacity 0.3s ease 0.1s, transform 0.3s ease;
@@ -129,19 +163,20 @@
   flex-direction: column;
   gap: 8px;
   width: 100%;
-  flex: 1;
+  flex: 1; /* Pozwala liście linków zająć dostępną przestrzeń */
 }
 
 .nav-item {
   color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
-  padding: 12px 15px;
+  padding: 12px 15px; /* Dopasowanie paddingu dla ikon i tekstu */
   border-radius: var(--border-radius);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: flex;
   align-items: center;
   position: relative;
-  overflow: hidden;
+  overflow: hidden; /* Zapobiega wychodzeniu :before poza obrys */
+  cursor: pointer; /* Dla elementów Link i button */
 }
 
 .nav-item:before {
@@ -154,14 +189,15 @@
   background: var(--accent-color);
   transform: scaleY(0);
   transition: transform 0.3s ease;
+  border-radius: 0 var(--border-radius) var(--border-radius) 0; /* Zaokrąglenie dla :before */
 }
 
-.nav-item:hover {
+.nav-item:hover, .nav-item:focus-visible {
   background-color: rgba(255, 255, 255, 0.08);
   color: white;
 }
 
-.nav-item:hover:before {
+.nav-item:hover:before, .nav-item:focus-visible:before {
   transform: scaleY(1);
 }
 
@@ -178,10 +214,13 @@
 
 .nav-icon {
   font-size: 18px;
-  min-width: 22px;
+  min-width: 22px; /* Zapewnia miejsce na ikonę nawet gdy sidebar jest zwinięty */
+  height: 22px; /* Zapewnia stałą wysokość dla ikon */
   display: flex;
   justify-content: center;
+  align-items: center; /* Wyśrodkowanie ikony */
   transition: var(--transition);
+  flex-shrink: 0; /* Ikona nie powinna się kurczyć */
 }
 
 .sidebar.open .nav-icon {
@@ -194,6 +233,8 @@
   transition: opacity 0.2s ease;
   font-size: 14px;
   white-space: nowrap;
+  overflow: hidden; /* Ukrywa tekst, gdy nie ma miejsca */
+  text-overflow: ellipsis; /* Dodaje ... dla zbyt długiego tekstu */
 }
 
 .sidebar.open .nav-text {
@@ -204,55 +245,141 @@
   font-size: 12px;
   opacity: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
-  margin-left: auto;
+  margin-left: auto; /* Automatyczny margines, aby strzałka była po prawej */
 }
 
 .sidebar.open .chevron-icon {
   opacity: 0.7;
 }
 
-.nav-item:hover .chevron-icon {
+.nav-item:hover .chevron-icon, .nav-item:focus-visible .chevron-icon {
   transform: translateX(3px);
   opacity: 1;
 }
+
+
+/* Styles for Submenu (example) */
+.nav-item-dropdown .group-header {
+  /* Style dla nagłówka grupy, podobne do nav-item */
+  /* Możesz chcieć inny kursor, jeśli nie jest to link */
+  cursor: pointer; 
+}
+
+.submenu-links {
+  list-style: none;
+  padding: 0;
+  margin: 5px 0 5px 20px; /* Wcięcie dla submenu */
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out; /* Animacja rozwijania */
+}
+
+.nav-item-dropdown.open .submenu-links {
+  max-height: 500px; /* Wystarczająco duża wartość, aby pomieścić elementy */
+  /* Możesz też użyć 'auto' po zakończeniu animacji z JS, ale max-height jest prostsze dla CSS only */
+}
+
+.submenu-item {
+  /* Style dla pojedynczego elementu submenu, dziedziczy z nav-item ale można nadpisać */
+  padding-left: 25px !important; /* Większe wcięcie dla sub-elementów */
+  font-size: 13px;
+}
+.submenu-item .nav-icon {
+  font-size: 16px; /* Mniejsza ikona dla submenu */
+}
+
+.submenu-chevron {
+  transition: transform 0.3s ease;
+}
+.nav-item-dropdown.open .submenu-chevron {
+  transform: rotate(90deg);
+}
+/* Koniec stylów dla Submenu */
+
 
 /* Footer section */
 .sidebar-footer {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.5);
   text-align: center;
-  padding: 15px 0;
-  margin-top: 20px;
+  padding: 10px 0; /* Zmniejszony padding */
+  margin-top: auto; /* Wypycha stopkę na dół */
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   transition: var(--transition);
+  width: 100%; /* Aby border-top był na całą szerokość */
 }
+
+.footer-content-open {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px; /* Odstęp między wylogowaniem a wersją */
+}
+
+.logout-button, .logout-button-collapsed {
+  /* Dziedziczy .nav-item, ale możemy dodać specyficzne style */
+  background-color: transparent; /* Upewnij się, że jest przezroczysty */
+  border: none; /* Jeśli to <button> */
+  width: 100%; /* Aby przycisk zajął całą dostępną szerokość w stopce */
+  justify-content: flex-start; /* Tekst i ikona od lewej */
+}
+
+.logout-button:hover, .logout-button:focus-visible,
+.logout-button-collapsed:hover, .logout-button-collapsed:focus-visible {
+  background-color: var(--danger-color) !important; /* Użycie koloru danger */
+  color: white !important;
+}
+.logout-button:hover:before, .logout-button:focus-visible:before,
+.logout-button-collapsed:hover:before, .logout-button-collapsed:focus-visible:before {
+    background: var(--danger-hover) !important; /* Ciemniejszy pasek dla danger */
+}
+
+
+.logout-button-collapsed {
+  padding: 12px 0; /* Wyśrodkowanie ikony */
+  justify-content: center; /* Ikona na środku, gdy zwinięte */
+}
+.logout-button-collapsed .nav-icon {
+  margin-right: 0; /* Usuń margines, gdy tylko ikona */
+}
+
+.app-version {
+  font-size: 11px;
+  opacity: 0.7;
+  white-space: nowrap; /* Zapobiega łamaniu tekstu */
+}
+
 
 /* Responsive styles */
 @media screen and (max-width: 768px) {
   .sidebar {
-    width: 0;
-    padding: 15px 0;
+    width: 0; /* Sidebar domyślnie schowany na mobilnych */
+    padding: 15px 0; /* Reset paddingu gdy schowany */
   }
   
   .sidebar.open {
-    width: 220px;
+    width: 220px; /* Szerokość otwartego sidebara na mobilnych */
     padding: 15px 10px;
   }
   
+  /* Przycisk menu-toggle na mobilnych - pozycjonowany absolutnie */
   .menu-toggle {
-    position: fixed;
+    position: fixed; /* Zmienione z fixed na absolute względem body lub innego kontenera */
     top: 15px;
     left: 15px;
-    z-index: 1001;
-    background-color: var(--primary-color);
+    z-index: 1001; /* Musi być nad resztą */
+    background-color: var(--primary-color); /* Tło dla widoczności */
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    padding: 10px;
-    border-radius: 50%;
-    margin: 0;
+    padding: 10px; /* Mniejszy padding dla mobilnych */
+    border-radius: 50%; /* Okrągły przycisk */
+    margin: 0; /* Reset marginesów */
   }
   
   .sidebar.open .menu-toggle {
-    left: 180px;
+    /* Pozycja przycisku gdy sidebar jest otwarty na mobilnych */
+    /* Jeśli chcesz, aby przycisk "chował się" lub zmieniał pozycję */
+    left: calc(220px - 50px); /* Przykładowo: szerokość sidebara - szerokość przycisku - margines */
+    /* Alternatywnie, możesz go zostawić w tym samym miejscu lub zmienić ikonę */
   }
   
   .sidebar:not(.open) .user-profile,
@@ -260,6 +387,7 @@
   .sidebar:not(.open) .sidebar-footer {
     opacity: 0;
     pointer-events: none;
+    transition: opacity 0.1s ease; /* Szybsze znikanie */
   }
   
   .sidebar.open .user-profile,
@@ -267,6 +395,7 @@
   .sidebar.open .sidebar-footer {
     opacity: 1;
     pointer-events: all;
+    transition: opacity 0.3s ease 0.1s; /* Opóźnione pojawianie się */
   }
   
   .nav-item {
@@ -274,12 +403,34 @@
   }
   
   .profile-image-container {
-    width: 40px;
+    width: 40px; /* Mniejszy obraz profilowy na mobilnych */
     height: 40px;
   }
   
   .sidebar.open .profile-image-container {
     width: 60px;
     height: 60px;
+  }
+
+  /* Stopka na mobilnych */
+  .sidebar-footer {
+    padding: 10px 0;
+  }
+  .sidebar.open .logout-button .nav-text {
+    /* Tekst wylogowania na mobilnych w otwartym sidebarze */
+    display: inline-block; /* lub flex, w zależności od potrzeby */
+    opacity: 1;
+  }
+  .sidebar:not(.open) .logout-button-collapsed {
+    /* Przycisk wylogowania gdy sidebar zamknięty na mobilnych - może być problematyczny z .menu-toggle */
+    /* Lepiej, żeby był dostępny tylko gdy sidebar jest otwarty */
+     display: none; 
+  }
+
+  .sidebar.open .logout-button {
+      justify-content: flex-start;
+  }
+  .sidebar.open .logout-button .nav-icon {
+      margin-right: 12px; /* Dodaj margines, jak w innych nav-item */
   }
 }
