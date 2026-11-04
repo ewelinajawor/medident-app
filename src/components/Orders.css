@@ -185,3 +185,5 @@
 @media (max-width: 640px) {
   .orders-page .label-wide { display: none; }
 }
+
+.orders-page .gratis-badge { margin-left: var(--space-2); }

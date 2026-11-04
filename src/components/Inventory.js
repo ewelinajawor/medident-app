@@ -1,12 +1,30 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, Plus, ShoppingCart, PackagePlus, PackageMinus } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Search, Plus, ShoppingCart, PackagePlus, PackageMinus, Pencil, ScanLine, Printer } from 'lucide-react';
 import './Inventory.css';
-import { KEYS, readJSON, writeJSON, addToShoppingList } from '../utils/storage';
+import {
+  KEYS,
+  readJSON,
+  writeJSON,
+  addToShoppingList,
+  stockLevel,
+  STOCK_LEVEL_LABELS,
+  getAlertLevel,
+  getItemCode,
+  findStockByCode,
+} from '../utils/storage';
+import EditItemModal from './inventory/EditItemModal';
+import LabelSheet from './inventory/LabelSheet';
+import ScanPanel from './inventory/ScanPanel';
 
 // Katalog ma ponad 11 tys. pozycji – renderujemy je partiami, żeby strona nie zamarzała.
 const CATALOG_PAGE_SIZE = 60;
 
 const UNIT_MAP = { 'op.': 'opak', 'szt': 'szt', 'kpl.': 'kpl', 'para': 'para' };
+
+const LEVEL_BADGE = { ok: 'badge-success', alert: 'badge-warning', low: 'badge-danger', out: 'badge-danger' };
+
+const STORAGE_FULL_MESSAGE =
+  'Nie udało się zapisać – pamięć przeglądarki jest pełna. Usuń zdjęcie tego produktu albo zdjęcia innych produktów i spróbuj ponownie.';
 
 function Inventory() {
   const [productCatalog, setProductCatalog] = useState([]); // Katalog z JSON
@@ -15,23 +33,35 @@ function Inventory() {
   const [visibleCatalogCount, setVisibleCatalogCount] = useState(CATALOG_PAGE_SIZE);
   const [message, setMessage] = useState('');
   const isFirstSave = useRef(true);
-  
+
+  // Lustro stanu – skaner potrzebuje aktualnej wartości od razu, zanim React przerenderuje stronę.
+  const stockRef = useRef(inventoryStock);
+  stockRef.current = inventoryStock;
+  const commitStock = useCallback((next) => {
+    stockRef.current = next;
+    setInventoryStock(next);
+  }, []);
+
   // UI States
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('stock'); // 'stock', 'receive', 'issue'
-  
+  const [showScanner, setShowScanner] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [labelItems, setLabelItems] = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
+
   // Receiving goods
   const [receiveModal, setReceiveModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [receiveQuantity, setReceiveQuantity] = useState(1);
   const [receiveNote, setReceiveNote] = useState('');
-  
+
   // Issuing goods
   const [issueModal, setIssueModal] = useState(false);
   const [issueQuantity, setIssueQuantity] = useState(1);
   const [issueNote, setIssueNote] = useState('');
-  
+
   // Manual product addition
   const [showAddForm, setShowAddForm] = useState(false);
   const [newProduct, setNewProduct] = useState({
@@ -40,7 +70,7 @@ function Inventory() {
     description: '',
     unit: 'szt'
   });
-  
+
   const [lastUpdate, setLastUpdate] = useState(() => {
     const lastSaved = localStorage.getItem('lastInventoryUpdate');
     return lastSaved || new Date().toLocaleString();
@@ -52,8 +82,7 @@ function Inventory() {
       try {
         const response = await fetch(`${process.env.PUBLIC_URL}/dental_products.json`);
         const catalog = await response.json();
-        
-        // Ensure all products have required fields
+
         // Identyfikatory "catalog_<indeks>" zostają bez zmian, bo odwołują się do nich zapisane stany magazynu.
         const processedCatalog = catalog.map((product, index) => ({
           id: product.id || `catalog_${index}`,
@@ -65,10 +94,8 @@ function Inventory() {
         }));
 
         setProductCatalog([...processedCatalog, ...readJSON(KEYS.customProducts, [])]);
-
       } catch (error) {
         console.error('Error loading product catalog:', error);
-        // Fallback catalog
         setProductCatalog([
           { id: 1, name: 'Masa wyciskowa', category: 'Materiały', description: 'Masa do odcisków', unit: 'opak', minStock: 5 },
           { id: 2, name: 'Narzędzia protetyczne', category: 'Sprzęt', description: 'Podstawowe narzędzia', unit: 'szt', minStock: 3 },
@@ -104,53 +131,64 @@ function Inventory() {
     setTimeout(() => setMessage(''), 3000);
   };
 
+  // Uzupełniamy do progu ostrzegawczego, tak jak lista generowana z braków.
   const handleAddToShoppingList = (item) => {
-    const shortage = item.minStock - item.quantity;
-    addToShoppingList({ name: item.name, category: item.category, quantity: shortage > 0 ? shortage : 1 });
+    addToShoppingList({
+      name: item.name,
+      category: item.category,
+      quantity: Math.max(1, getAlertLevel(item) - item.quantity)
+    });
     showMessage(`Dodano „${item.name}” do listy zakupów.`);
   };
 
-  // Get unique categories from catalog
   const availableCategories = [...new Set(productCatalog.map(product => product.category))].sort();
+  const stockCategories = [...new Set(inventoryStock.map(item => item.category || 'Inne'))].sort();
 
-  // Filter catalog products for search
+  const query = searchQuery.toLowerCase();
+
   const filteredCatalogProducts = productCatalog.filter((product) => {
     const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = product.name.toLowerCase().includes(query) ||
+                         (product.description || '').toLowerCase().includes(query);
     return matchesCategory && matchesSearch;
   });
 
-  // Filter inventory stock
   const filteredStock = inventoryStock.filter((item) => {
     const matchesCategory = selectedCategory ? item.category === selectedCategory : true;
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesSearch = item.name.toLowerCase().includes(query) ||
+                         (item.description && item.description.toLowerCase().includes(query)) ||
+                         getItemCode(item).toLowerCase().includes(query);
     return matchesCategory && matchesSearch;
   });
 
-  // Get stock statistics
-  const totalItems = inventoryStock.reduce((sum, item) => sum + item.quantity, 0);
-  const lowStockItems = inventoryStock.filter(item => item.quantity < item.minStock).length;
-  const outOfStockItems = inventoryStock.filter(item => item.quantity === 0).length;
+  // Statystyki według czterech poziomów stanu
+  const levelCounts = inventoryStock.reduce(
+    (acc, item) => ({ ...acc, [stockLevel(item)]: acc[stockLevel(item)] + 1 }),
+    { ok: 0, alert: 0, low: 0, out: 0 }
+  );
 
-  // Function to receive goods (add to inventory)
+  // Przyjęcie towaru (z katalogu albo istniejącej pozycji)
   const receiveGoods = (catalogProduct, quantity, note = '') => {
-    const stockRef = String(catalogProduct.id).startsWith('stock:') ? String(catalogProduct.id).slice(6) : null;
-    const existingIndex = inventoryStock.findIndex(item =>
-      stockRef ? String(item.id) === stockRef : item.catalogId === catalogProduct.id
+    const stock = stockRef.current;
+    const stockRefId = String(catalogProduct.id).startsWith('stock:') ? String(catalogProduct.id).slice(6) : null;
+    const existingIndex = stock.findIndex(item =>
+      stockRefId ? String(item.id) === stockRefId : item.catalogId === catalogProduct.id
     );
-    
+    const nowIso = new Date().toISOString();
+
     if (existingIndex >= 0) {
-      // Update existing stock
-      setInventoryStock(prev => prev.map((item, index) => 
-        index === existingIndex 
-          ? { ...item, quantity: item.quantity + quantity, lastReceived: new Date().toISOString() }
+      commitStock(stock.map((item, index) =>
+        index === existingIndex
+          ? {
+              ...item,
+              quantity: item.quantity + quantity,
+              lastReceived: nowIso,
+              notes: note ? [...(item.notes || []), { date: nowIso, text: note, type: 'receive' }] : item.notes
+            }
           : item
       ));
     } else {
-      // Add new item to inventory
-      const newStockItem = {
+      commitStock([...stock, {
         id: Date.now(),
         catalogId: catalogProduct.id,
         name: catalogProduct.name,
@@ -158,35 +196,117 @@ function Inventory() {
         description: catalogProduct.description,
         unit: catalogProduct.unit,
         minStock: catalogProduct.minStock,
-        quantity: quantity,
-        lastReceived: new Date().toISOString(),
-        notes: note ? [{ date: new Date().toISOString(), text: note, type: 'receive' }] : []
-      };
-      setInventoryStock(prev => [...prev, newStockItem]);
+        quantity,
+        lastReceived: nowIso,
+        notes: note ? [{ date: nowIso, text: note, type: 'receive' }] : []
+      }]);
     }
   };
 
-  // Function to issue goods (remove from inventory)
+  // Wydanie towaru – zwraca false, gdy na stanie jest za mało.
   const issueGoods = (stockItem, quantity, note = '') => {
-    if (quantity > stockItem.quantity) {
-      alert('Nie można wydać więcej niż jest dostępne na stanie!');
-      return false;
-    }
-
-    setInventoryStock(prev => prev.map(item => 
-      item.id === stockItem.id 
-        ? { 
-            ...item, 
+    const stock = stockRef.current;
+    const current = stock.find(item => item.id === stockItem.id);
+    if (!current || quantity > current.quantity) return false;
+    const nowIso = new Date().toISOString();
+    commitStock(stock.map(item =>
+      item.id === stockItem.id
+        ? {
+            ...item,
             quantity: item.quantity - quantity,
-            lastIssued: new Date().toISOString(),
-            notes: note ? [...(item.notes || []), { date: new Date().toISOString(), text: note, type: 'issue' }] : item.notes
+            lastIssued: nowIso,
+            notes: note ? [...(item.notes || []), { date: nowIso, text: note, type: 'issue' }] : item.notes
           }
         : item
     ));
     return true;
   };
 
-  // Handle receive modal
+  // ---------- Skanowanie ----------
+
+  const handleScan = ({ code, mode, quantity }) => {
+    const item = findStockByCode(stockRef.current, code);
+    if (!item) return { unknown: true };
+    const unit = item.unit || 'szt';
+    if (mode === 'issue') {
+      if (quantity > item.quantity) {
+        return { error: `${item.name}: na stanie jest ${item.quantity} ${unit}, nie można wydać ${quantity}.` };
+      }
+      issueGoods(item, quantity, 'Skan');
+    } else {
+      receiveGoods({ ...item, id: `stock:${item.id}` }, quantity, 'Skan');
+    }
+    const delta = mode === 'issue' ? -quantity : quantity;
+    return {
+      entry: {
+        id: `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        time: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        itemId: item.id,
+        name: item.name,
+        unit,
+        delta,
+        newQuantity: item.quantity + delta
+      }
+    };
+  };
+
+  const handleUndoScan = (entry) => {
+    const item = stockRef.current.find(s => s.id === entry.itemId);
+    if (!item) return 'Tej pozycji nie ma już w magazynie.';
+    if (entry.delta > 0 && item.quantity < entry.delta) {
+      return `Nie można cofnąć – część towaru (${item.name}) została już wydana.`;
+    }
+    commitStock(stockRef.current.map(s =>
+      s.id === entry.itemId ? { ...s, quantity: s.quantity - entry.delta } : s
+    ));
+    return null;
+  };
+
+  const handleAssignCode = (itemId, code) => {
+    const stock = stockRef.current;
+    if (findStockByCode(stock, code)) return `Kod „${code}” ma już inny produkt.`;
+    commitStock(stock.map(s => (String(s.id) === String(itemId) ? { ...s, code } : s)));
+    return null;
+  };
+
+  // ---------- Edycja pozycji ----------
+
+  const handleSaveItem = (updated) => {
+    const next = stockRef.current.map(s => (s.id === updated.id ? updated : s));
+    // Zapis na próbę – zdjęcia potrafią przepełnić localStorage, a writeJSON tylko loguje błąd.
+    try {
+      localStorage.setItem(KEYS.inventory, JSON.stringify(next));
+    } catch (error) {
+      return STORAGE_FULL_MESSAGE;
+    }
+    commitStock(next);
+    setEditingItem(null);
+    showMessage(`Zapisano zmiany: ${updated.name}.`);
+    return null;
+  };
+
+  // ---------- Etykiety ----------
+
+  const toggleSelected = (id) => {
+    setSelectedIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
+  };
+
+  const allFilteredSelected = filteredStock.length > 0 && filteredStock.every(item => selectedIds.includes(item.id));
+
+  const toggleSelectAll = () => {
+    const ids = filteredStock.map(item => item.id);
+    setSelectedIds(prev => (allFilteredSelected ? prev.filter(id => !ids.includes(id)) : [...new Set([...prev, ...ids])]));
+  };
+
+  const openLabels = () => {
+    const chosen = inventoryStock.filter(item => selectedIds.includes(item.id));
+    setLabelItems(chosen.length > 0 ? chosen : filteredStock);
+  };
+
+  const closeLabels = useCallback(() => setLabelItems(null), []);
+
+  // ---------- Modale przyjęcia / wydania ----------
+
   const openReceiveModal = (product) => {
     setSelectedProduct(product);
     setReceiveQuantity(1);
@@ -202,7 +322,6 @@ function Inventory() {
     }
   };
 
-  // Handle issue modal
   const openIssueModal = (stockItem) => {
     setSelectedProduct(stockItem);
     setIssueQuantity(1);
@@ -219,17 +338,13 @@ function Inventory() {
     }
   };
 
-  // Add custom product to catalog
   const addCustomProduct = (e) => {
     e.preventDefault();
-    if (!newProduct.name.trim()) {
-      alert('Nazwa produktu jest wymagana');
-      return;
-    }
+    if (!newProduct.name.trim()) return;
 
     const customProduct = {
       id: `custom_${Date.now()}`,
-      name: newProduct.name,
+      name: newProduct.name.trim(),
       category: newProduct.category,
       description: newProduct.description,
       unit: newProduct.unit,
@@ -250,12 +365,12 @@ function Inventory() {
   ];
 
   const stockStatus = (item) => {
-    if (item.quantity === 0) return <span className="badge badge-danger">Brak</span>;
-    if (item.quantity < item.minStock) return <span className="badge badge-warning">Niski stan</span>;
-    return <span className="badge badge-success">W normie</span>;
+    const level = stockLevel(item);
+    return <span className={`badge ${LEVEL_BADGE[level]}`}>{STOCK_LEVEL_LABELS[level]}</span>;
   };
 
   const issuableStock = filteredStock.filter(item => item.quantity > 0);
+  const categoryOptions = activeTab === 'stock' || activeTab === 'issue' ? stockCategories : availableCategories;
 
   if (loadingCatalog) {
     return (
@@ -268,6 +383,13 @@ function Inventory() {
     );
   }
 
+  const stats = [
+    { label: 'Produkty', value: inventoryStock.length, tone: '' },
+    { label: 'Kończy się', value: levelCounts.alert, tone: levelCounts.alert > 0 ? 'warning' : '' },
+    { label: 'Poniżej minimum', value: levelCounts.low, tone: levelCounts.low > 0 ? 'danger' : '' },
+    { label: 'Brak na stanie', value: levelCounts.out, tone: levelCounts.out > 0 ? 'danger' : '' }
+  ];
+
   return (
     <div className="inventory-page page">
       <header className="page-header">
@@ -275,27 +397,35 @@ function Inventory() {
           <h1 className="page-title">Magazyn</h1>
           <p className="page-subtitle">Ostatnia aktualizacja: {lastUpdate}</p>
         </div>
+        <button
+          type="button"
+          className={`btn ${showScanner ? 'btn-secondary' : 'btn-primary'}`}
+          onClick={() => setShowScanner(s => !s)}
+          aria-expanded={showScanner}
+        >
+          <ScanLine /> {showScanner ? 'Ukryj skanowanie' : 'Skanuj kody'}
+        </button>
       </header>
 
       {message && <div className="notice" role="status">{message}</div>}
 
+      {showScanner && (
+        <ScanPanel
+          stock={inventoryStock}
+          onScan={handleScan}
+          onUndo={handleUndoScan}
+          onAssign={handleAssignCode}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+
       <div className="stat-row">
-        <div className="stat">
-          <span className="stat-label">Produktów w magazynie</span>
-          <span className="stat-value num">{inventoryStock.length}</span>
-        </div>
-        <div className="stat">
-          <span className="stat-label">Łączna ilość</span>
-          <span className="stat-value num">{totalItems}</span>
-        </div>
-        <div className={`stat ${lowStockItems > 0 ? 'warning' : ''}`}>
-          <span className="stat-label">Niski stan</span>
-          <span className="stat-value num">{lowStockItems}</span>
-        </div>
-        <div className={`stat ${outOfStockItems > 0 ? 'danger' : ''}`}>
-          <span className="stat-label">Brak na stanie</span>
-          <span className="stat-value num">{outOfStockItems}</span>
-        </div>
+        {stats.map(stat => (
+          <div key={stat.label} className={`stat ${stat.tone}`}>
+            <span className="stat-label">{stat.label}</span>
+            <span className="stat-value num">{stat.value}</span>
+          </div>
+        ))}
       </div>
 
       <div className="tabs" role="tablist">
@@ -305,7 +435,7 @@ function Inventory() {
             role="tab"
             aria-selected={activeTab === tab.id}
             className={`tab ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => { setActiveTab(tab.id); setSelectedCategory(''); }}
           >
             {tab.label}
           </button>
@@ -317,7 +447,7 @@ function Inventory() {
           <Search className="search-field-icon" aria-hidden="true" />
           <input
             type="search"
-            placeholder={activeTab === 'stock' ? 'Szukaj w magazynie' : 'Szukaj produktu'}
+            placeholder={activeTab === 'stock' ? 'Szukaj po nazwie lub kodzie' : 'Szukaj produktu'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             aria-label="Szukaj"
@@ -330,10 +460,15 @@ function Inventory() {
           className="category-select"
         >
           <option value="">Wszystkie kategorie</option>
-          {availableCategories.map((category) => (
+          {categoryOptions.map((category) => (
             <option key={category} value={category}>{category}</option>
           ))}
         </select>
+        {activeTab === 'stock' && inventoryStock.length > 0 && (
+          <button className="btn btn-secondary toolbar-end" onClick={openLabels}>
+            <Printer /> {selectedIds.length > 0 ? `Drukuj etykiety (${selectedIds.length})` : 'Drukuj etykiety'}
+          </button>
+        )}
         {activeTab === 'receive' && (
           <button className="btn btn-secondary toolbar-end" onClick={() => setShowAddForm(true)}>
             <Plus /> Nowy produkt w katalogu
@@ -353,58 +488,94 @@ function Inventory() {
               <table>
                 <thead>
                   <tr>
+                    <th className="check-col">
+                      <input
+                        type="checkbox"
+                        checked={allFilteredSelected}
+                        onChange={toggleSelectAll}
+                        aria-label="Zaznacz wszystkie do druku etykiet"
+                      />
+                    </th>
                     <th>Produkt</th>
                     <th className="hide-sm">Kategoria</th>
                     <th className="right">Stan</th>
-                    <th className="right hide-sm">Minimum</th>
+                    <th className="right hide-sm" title="Minimum / próg ostrzegawczy">Min. / próg</th>
                     <th>Status</th>
                     <th aria-label="Akcje"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredStock.map((item) => (
-                    <tr key={item.id}>
-                      <td>
-                        <span className="item-name">{item.name}</span>
-                        {item.description && <span className="item-desc">{item.description}</span>}
-                      </td>
-                      <td className="muted hide-sm">{item.category}</td>
-                      <td className="right num nowrap">{item.quantity} {item.unit}</td>
-                      <td className="right num muted hide-sm">{item.minStock}</td>
-                      <td>{stockStatus(item)}</td>
-                      <td className="right">
-                        <div className="row-actions">
-                          {item.quantity < item.minStock && (
+                  {filteredStock.map((item) => {
+                    const level = stockLevel(item);
+                    return (
+                      <tr key={item.id} className={selectedIds.includes(item.id) ? 'selected-row' : ''}>
+                        <td className="check-col">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(item.id)}
+                            onChange={() => toggleSelected(item.id)}
+                            aria-label={`Zaznacz: ${item.name}`}
+                          />
+                        </td>
+                        <td>
+                          <div className="item-cell">
+                            {item.photo ? (
+                              <img src={item.photo} alt="" className="item-thumb" />
+                            ) : (
+                              <span className="item-thumb item-thumb-empty" aria-hidden="true" />
+                            )}
+                            <span>
+                              <span className="item-name">{item.name}</span>
+                              <span className="item-code">{getItemCode(item)}</span>
+                            </span>
+                          </div>
+                        </td>
+                        <td className="muted hide-sm">{item.category}</td>
+                        <td className="right num nowrap">{item.quantity} {item.unit}</td>
+                        <td className="right num muted hide-sm nowrap">{item.minStock} / {getAlertLevel(item)}</td>
+                        <td>{stockStatus(item)}</td>
+                        <td className="right">
+                          <div className="row-actions">
+                            {level !== 'ok' && (
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                onClick={() => handleAddToShoppingList(item)}
+                                title="Dodaj do listy zakupów"
+                                aria-label={`Dodaj do listy zakupów: ${item.name}`}
+                              >
+                                <ShoppingCart /> <span className="label-wide">Do listy</span>
+                              </button>
+                            )}
                             <button
-                              className="btn btn-ghost btn-sm"
-                              onClick={() => handleAddToShoppingList(item)}
-                              title="Dodaj do listy zakupów"
-                              aria-label={`Dodaj do listy zakupów: ${item.name}`}
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => openIssueModal(item)}
+                              disabled={item.quantity === 0}
                             >
-                              <ShoppingCart /> <span className="label-wide">Do listy</span>
+                              Wydaj
                             </button>
-                          )}
-                          <button
-                            className="btn btn-secondary btn-sm"
-                            onClick={() => openIssueModal(item)}
-                            disabled={item.quantity === 0}
-                          >
-                            Wydaj
-                          </button>
-                          <button
-                            className="btn btn-secondary btn-sm"
-                            onClick={() => {
-                              // Pozycje przyjęte z zamówień mogą nie mieć odpowiednika w katalogu – wtedy używamy samej pozycji.
-                              const catalogProduct = productCatalog.find(p => p.id === item.catalogId);
-                              openReceiveModal(catalogProduct || { ...item, id: item.catalogId || `stock:${item.id}` });
-                            }}
-                          >
-                            Przyjmij
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            <button
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => {
+                                // Pozycje przyjęte z zamówień mogą nie mieć odpowiednika w katalogu – wtedy używamy samej pozycji.
+                                const catalogProduct = productCatalog.find(p => p.id === item.catalogId);
+                                openReceiveModal(catalogProduct || { ...item, id: item.catalogId || `stock:${item.id}` });
+                              }}
+                            >
+                              Przyjmij
+                            </button>
+                            <button
+                              className="btn btn-ghost btn-sm icon-only"
+                              onClick={() => setEditingItem(item)}
+                              title="Edytuj"
+                              aria-label={`Edytuj: ${item.name}`}
+                            >
+                              <Pencil />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -447,7 +618,7 @@ function Inventory() {
                           </td>
                           <td className="muted hide-sm">{product.category}</td>
                           <td className="right num nowrap">{currentStock ? currentStock.quantity : 0} {product.unit}</td>
-                          <td className="right num muted hide-sm">{product.minStock}</td>
+                          <td className="right num muted hide-sm">{currentStock ? currentStock.minStock : product.minStock}</td>
                           <td className="right">
                             <button className="btn btn-secondary btn-sm" onClick={() => openReceiveModal(product)}>
                               <PackagePlus /> Przyjmij
@@ -563,6 +734,9 @@ function Inventory() {
                 value={issueQuantity}
                 onChange={(e) => setIssueQuantity(parseInt(e.target.value) || 1)}
               />
+              {issueQuantity > selectedProduct.quantity && (
+                <span className="field-error">Na stanie jest tylko {selectedProduct.quantity} {selectedProduct.unit}.</span>
+              )}
             </label>
             <label className="field">
               <span className="field-label">Cel wydania <span className="muted">(opcjonalnie)</span></span>
@@ -649,6 +823,18 @@ function Inventory() {
           </div>
         </div>
       )}
+
+      {editingItem && (
+        <EditItemModal
+          item={editingItem}
+          stock={inventoryStock}
+          categories={stockCategories}
+          onSave={handleSaveItem}
+          onClose={() => setEditingItem(null)}
+        />
+      )}
+
+      {labelItems && <LabelSheet items={labelItems} onClose={closeLabels} />}
     </div>
   );
 }

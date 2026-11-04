@@ -193,3 +193,274 @@
 @media (max-width: 640px) {
   .inventory-page .label-wide { display: none; }
 }
+
+/* ---------- Tabela stanu: zdjęcie, kod, zaznaczanie ---------- */
+.inventory-page .check-col { width: 36px; padding-right: 0; }
+.inventory-page table th.check-col:first-child,
+.inventory-page table td.check-col:first-child { padding-left: var(--space-5); }
+.inventory-page tr.selected-row td { background: var(--accent-soft); }
+
+.inventory-page .item-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.inventory-page .item-thumb {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  object-fit: cover;
+  background: var(--surface-muted);
+}
+
+.inventory-page .item-thumb-empty { display: inline-block; }
+
+.inventory-page .item-code {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-subtle);
+}
+
+.inventory-page .icon-only { padding: 0 8px; }
+
+/* ---------- Pola formularzy ---------- */
+.inventory-page .field-error,
+.inventory-page .form-error {
+  font-size: var(--text-sm);
+  color: var(--danger);
+}
+
+.inventory-page .form-error {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  background: var(--danger-soft);
+}
+
+.inventory-page .field-help { font-size: var(--text-sm); margin: 0 0 var(--space-4); }
+.inventory-page .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.inventory-page .code-input { font-family: var(--font-mono); letter-spacing: 0.02em; }
+
+/* ---------- Edycja produktu ---------- */
+.inventory-page .modal-wide { max-width: 640px; }
+
+.inventory-page .edit-layout {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: var(--space-5);
+}
+
+.inventory-page .edit-photo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.inventory-page .photo-large,
+.inventory-page .photo-placeholder {
+  width: 180px;
+  height: 180px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  object-fit: cover;
+  background: var(--surface-muted);
+}
+
+.inventory-page .photo-placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--text-subtle);
+  font-size: var(--text-sm);
+  border-style: dashed;
+}
+
+.inventory-page .photo-actions { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.inventory-page .photo-actions label.btn { cursor: pointer; }
+
+/* ---------- Skanowanie ---------- */
+.inventory-page .scan-panel {
+  margin-bottom: var(--space-5);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.inventory-page .scan-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.inventory-page .scan-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-md);
+}
+
+.inventory-page .scan-title svg { width: 18px; height: 18px; color: var(--accent); }
+
+.inventory-page .scan-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.inventory-page .scan-form label { display: flex; flex-direction: column; gap: 6px; }
+.inventory-page .scan-qty input { width: 90px; }
+.inventory-page .scan-code { flex: 1 1 260px; }
+.inventory-page .scan-code input { width: 100%; }
+
+.inventory-page .segmented {
+  display: inline-flex;
+  padding: 2px;
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.inventory-page .segmented button {
+  min-height: 30px;
+  padding: 0 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.inventory-page .segmented button.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.inventory-page .scan-feedback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 10px 14px;
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  font-weight: 500;
+}
+
+.inventory-page .scan-feedback.success { background: var(--success-soft); border-color: #c9e0d3; color: #1f5c39; }
+.inventory-page .scan-feedback.error { background: var(--danger-soft); border-color: #efc9c5; color: var(--danger); }
+.inventory-page .scan-feedback.unknown { background: var(--warning-soft); border-color: #ecd6ab; color: var(--warning); }
+
+.inventory-page .scan-assign { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.inventory-page .scan-assign select { max-width: 280px; font-weight: 400; color: var(--text); }
+
+.inventory-page .scan-log { border-top: 1px solid var(--border); padding-top: var(--space-3); }
+
+.inventory-page .scan-log-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.inventory-page .scan-log-head .section-label { margin: 0; }
+.inventory-page .scan-log table th:first-child,
+.inventory-page .scan-log table td:first-child { padding-left: 0; }
+.inventory-page .scan-log table th:last-child,
+.inventory-page .scan-log table td:last-child { padding-right: 0; }
+.inventory-page .delta-plus { color: var(--success); font-weight: 600; }
+.inventory-page .delta-minus { color: var(--danger); font-weight: 600; }
+
+@media (max-width: 640px) {
+  .inventory-page .edit-layout { grid-template-columns: 1fr; }
+  .inventory-page .photo-large,
+  .inventory-page .photo-placeholder { width: 120px; height: 120px; }
+  .inventory-page .field-row { grid-template-columns: 1fr; gap: 0; }
+  .inventory-page table th.check-col:first-child,
+  .inventory-page table td.check-col:first-child { padding-left: var(--space-3); }
+  .inventory-page .item-thumb { width: 28px; height: 28px; }
+}
+
+/* ---------- Arkusz etykiet (portal poza aplikacją) ---------- */
+body.md-labels-open { overflow: hidden; }
+
+.label-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  overflow-y: auto;
+  padding: var(--space-5);
+  background: var(--bg);
+}
+
+.label-sheet .label-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  max-width: 1000px;
+  margin: 0 auto var(--space-5);
+}
+
+.label-sheet .label-title { margin: 0 0 var(--space-1); font-size: var(--text-lg); }
+.label-sheet .label-toolbar p { margin: 0; }
+.label-sheet .label-toolbar-actions { display: flex; gap: var(--space-2); }
+
+.label-sheet .label-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-3);
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.label-sheet .label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: #fff;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.label-sheet .label-text { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+
+.label-sheet .label-name {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.label-sheet .label-meta { font-size: var(--text-xs); color: var(--text-muted); margin-bottom: 4px; }
+.label-sheet .label-barcode { max-width: 100%; height: auto; }
+.label-sheet .label-code { font-family: var(--font-mono); font-size: var(--text-sm); }
+.label-sheet .label-qr { width: 72px; height: 72px; flex-shrink: 0; image-rendering: pixelated; }
+
+@media print {
+  body.md-labels-open #root,
+  body.md-labels-open .label-toolbar { display: none !important; }
+  body.md-labels-open { overflow: visible; background: #fff; }
+  body.md-labels-open .label-sheet { position: static; padding: 0; background: #fff; overflow: visible; }
+  body.md-labels-open .label-grid { max-width: none; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+  body.md-labels-open .label { border: 1px dashed #999; padding: 3mm; }
+}
+
+.inventory-page .code-input::placeholder { font-family: var(--font); letter-spacing: 0; }

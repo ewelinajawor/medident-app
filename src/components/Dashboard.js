@@ -14,8 +14,22 @@ import {
 } from 'chart.js';
 import './Dashboard.css';
 import EventCalendar from './EventCalendar';
-import { KEYS, readJSON, getOrders, addToShoppingList } from '../utils/storage';
+import {
+  KEYS,
+  readJSON,
+  getOrders,
+  addToShoppingList,
+  stockLevel,
+  getAlertLevel,
+  STOCK_LEVEL_LABELS
+} from '../utils/storage';
 import { formatMoney } from '../utils/format';
+import { getRfqs, rfqProgress } from '../utils/rfq';
+import { buildNotifications, getReadNotificationIds } from '../utils/notifications';
+import NotificationList, { markRead, addNotificationItemToList } from './NotificationList';
+
+const LEVEL_ORDER = { out: 0, low: 1, alert: 2, ok: 3 };
+const LEVEL_BADGE = { out: 'badge-danger', low: 'badge-danger', alert: 'badge-warning', ok: 'badge-success' };
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 ChartJS.defaults.font.family = "'IBM Plex Sans', system-ui, sans-serif";
@@ -76,29 +90,46 @@ function Dashboard({ username }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [todayEvents, setTodayEvents] = useState(() => getTodayEvents(readJSON(KEYS.calendarEvents, [])));
   const [inventoryFilter, setInventoryFilter] = useState('');
-  const [inventorySortBy, setInventorySortBy] = useState('name');
+  const [inventorySortBy, setInventorySortBy] = useState('level');
   const [inventorySortOrder, setInventorySortOrder] = useState('asc');
   const [message, setMessage] = useState('');
 
   // Dane z magazynu i historii zamówień (te same, które widać na ekranach Magazyn i Zamówienia).
   const [stock] = useState(() => readJSON(KEYS.inventory, []));
   const [orders] = useState(() => getOrders());
+  const [openRfqs] = useState(() =>
+    getRfqs()
+      .filter((r) => r.status === 'open' || r.status === 'analysis')
+      .sort((a, b) => b.number - a.number)
+  );
+  const [notifications] = useState(() => buildNotifications());
+  const [readIds, setReadIds] = useState(() => getReadNotificationIds());
+  const unreadNotifications = notifications.filter((n) => !readIds.includes(n.id));
 
+  // Poziomy: brak / poniżej minimum / kończy się (poniżej progu ostrzegawczego) / w normie
   const inventorySummary = useMemo(() => {
-    let normal = 0, low = 0, critical = 0;
+    const counts = { out: 0, low: 0, alert: 0, ok: 0 };
     stock.forEach((item) => {
-      if (item.quantity === 0) critical++;
-      else if (item.quantity < item.minStock) low++;
-      else normal++;
+      counts[stockLevel(item)] += 1;
     });
-    return { normal, low, critical };
+    return counts;
   }, [stock]);
 
   const lowStockItems = useMemo(
     () =>
       stock
-        .filter((item) => item.quantity < item.minStock)
-        .map((item) => ({ ...item, stock: item.quantity })),
+        .map((item) => {
+          const alertLevel = getAlertLevel(item);
+          return {
+            ...item,
+            stock: item.quantity,
+            level: stockLevel(item),
+            alertLevel,
+            toOrder: Math.max(1, alertLevel - item.quantity)
+          };
+        })
+        .filter((item) => item.level !== 'ok')
+        .sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level] || a.name.localeCompare(b.name, 'pl')),
     [stock]
   );
 
@@ -146,9 +177,20 @@ function Dashboard({ username }) {
     setTimeout(() => setMessage(''), 3000);
   };
 
+  // Uzupełniamy do progu ostrzegawczego – tak samo jak „lista z braków” na Liście zakupów.
   const orderItem = (item) => {
-    const shortage = item.minStock - item.stock;
-    addToShoppingList({ name: item.name, category: item.category, quantity: shortage > 0 ? shortage : 1 });
+    addToShoppingList({ name: item.name, category: item.category, quantity: item.toOrder });
+  };
+
+  const handleNotificationRead = (id) => {
+    markRead([id]);
+    setReadIds(getReadNotificationIds());
+  };
+
+  const handleNotificationAddToList = (notification) => {
+    const quantity = addNotificationItemToList(notification);
+    handleNotificationRead(notification.id);
+    showMessage(`Dodano „${notification.item.name}” (${quantity} ${notification.item.unit || 'szt'}) do listy zakupów.`);
   };
 
   const handleOrderOne = (item) => {
@@ -196,11 +238,11 @@ function Dashboard({ username }) {
   };
 
   const inventoryChartData = {
-    labels: ['Dobry stan', 'Niski stan', 'Brak na stanie'],
+    labels: ['W normie', 'Kończy się', 'Poniżej minimum', 'Brak'],
     datasets: [
       {
-        data: [inventorySummary.normal, inventorySummary.low, inventorySummary.critical],
-        backgroundColor: [COLORS.success, COLORS.warning, COLORS.danger],
+        data: [inventorySummary.ok, inventorySummary.alert, inventorySummary.low, inventorySummary.out],
+        backgroundColor: [COLORS.success, COLORS.warning, '#d9773b', COLORS.danger],
         borderColor: '#ffffff',
         borderWidth: 2
       }
@@ -225,15 +267,17 @@ function Dashboard({ username }) {
     )
     .sort((a, b) => {
       let comparison = 0;
-      if (inventorySortBy === 'name') comparison = a.name.localeCompare(b.name, 'pl');
+      if (inventorySortBy === 'level') comparison = LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level] || a.name.localeCompare(b.name, 'pl');
+      else if (inventorySortBy === 'name') comparison = a.name.localeCompare(b.name, 'pl');
       else if (inventorySortBy === 'stock') comparison = a.stock - b.stock;
       else if (inventorySortBy === 'category') comparison = (a.category || '').localeCompare(b.category || '', 'pl');
       return inventorySortOrder === 'asc' ? comparison : -comparison;
     });
 
+  const belowMinimum = inventorySummary.low + inventorySummary.out;
   const stats = [
-    { label: 'Niski stan', value: inventorySummary.low, tone: inventorySummary.low > 0 ? 'warning' : '', to: '/inventory' },
-    { label: 'Brak na stanie', value: inventorySummary.critical, tone: inventorySummary.critical > 0 ? 'danger' : '', to: '/inventory' },
+    { label: 'Poniżej minimum', value: belowMinimum, tone: belowMinimum > 0 ? 'danger' : '', to: '/inventory' },
+    { label: 'Kończy się', value: inventorySummary.alert, tone: inventorySummary.alert > 0 ? 'warning' : '', to: '/inventory' },
     { label: 'Zamówienia w toku', value: pendingOrders.length, tone: '', to: '/orders' },
     { label: 'Wydatki w tym miesiącu', value: `${formatMoney(thisMonthSpend)}`, tone: '', to: '/savings' }
   ];
@@ -244,32 +288,30 @@ function Dashboard({ username }) {
         <thead>
           <tr>
             <th>Produkt</th>
-            {!compact && <th>Kategoria</th>}
+            {!compact && <th className="hide-narrow">Kategoria</th>}
+            <th>Status</th>
             <th className="right">Stan</th>
-            <th className="right">Minimum</th>
-            {!compact && <th className="right">Brakuje</th>}
+            <th className="right hide-narrow">Minimum</th>
+            {!compact && <th className="right hide-narrow">Próg</th>}
+            <th className="right hide-narrow">Do zamówienia</th>
             <th aria-label="Akcje"></th>
           </tr>
         </thead>
         <tbody>
-          {items.map((item) => {
-            const shortage = Math.max(0, item.minStock - item.stock);
-            return (
-              <tr key={item.id}>
-                <td>
-                  <span className={`stock-dot ${item.stock === 0 ? 'danger' : 'warning'}`} aria-hidden="true" />
-                  {item.name}
-                </td>
-                {!compact && <td className="muted">{item.category}</td>}
-                <td className="right num">{item.stock} {item.unit}</td>
-                <td className="right num muted">{item.minStock}</td>
-                {!compact && <td className="right num">{shortage}</td>}
-                <td className="right">
-                  <button className="btn btn-secondary btn-sm" onClick={() => handleOrderOne(item)}>Zamów</button>
-                </td>
-              </tr>
-            );
-          })}
+          {items.map((item) => (
+            <tr key={item.id}>
+              <td>{item.name}</td>
+              {!compact && <td className="muted hide-narrow">{item.category}</td>}
+              <td><span className={`badge ${LEVEL_BADGE[item.level]}`}>{STOCK_LEVEL_LABELS[item.level]}</span></td>
+              <td className="right num">{item.stock} {item.unit}</td>
+              <td className="right num muted hide-narrow">{item.minStock}</td>
+              {!compact && <td className="right num muted hide-narrow">{item.alertLevel}</td>}
+              <td className="right num hide-narrow">{item.toOrder}</td>
+              <td className="right">
+                <button className="btn btn-secondary btn-sm" onClick={() => handleOrderOne(item)}>Zamów</button>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
@@ -312,6 +354,7 @@ function Dashboard({ username }) {
                     onChange={(e) => setInventoryFilter(e.target.value)}
                   />
                   <select value={inventorySortBy} onChange={(e) => setInventorySortBy(e.target.value)}>
+                    <option value="level">Pilność</option>
                     <option value="name">Nazwa</option>
                     <option value="stock">Stan</option>
                     <option value="category">Kategoria</option>
@@ -411,7 +454,9 @@ function Dashboard({ username }) {
         );
       default:
         return (
+          <div className="dash-stack">
           <div className="dash-grid">
+            <div className="dash-stack">
             <div className="card">
               <div className="card-head">
                 <h3>Dzisiaj</h3>
@@ -436,6 +481,42 @@ function Dashboard({ username }) {
               )}
             </div>
 
+            {openRfqs.length > 0 && (
+              <div className="card card-flush">
+                <div className="card-toolbar">
+                  <h3>Zapytania ofertowe</h3>
+                  <Link to="/offers" className="btn btn-ghost btn-sm">Wszystkie <ArrowRight /></Link>
+                </div>
+                <ul className="rfq-list">
+                  {openRfqs.map((rfq) => {
+                    const progress = rfqProgress(rfq);
+                    return (
+                      <li key={rfq.id}>
+                        <Link to={`/offers?rfq=${rfq.id}`} className="rfq-row">
+                          <span className="rfq-main">
+                            <span className="rfq-title">Zapytanie nr {rfq.number}</span>
+                            <span className="rfq-progress muted">
+                              Otrzymano {progress.received} z {progress.total} ofert
+                            </span>
+                          </span>
+                          {progress.overdue.length > 0 ? (
+                            <span className="badge badge-danger">Po terminie</span>
+                          ) : progress.complete ? (
+                            <span className="badge badge-success">Do analizy</span>
+                          ) : (
+                            <span className="badge badge-info">
+                              {progress.daysLeft <= 0 ? 'Termin dziś' : `Termin za ${progress.daysLeft} dn.`}
+                            </span>
+                          )}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+            </div>
+
             <div className="card card-flush">
               <div className="card-toolbar">
                 <h3>Wymagają uzupełnienia</h3>
@@ -453,6 +534,30 @@ function Dashboard({ username }) {
                 </p>
               )}
             </div>
+          </div>
+
+          <div className="card card-flush dash-notifications">
+            <div className="card-toolbar">
+              <h3>
+                Powiadomienia
+                {unreadNotifications.length > 0 && (
+                  <span className="muted dash-count"> · {unreadNotifications.length} nieprzeczytane</span>
+                )}
+              </h3>
+              <Link to="/notifications" className="btn btn-ghost btn-sm">Wszystkie <ArrowRight /></Link>
+            </div>
+            {unreadNotifications.length > 0 ? (
+              <NotificationList
+                compact
+                notifications={unreadNotifications.slice(0, 5)}
+                readIds={readIds}
+                onRead={handleNotificationRead}
+                onAddToList={handleNotificationAddToList}
+              />
+            ) : (
+              <p className="card-empty">Brak nowych powiadomień.</p>
+            )}
+          </div>
           </div>
         );
     }

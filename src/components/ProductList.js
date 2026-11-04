@@ -14,10 +14,24 @@ import {
   ChevronRight
 } from 'lucide-react';
 import './ProductList.css';
-import { addToShoppingList } from '../utils/storage';
+import { addToShoppingList, getPriceHistory } from '../utils/storage';
 import { formatMoney } from '../utils/format';
 
 const collator = new Intl.Collator('pl', { sensitivity: 'base', numeric: true });
+
+/**
+ * Historia cen produktu. Baza produktów pokazuje nazwy oczyszczone (bez „szt”, „op.”),
+ * a lista zakupów zapisuje nazwy z pliku – dlatego sprawdzamy obie.
+ */
+const priceHistoryForProduct = (product) => {
+  const names = new Set([product.name, product.rawName].filter(Boolean));
+  return getPriceHistory()
+    .filter((entry) => names.has(entry.name))
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+};
+
+const formatShortDate = (value) =>
+  new Date(value).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', year: 'numeric' });
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
@@ -51,6 +65,7 @@ const ProductList = () => {
         if (Array.isArray(data)) {
           const processedData = data.map((product) => ({
             ...product,
+            rawName: product.name,
             // Oczyszczanie nazwy produktu
             name: product.name ? product.name.replace(/(N\/A\s(?:szt|op\.)|szt|op\.)/gi, "").trim() : "",
             // 145 produktów w bazie nie ma producenta – bez tego wyszukiwarka rzucała wyjątek.
@@ -501,6 +516,48 @@ const ProductList = () => {
                 </>
               )}
             </dl>
+
+            {(() => {
+              const history = priceHistoryForProduct(showQuickView);
+              if (history.length === 0) return null;
+              const last = history[history.length - 1];
+              const lowest = history.reduce((min, h) => (h.price < min.price ? h : min), history[0]);
+              return (
+                <section className="price-history" aria-labelledby="price-history-title">
+                  <h3 id="price-history-title" className="section-label">Historia cen</h3>
+                  <dl className="price-history-facts">
+                    <div>
+                      <dt>Ostatnia</dt>
+                      <dd className="num">{formatMoney(last.price)}</dd>
+                      <dd className="muted">{last.supplier}</dd>
+                    </div>
+                    <div>
+                      <dt>Najniższa</dt>
+                      <dd className="num">{formatMoney(lowest.price)}</dd>
+                      <dd className="muted">{lowest.supplier}</dd>
+                    </div>
+                  </dl>
+                  <div className="price-history-table">
+                    <table>
+                      <tbody>
+                        {[...history].reverse().slice(0, 5).map((h, i) => (
+                          <tr key={`${h.date}-${h.supplier}-${i}`}>
+                            <td className="num muted">{formatShortDate(h.date)}</td>
+                            <td>{h.supplier}</td>
+                            <td className="right num">{formatMoney(h.price)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {history.length > 5 && (
+                    <p className="muted price-history-more">
+                      Pokazano 5 z {history.length}. Pełna historia w zakładce Raporty.
+                    </p>
+                  )}
+                </section>
+              );
+            })()}
 
             <div className="modal-actions">
               <button className="btn btn-secondary" onClick={() => setShowQuickView(null)}>Zamknij</button>

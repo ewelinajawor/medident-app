@@ -1,0 +1,95 @@
+/* Lista powiadomień (strona Powiadomienia i Strona główna) */
+
+.ntf-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ntf-list .ntf-item {
+  --tone: var(--border-strong);
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.ntf-list .ntf-item:last-child { border-bottom: none; }
+
+.ntf-list .ntf-item::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--tone);
+}
+
+.ntf-list .tone-danger { --tone: var(--danger); }
+.ntf-list .tone-warning { --tone: #d9a441; }
+.ntf-list .tone-success { --tone: var(--success); }
+.ntf-list .tone-info { --tone: var(--info); }
+
+.ntf-list .ntf-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.ntf-list .unread .ntf-dot { background: var(--accent); }
+
+.ntf-list .ntf-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ntf-list .ntf-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+}
+
+.ntf-list .ntf-title { font-weight: 600; color: var(--text); }
+.ntf-list .read .ntf-title { font-weight: 500; color: var(--text-muted); }
+
+.ntf-list .ntf-time {
+  font-size: var(--text-sm);
+  color: var(--text-subtle);
+  white-space: nowrap;
+}
+
+.ntf-list .ntf-message { margin: 0; color: var(--text-muted); }
+
+.ntf-list .ntf-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.ntf-list .ntf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.ntf-list .ntf-mark { padding: 0 8px; }
+
+/* Wersja zwarta – na Stronie głównej */
+.ntf-list.compact .ntf-item { padding: var(--space-3) var(--space-5); }
+
+@media (max-width: 640px) {
+  .ntf-list .ntf-item { flex-wrap: wrap; padding: var(--space-3) var(--space-4); }
+  .ntf-list .ntf-actions { width: 100%; justify-content: flex-start; padding-left: 20px; }
+}

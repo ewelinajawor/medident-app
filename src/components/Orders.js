@@ -310,7 +310,15 @@ function Orders() {
                                   <tbody>
                                     {order.items.map((item, i) => (
                                       <tr key={i}>
-                                        <td>{item.name}</td>
+                                        <td>
+                                          {item.name}
+                                          {item.gratis && (
+                                            <span className="badge badge-accent gratis-badge">
+                                              Gratis: {[item.gratis.qty > 0 ? `${item.gratis.qty} szt.` : null, item.gratis.desc || null].filter(Boolean).join(' – ') || 'tak'}
+                                              {item.gratis.value > 0 && ` (${formatMoney(item.gratis.value)})`}
+                                            </span>
+                                          )}
+                                        </td>
                                         <td className="right num">{item.quantity} szt.</td>
                                         <td className="right num">
                                           {item.price > 0 ? `${formatMoney((item.price * item.quantity))}` : '—'}
@@ -321,7 +329,12 @@ function Orders() {
                                 </table>
 
                                 {order.notes && (
-                                  <p className="order-notes"><span className="muted">Uwagi:</span> {order.notes}</p>
+                                  <p className="order-notes">
+                                    <span className="muted">Uwagi:</span> {order.notes}
+                                    {/^Z zapytania ofertowego nr \d+/.test(order.notes) && (
+                                      <> · <Link to="/offers">Zobacz zapytania ofertowe</Link></>
+                                    )}
+                                  </p>
                                 )}
 
                                 <div className="details-actions">

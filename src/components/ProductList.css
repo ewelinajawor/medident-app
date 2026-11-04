@@ -341,3 +341,27 @@
   .product-list-page .products-grid { grid-template-columns: 1fr; }
   .product-list-page .toast { left: var(--space-4); right: var(--space-4); bottom: var(--space-4); max-width: none; }
 }
+
+/* Historia cen w oknie szczegółów */
+.product-list-page .price-history { margin-top: var(--space-4); }
+
+.product-list-page .price-history-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+}
+
+.product-list-page .price-history-facts dt { font-size: var(--text-sm); color: var(--text-muted); }
+.product-list-page .price-history-facts dd { margin: 0; font-size: var(--text-sm); }
+.product-list-page .price-history-facts dd.num { font-size: var(--text-md); font-weight: 600; color: var(--text); }
+
+.product-list-page .price-history-table {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.product-list-page .price-history-table td { padding: 7px 10px; font-size: var(--text-sm); }
+.product-list-page .price-history-table .right { text-align: right; }
+.product-list-page .price-history-more { margin: var(--space-2) 0 0; font-size: var(--text-sm); }

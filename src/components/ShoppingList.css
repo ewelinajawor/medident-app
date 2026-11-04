@@ -312,27 +312,163 @@
 
 .shopping-list .sl-empty p { margin: 0 0 var(--space-1); }
 
-/* Porównanie cen */
-.shopping-list .sl-best {
-  background: var(--accent-soft);
+/* Pole ilości w wierszu */
+.shopping-list .stepper input {
+  width: 48px;
+  min-height: 0;
+  height: 100%;
+  padding: 0 4px;
+  border: none;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  border-radius: 0;
+  text-align: center;
+  font-weight: 500;
+  -moz-appearance: textfield;
+}
+
+.shopping-list .stepper input::-webkit-outer-spin-button,
+.shopping-list .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+.shopping-list .stepper input:focus { box-shadow: inset 0 0 0 2px var(--accent); }
+
+/* Edytowalna nazwa (produkt spoza bazy) */
+.shopping-list .sl-name-input {
+  width: 100%;
+  min-width: 180px;
+  min-height: 30px;
+  padding: 4px 8px;
+}
+
+.shopping-list .sl-product-cell { min-width: 220px; }
+
+.shopping-list .sl-list-meta {
+  margin: 2px 0 0;
+  font-size: var(--text-xs);
+}
+
+/* Zakładki kategorii – jak arkusze w Excelu */
+.shopping-list .sl-sheets {
+  display: flex;
+  gap: 2px;
+  padding: var(--space-2) var(--space-5) 0;
+  background: var(--surface-muted);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.shopping-list .sl-sheet {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  margin-bottom: -1px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.shopping-list .sl-sheet:hover { color: var(--text); background: var(--surface-hover); }
+
+.shopping-list .sl-sheet.active {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* Historia cen */
+.shopping-list .sl-history-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  vertical-align: middle;
+}
+
+.shopping-list .sl-history-toggle svg { width: 12px; height: 12px; }
+
+.shopping-list .sl-history-toggle:hover,
+.shopping-list .sl-history-toggle[aria-expanded="true"] {
+  border-color: var(--accent);
   color: var(--accent-text);
 }
 
-.shopping-list tbody tr:hover td.sl-best { background: var(--accent-soft); }
+.shopping-list .sl-history-row td { background: var(--surface-muted); }
+.shopping-list tbody tr.sl-history-row:hover td { background: var(--surface-muted); }
 
-.shopping-list .sl-unit-price { display: block; }
+.shopping-list .sl-history-row .section-label { display: block; margin-bottom: var(--space-2); }
 
-.shopping-list .sl-line-total {
-  display: block;
-  font-size: var(--text-xs);
-  color: var(--text-muted);
+.shopping-list .sl-mini-table {
+  width: auto;
+  min-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
 }
 
-.shopping-list tfoot td {
-  font-weight: 600;
-  border-top: 1px solid var(--border-strong);
-  border-bottom: none;
-  background: var(--surface-muted);
+.shopping-list .sl-mini-table th,
+.shopping-list .sl-mini-table td { padding: 6px 12px; }
+
+.shopping-list .sl-mini-table th:first-child,
+.shopping-list .sl-mini-table td:first-child { padding-left: 12px; }
+
+/* Lista z braków */
+.shopping-list .sl-from-stock {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.shopping-list .sl-stock-panel { display: grid; gap: var(--space-3); }
+
+.shopping-list .sl-stock-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+}
+
+.shopping-list .sl-stock-summary { margin: 0; font-size: var(--text-sm); }
+
+.shopping-list .sl-stock-actions,
+.shopping-list .sl-inline-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.shopping-list .sl-inline-confirm > span { font-size: var(--text-sm); margin-right: var(--space-1); }
+
+/* Sugestia „spoza bazy” */
+.shopping-list .sl-suggestion-custom {
+  margin-top: var(--space-1);
+  padding-top: var(--space-1);
+  border-top: 1px solid var(--border);
+}
+
+.shopping-list .sl-suggestion-custom .sl-suggestion-name { color: var(--accent-text); font-weight: 500; }
+
+/* Komunikat z „Cofnij” */
+.shopping-list .notice { justify-content: space-between; }
+.shopping-list .sl-undo { color: #1f5c39; }
+
+.shopping-list .sl-rfq-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 /* Panel zamówienia */
@@ -401,12 +537,30 @@
   text-overflow: ellipsis;
 }
 
-.shopping-list .sl-send { width: 100%; }
+.shopping-list .sl-send { width: 100%; white-space: normal; line-height: 1.25; padding-block: 8px; }
 
 .shopping-list .sl-hint {
   margin: calc(var(--space-2) * -1) 0 0;
   font-size: var(--text-xs);
 }
+
+.shopping-list .sl-secondary-actions {
+  display: grid;
+  gap: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.shopping-list .sl-secondary-actions > .btn { width: 100%; }
+
+.shopping-list .sl-dialog-intro { margin: calc(var(--space-2) * -1) 0 var(--space-4); font-size: var(--text-sm); }
+
+.shopping-list .sl-modal .sl-suppliers { margin-bottom: var(--space-4); }
+
+.shopping-list .sl-deadline { margin-bottom: var(--space-4); }
+.shopping-list .sl-deadline input { width: 200px; }
+
+.shopping-list .sl-modal .sl-hint { margin: 0 0 var(--space-4); }
 
 /* Szablony */
 .shopping-list .sl-templates {
@@ -479,7 +633,9 @@
 
 .shopping-list .sl-modal-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: var(--space-2);
 }
 
 @media (max-width: 1100px) {
@@ -494,4 +650,6 @@
   .shopping-list .card-flush { padding: 0; }
   .shopping-list .sl-list-head,
   .shopping-list .sl-info { padding-left: var(--space-4); padding-right: var(--space-4); }
+  .shopping-list .sl-sheets { padding-left: var(--space-4); padding-right: var(--space-4); }
+  .shopping-list .sl-mini-table { min-width: 0; }
 }

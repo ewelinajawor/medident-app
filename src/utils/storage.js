@@ -11,6 +11,10 @@ export const KEYS = {
   suppliers: "suppliers",
   calendarEvents: "calendarEvents",
   profile: "userProfile",
+  closedLists: "closedShoppingLists",
+  rfqs: "rfqs",
+  priceHistory: "priceHistory",
+  notificationsRead: "notificationsRead",
 };
 
 export const ORDER_STATUSES = ["W realizacji", "Wysłane", "Dostarczone"];
@@ -123,6 +127,7 @@ export function normalizeOrder(order, index = 0) {
       quantity: p.quantity || 1,
       price: product.bestPrice || product.price || 0,
       category: product.category,
+      gratis: p.gratis || undefined,
     };
   });
   const amount =
@@ -164,6 +169,7 @@ export function appendOrder({ supplier, items, notes = "", deliveryDate }) {
     deliveryDate,
   });
   saveOrders([...getOrders(), order]);
+  recordPrices(order.items.map((i) => ({ name: i.name, supplier, price: i.price, source: "zamówienie" })));
   return order;
 }
 
@@ -212,4 +218,148 @@ export function buildOrderEmail({ clinicName, items, notes }) {
   ]
     .filter((l) => l !== null)
     .join("\n");
+}
+
+// ---------- Stany magazynowe: minimum i próg ostrzegawczy ----------
+// Klient: „poniżej 10, a zanim spadnie do 5 – powiadomienie”.
+// minStock = minimum (5), alertLevel = próg ostrzegawczy (10). Domyślnie próg = 2 × minimum.
+
+export const getAlertLevel = (item) =>
+  Number.isFinite(item.alertLevel) && item.alertLevel > 0 ? item.alertLevel : (item.minStock || 0) * 2;
+
+/** 'out' – brak, 'low' – poniżej minimum, 'alert' – poniżej progu ostrzegawczego, 'ok' */
+export function stockLevel(item) {
+  if (item.quantity <= 0) return "out";
+  if (item.quantity < (item.minStock || 0)) return "low";
+  if (item.quantity < getAlertLevel(item)) return "alert";
+  return "ok";
+}
+
+export const STOCK_LEVEL_LABELS = { out: "Brak", low: "Poniżej minimum", alert: "Kończy się", ok: "W normie" };
+
+// ---------- Kody produktów (kod kreskowy / QR / RFID) ----------
+// Czytniki kodów kreskowych, QR i większość czytników RFID na USB działają jak klawiatura:
+// „wpisują” kod i Enter. Dlatego wystarczy jeden kod tekstowy na pozycję magazynową.
+
+export function defaultCodeFor(item) {
+  const digits = String(item.id).replace(/\D/g, "").slice(-6).padStart(6, "0");
+  return `MD${digits}`;
+}
+
+export const getItemCode = (item) => item.code || defaultCodeFor(item);
+
+export function findStockByCode(stock, code) {
+  const wanted = String(code || "").trim().toUpperCase();
+  if (!wanted) return null;
+  return stock.find((item) => getItemCode(item).toUpperCase() === wanted) || null;
+}
+
+// ---------- Listy zakupów: zamykanie i numeracja ----------
+
+/** Pozycje do listy z braków: wszystko poniżej progu ostrzegawczego, uzupełnione do tego progu. */
+export function buildListFromStock(stock, { onlyBelowMinimum = false } = {}) {
+  return stock
+    .filter((item) => {
+      const level = stockLevel(item);
+      return onlyBelowMinimum ? level === "out" || level === "low" : level !== "ok";
+    })
+    .map((item) => ({
+      name: item.name,
+      category: item.category || "Inne",
+      quantity: Math.max(1, getAlertLevel(item) - item.quantity),
+      price: 0,
+      dateAdded: new Date().toLocaleDateString("pl-PL"),
+      fromStock: true,
+    }));
+}
+
+export const getClosedLists = () => readJSON(KEYS.closedLists, []);
+
+export function listTitle(list) {
+  const date = new Date(list.closedAt).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" });
+  return `Lista zakupów nr ${list.number} z ${date}`;
+}
+
+/** Zamyka bieżącą listę: zapisuje ją w archiwum z kolejnym numerem i czyści bieżącą. */
+export function closeShoppingList({ items, notes = "" }) {
+  const closed = getClosedLists();
+  const list = {
+    id: `list_${Date.now()}`,
+    number: closed.reduce((max, l) => Math.max(max, l.number || 0), 0) + 1,
+    closedAt: new Date().toISOString(),
+    items: items.map((i) => ({ name: i.name, category: i.category || "Inne", quantity: i.quantity, price: i.price || 0 })),
+    notes,
+    rfqId: null,
+  };
+  writeJSON(KEYS.closedLists, [...closed, list]);
+  writeJSON(KEYS.shoppingList, []);
+  localStorage.setItem(KEYS.orderNotes, "");
+  return list;
+}
+
+export function updateClosedList(id, changes) {
+  writeJSON(
+    KEYS.closedLists,
+    getClosedLists().map((l) => (l.id === id ? { ...l, ...changes } : l))
+  );
+}
+
+// ---------- Historia cen ----------
+
+export const getPriceHistory = () => readJSON(KEYS.priceHistory, []);
+
+/** entries: [{ name, supplier, price, date?, source: 'oferta' | 'zamówienie' }] */
+export function recordPrices(entries) {
+  const valid = entries.filter((e) => e.name && e.price > 0);
+  if (valid.length === 0) return;
+  const now = new Date().toISOString();
+  writeJSON(KEYS.priceHistory, [
+    ...getPriceHistory(),
+    ...valid.map((e) => ({ name: e.name, supplier: e.supplier || "—", price: e.price, date: e.date || now, source: e.source || "oferta" })),
+  ]);
+}
+
+/** Historia ceny jednego produktu, od najstarszej. */
+export function priceHistoryFor(name, history = getPriceHistory()) {
+  return history
+    .filter((e) => e.name === name)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+}
+
+// ---------- Eksport do Power BI ----------
+
+const csvCell = (value) => {
+  const text = value === null || value === undefined ? "" : String(value);
+  return /[";\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+};
+
+/** CSV z separatorem ";" i przecinkiem dziesiętnym – tak otwiera go polski Excel i Power BI. */
+export function toCsv(rows, columns) {
+  const header = columns.map((c) => csvCell(c.label)).join(";");
+  const body = rows.map((row) =>
+    columns
+      .map((c) => {
+        const value = typeof c.value === "function" ? c.value(row) : row[c.value];
+        return csvCell(typeof value === "number" ? String(value).replace(".", ",") : value);
+      })
+      .join(";")
+  );
+  return "﻿" + [header, ...body].join("\n");
+}
+
+/** Płaska tabela pozycji zamówień (jeden wiersz = jedna pozycja) – źródło dla raportu Power BI. */
+export function orderLinesForReport(orders = getOrders()) {
+  return orders.flatMap((order) =>
+    order.items.map((item) => ({
+      orderId: order.id,
+      date: order.date.slice(0, 10),
+      supplier: order.supplier,
+      status: order.status,
+      product: item.name,
+      category: item.category || "Inne",
+      quantity: item.quantity,
+      unitPrice: item.price || 0,
+      value: Math.round((item.price || 0) * item.quantity * 100) / 100,
+    }))
+  );
 }

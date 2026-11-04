@@ -10,12 +10,14 @@ import {
   Truck,
   Bell,
   Settings,
+  BarChart3,
   LogOut,
   Menu,
   X
 } from "lucide-react";
 import "./Navbar.css";
 import { DEFAULT_AVATAR } from "../utils/avatar";
+import { buildNotifications, getReadNotificationIds } from "../utils/notifications";
 
 const NAV_GROUPS = [
   {
@@ -31,14 +33,15 @@ const NAV_GROUPS = [
     label: "Zakupy",
     items: [
       { path: "/product-list", icon: BookOpen, text: "Baza produktów" },
-      { path: "/offers", icon: Scale, text: "Porównanie ofert" },
+      { path: "/offers", icon: Scale, text: "Zapytania ofertowe" },
       { path: "/suppliers", icon: Truck, text: "Dostawcy" },
+      { path: "/savings", icon: BarChart3, text: "Raporty" },
     ],
   },
   {
     label: "Konto",
     items: [
-      { path: "/notifications", icon: Bell, text: "Powiadomienia" },
+      { path: "/notifications", icon: Bell, text: "Powiadomienia", badge: "notifications" },
       { path: "/settings", icon: Settings, text: "Ustawienia", also: ["/admin-panel", "/edit-profile"] },
     ],
   },
@@ -48,9 +51,26 @@ const Navbar = ({ clinicName, profilePicture }) => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
+  const [unreadCount, setUnreadCount] = useState(0);
+
   // Na telefonie menu zamyka się po przejściu na inną stronę.
   useEffect(() => {
     setIsOpen(false);
+  }, [location.pathname]);
+
+  // Licznik nieprzeczytanych powiadomień – przeliczany przy zmianie strony i po oznaczeniu jako przeczytane.
+  useEffect(() => {
+    const recount = () => {
+      const read = getReadNotificationIds();
+      setUnreadCount(buildNotifications().filter((n) => !read.includes(n.id)).length);
+    };
+    recount();
+    window.addEventListener("notifications-changed", recount);
+    window.addEventListener("storage", recount);
+    return () => {
+      window.removeEventListener("notifications-changed", recount);
+      window.removeEventListener("storage", recount);
+    };
   }, [location.pathname]);
 
   const handleLogout = () => {
@@ -97,7 +117,7 @@ const Navbar = ({ clinicName, profilePicture }) => {
             <div className="nav-group" key={group.label || index}>
               {group.label && <div className="nav-group-label">{group.label}</div>}
               <ul className="nav-links">
-                {group.items.map(({ path, icon: Icon, text, also = [] }) => (
+                {group.items.map(({ path, icon: Icon, text, also = [], badge }) => (
                   <li key={path}>
                     <NavLink
                       to={path}
@@ -107,6 +127,11 @@ const Navbar = ({ clinicName, profilePicture }) => {
                     >
                       <Icon className="nav-icon" size={18} strokeWidth={1.75} aria-hidden="true" />
                       <span>{text}</span>
+                      {badge === "notifications" && unreadCount > 0 && (
+                        <span className="nav-badge" aria-label={`${unreadCount} nieprzeczytanych`}>
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
+                      )}
                     </NavLink>
                   </li>
                 ))}
