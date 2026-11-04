@@ -1,24 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Search, 
-  Filter, 
-  Grid3X3, 
-  List, 
-  Plus, 
-  ChevronDown, 
-  ChevronUp, 
-  Package, 
-  Building2, 
-  Tag, 
-  ArrowUpDown,
+import {
+  Search,
+  Grid3X3,
+  List,
+  Plus,
+  Package,
+  Building2,
+  Tag,
   X,
   SlidersHorizontal,
   Eye,
-  ShoppingCart
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import './ProductList.css';
+import { addToShoppingList } from '../utils/storage';
+import { formatMoney } from '../utils/format';
 
-const ProductList = ({ addToShoppingList }) => {
+const collator = new Intl.Collator('pl', { sensitivity: 'base', numeric: true });
+
+const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -39,7 +40,7 @@ const ProductList = ({ addToShoppingList }) => {
   // Load products from JSON
   useEffect(() => {
     setLoading(true);
-    fetch("/dental_products.json")
+    fetch(`${process.env.PUBLIC_URL}/dental_products.json`)
       .then((response) => {
         if (!response.ok) {
           throw new Error("Nie udało się załadować danych.");
@@ -52,6 +53,9 @@ const ProductList = ({ addToShoppingList }) => {
             ...product,
             // Oczyszczanie nazwy produktu
             name: product.name ? product.name.replace(/(N\/A\s(?:szt|op\.)|szt|op\.)/gi, "").trim() : "",
+            // 145 produktów w bazie nie ma producenta – bez tego wyszukiwarka rzucała wyjątek.
+            supplier: product.supplier || "Nieznany producent",
+            category: product.category || "Inne",
           }));
 
           setProducts(processedData);
@@ -77,11 +81,12 @@ const ProductList = ({ addToShoppingList }) => {
     let result = [...products];
 
     // Search filter
-    if (searchTerm) {
+    const query = searchTerm.trim().toLowerCase();
+    if (query) {
       result = result.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.supplier.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchTerm.toLowerCase())
+        product.name.toLowerCase().includes(query) ||
+        product.supplier.toLowerCase().includes(query) ||
+        product.category.toLowerCase().includes(query)
       );
     }
 
@@ -97,12 +102,8 @@ const ProductList = ({ addToShoppingList }) => {
 
     // Sort
     result.sort((a, b) => {
-      const aValue = a[sortConfig.key];
-      const bValue = b[sortConfig.key];
-      
-      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
+      const comparison = collator.compare(String(a[sortConfig.key] ?? ''), String(b[sortConfig.key] ?? ''));
+      return sortConfig.direction === 'asc' ? comparison : -comparison;
     });
 
     setFilteredProducts(result);
@@ -131,10 +132,8 @@ const ProductList = ({ addToShoppingList }) => {
   };
 
   const addToShoppingListHandler = (product) => {
-    if (addToShoppingList) {
-      addToShoppingList({ ...product, addedAutomatically: product.stock < 5 });
-    }
-    setNotification(`Dodano ${product.name} do listy zakupów!`);
+    addToShoppingList({ name: product.name, category: product.category, price: product.price, quantity: 1 });
+    setNotification(`Dodano „${product.name}” do listy zakupów.`);
     setTimeout(() => setNotification(''), 3000);
   };
 
@@ -144,80 +143,83 @@ const ProductList = ({ addToShoppingList }) => {
     currentPage * itemsPerPage
   );
 
+  const pluralProducts = (n) => {
+    if (n === 1) return 'produkt';
+    const lastDigit = n % 10;
+    const lastTwo = n % 100;
+    return lastDigit >= 2 && lastDigit <= 4 && (lastTwo < 12 || lastTwo > 14) ? 'produkty' : 'produktów';
+  };
+
+  const activeFilterCount = filters.categories.length + filters.suppliers.length;
+  const hasFilters = searchTerm || activeFilterCount > 0;
+
+  const formatPrice = (price) => (typeof price === 'number' && price > 0 ? `${formatMoney(price)}` : null);
+
   const ProductCard = ({ product }) => {
+    const price = formatPrice(product.price);
     return (
-      <div className="product-card">
-        <div className="product-card-header">
-          <Package className="product-icon" />
+      <article className="product-card">
+        <h3 className="product-title" title={product.name}>{product.name}</h3>
+        <p className="product-meta">
+          <span>{product.supplier}</span>
+          <span className="meta-sep" aria-hidden="true">·</span>
+          <span>{product.category}</span>
+        </p>
+        <div className="product-card-footer">
+          {price ? <span className="product-price num">{price}</span> : <span className="product-price muted">Brak ceny</span>}
           <div className="product-card-actions">
             <button
               onClick={() => setShowQuickView(product)}
-              className="quick-view-btn"
-              title="Podgląd"
+              className="btn btn-ghost btn-sm icon-only"
+              title="Szczegóły"
+              aria-label={`Szczegóły: ${product.name}`}
             >
-              <Eye className="icon" />
-            </button>
-          </div>
-        </div>
-        
-        <div className="product-card-body">
-          <h3 className="product-title">
-            {product.name}
-          </h3>
-          
-          <div className="product-details">
-            <div className="detail-item">
-              <Building2 className="detail-icon" />
-              <span className="detail-text">{product.supplier}</span>
-            </div>
-            <div className="detail-item">
-              <Tag className="detail-icon" />
-              <span className="detail-text">{product.category}</span>
-            </div>
-          </div>
-
-          <button
-            onClick={() => addToShoppingListHandler(product)}
-            className="add-to-list-btn"
-          >
-            <Plus className="icon" />
-            Dodaj do listy
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  const TableRow = ({ product }) => {
-    return (
-      <tr className="table-row">
-        <td className="table-cell table-cell-product">
-          <div className="table-product-info">
-            <div className="table-product-icon">
-              <Package className="icon" />
-            </div>
-            <div className="table-product-details">
-              <div className="table-product-name">{product.name}</div>
-            </div>
-          </div>
-        </td>
-        <td className="table-cell">{product.supplier}</td>
-        <td className="table-cell">{product.category}</td>
-        <td className="table-cell table-cell-actions">
-          <div className="table-actions">
-            <button
-              onClick={() => setShowQuickView(product)}
-              className="table-action-btn"
-              title="Podgląd"
-            >
-              <Eye className="icon" />
+              <Eye />
             </button>
             <button
               onClick={() => addToShoppingListHandler(product)}
-              className="add-to-list-btn table-add-btn"
+              className="add-to-list-btn btn btn-secondary btn-sm"
             >
-              <Plus className="icon" />
-              Dodaj
+              <Plus /> Do listy
+            </button>
+          </div>
+        </div>
+      </article>
+    );
+  };
+
+  const SortHeader = ({ column, label }) => (
+    <button onClick={() => handleSort(column)} className="sort-header">
+      {label}
+      {sortConfig.key === column && (
+        <span className="sort-indicator" aria-hidden="true">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+      )}
+    </button>
+  );
+
+  const TableRow = ({ product }) => {
+    const price = formatPrice(product.price);
+    return (
+      <tr>
+        <td className="cell-name">{product.name}</td>
+        <td className="muted">{product.supplier}</td>
+        <td className="muted">{product.category}</td>
+        <td className="right num">{price || '—'}</td>
+        <td className="right">
+          <div className="row-actions">
+            <button
+              onClick={() => setShowQuickView(product)}
+              className="btn btn-ghost btn-sm icon-only"
+              title="Szczegóły"
+              aria-label={`Szczegóły: ${product.name}`}
+            >
+              <Eye />
+            </button>
+            <button
+              onClick={() => addToShoppingListHandler(product)}
+              className="add-to-list-btn btn btn-secondary btn-sm"
+            >
+              <Plus /> Do listy
             </button>
           </div>
         </td>
@@ -227,227 +229,186 @@ const ProductList = ({ addToShoppingList }) => {
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="loading-content">
-          <div className="loading-spinner"></div>
-          <p className="loading-text">Ładowanie produktów...</p>
-        </div>
+      <div className="product-list-page page">
+        <header className="page-header">
+          <h1 className="page-title">Baza produktów</h1>
+        </header>
+        <p className="muted">Ładowanie produktów…</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="error-container">
-        <div className="error-content">
-          <div className="error-title">Błąd ładowania danych</div>
-          <p className="error-text">{error}</p>
+      <div className="product-list-page page">
+        <header className="page-header">
+          <h1 className="page-title">Baza produktów</h1>
+        </header>
+        <div className="empty-state">
+          <h4>Nie udało się wczytać produktów</h4>
+          <p>{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="product-list-container">
-      <div className="container">
-        {/* Header */}
-        <div className="header">
-          <h1 className="main-title">Baza Produktów Gabinetu</h1>
-          <p className="subtitle">Wszystkie produkty używane w gabinecie dentystycznym</p>
+    <div className="product-list-page page">
+      <header className="page-header">
+        <div>
+          <h1 className="page-title">Baza produktów</h1>
+          <p className="page-subtitle">Katalog materiałów używanych w gabinecie</p>
+        </div>
+      </header>
+
+      <div className="toolbar">
+        <div className="search-field">
+          <Search className="search-field-icon" aria-hidden="true" />
+          <input
+            type="text"
+            placeholder="Szukaj po nazwie, producencie lub kategorii"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+            aria-label="Szukaj produktów"
+          />
         </div>
 
-        {/* Filters and Search */}
-        <div className="filters-section">
-          <div className="filters-top">
-            {/* Search */}
-            <div className="search-container">
-              <Search className="search-icon" />
-              <input
-                type="text"
-                placeholder="Szukaj produktów..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-input"
-              />
-            </div>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={`btn btn-secondary ${showFilters ? 'is-active' : ''}`}
+          aria-expanded={showFilters}
+        >
+          <SlidersHorizontal /> Filtry
+          {activeFilterCount > 0 && <span className="filter-count num">{activeFilterCount}</span>}
+        </button>
 
-            {/* Controls */}
-            <div className="controls">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`filters-toggle ${showFilters ? 'active' : ''}`}
-              >
-                <SlidersHorizontal className="icon" />
-                Filtry
-              </button>
+        <div className="toolbar-end">
+          <select
+            value={`${sortConfig.key}-${sortConfig.direction}`}
+            onChange={(e) => {
+              const [key, direction] = e.target.value.split('-');
+              setSortConfig({ key, direction });
+            }}
+            aria-label="Sortowanie"
+          >
+            <option value="name-asc">Nazwa A–Z</option>
+            <option value="name-desc">Nazwa Z–A</option>
+            <option value="supplier-asc">Producent A–Z</option>
+            <option value="supplier-desc">Producent Z–A</option>
+            <option value="category-asc">Kategoria A–Z</option>
+            <option value="category-desc">Kategoria Z–A</option>
+          </select>
 
-              <select
-                value={itemsPerPage}
-                onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                className="items-per-page-select"
-              >
-                <option value={12}>12 na stronę</option>
-                <option value={24}>24 na stronę</option>
-                <option value={48}>48 na stronę</option>
-                <option value={96}>96 na stronę</option>
-              </select>
+          <div className="segmented" role="group" aria-label="Widok">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={viewMode === 'grid' ? 'active' : ''}
+              title="Widok kafelków"
+              aria-pressed={viewMode === 'grid'}
+            >
+              <Grid3X3 />
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={viewMode === 'table' ? 'active' : ''}
+              title="Widok tabeli"
+              aria-pressed={viewMode === 'table'}
+            >
+              <List />
+            </button>
+          </div>
+        </div>
+      </div>
 
-              <div className="view-toggle">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-                  title="Widok kafelków"
-                >
-                  <Grid3X3 className="icon" />
-                </button>
-                <button
-                  onClick={() => setViewMode('table')}
-                  className={`view-btn ${viewMode === 'table' ? 'active' : ''}`}
-                  title="Widok tabeli"
-                >
-                  <List className="icon" />
-                </button>
-              </div>
+      {showFilters && (
+        <div className="card filters-panel">
+          <div className="filter-group">
+            <h3 className="section-label">Kategorie</h3>
+            <div className="filter-list">
+              {categories.map(category => (
+                <label key={category} className="filter-item">
+                  <input
+                    type="checkbox"
+                    checked={filters.categories.includes(category)}
+                    onChange={() => handleFilterChange('categories', category)}
+                  />
+                  <span>{category}</span>
+                </label>
+              ))}
             </div>
           </div>
 
-          {/* Advanced Filters */}
-          {showFilters && (
-            <div className="filters-panel">
-              <div className="filters-grid">
-                <div className="filter-group">
-                  <label className="filter-label">Kategorie</label>
-                  <div className="filter-list">
-                    {categories.map(category => (
-                      <label key={category} className="filter-item">
-                        <input
-                          type="checkbox"
-                          checked={filters.categories.includes(category)}
-                          onChange={() => handleFilterChange('categories', category)}
-                          className="filter-checkbox"
-                        />
-                        <span className="filter-text">{category}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="filter-group">
-                  <label className="filter-label">Dostawcy</label>
-                  <div className="filter-list">
-                    {suppliers.map(supplier => (
-                      <label key={supplier} className="filter-item">
-                        <input
-                          type="checkbox"
-                          checked={filters.suppliers.includes(supplier)}
-                          onChange={() => handleFilterChange('suppliers', supplier)}
-                          className="filter-checkbox"
-                        />
-                        <span className="filter-text">{supplier}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="filter-actions">
-                  <button
-                    onClick={clearFilters}
-                    className="clear-filters-btn"
-                  >
-                    Wyczyść wszystkie filtry
-                  </button>
-                </div>
-              </div>
+          <div className="filter-group">
+            <h3 className="section-label">Producenci</h3>
+            <div className="filter-list">
+              {suppliers.map(supplier => (
+                <label key={supplier} className="filter-item">
+                  <input
+                    type="checkbox"
+                    checked={filters.suppliers.includes(supplier)}
+                    onChange={() => handleFilterChange('suppliers', supplier)}
+                  />
+                  <span>{supplier}</span>
+                </label>
+              ))}
             </div>
+          </div>
+
+          <div className="filters-footer">
+            <button onClick={clearFilters} className="btn btn-ghost btn-sm" disabled={!hasFilters}>
+              Wyczyść filtry
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="results-info">
+        <span className="muted">
+          Znaleziono <strong className="num">{filteredProducts.length}</strong> {pluralProducts(filteredProducts.length)}
+        </span>
+        <label className="per-page">
+          <span className="muted">Na stronie</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => setItemsPerPage(Number(e.target.value))}
+          >
+            <option value={12}>12</option>
+            <option value={24}>24</option>
+            <option value={48}>48</option>
+            <option value={96}>96</option>
+          </select>
+        </label>
+      </div>
+
+      {filteredProducts.length === 0 ? (
+        <div className="empty-state">
+          <Package className="empty-icon" aria-hidden="true" />
+          <h4>Brak produktów</h4>
+          <p>Nie znaleziono produktów spełniających kryteria wyszukiwania.</p>
+          {hasFilters && (
+            <button onClick={clearFilters} className="btn btn-secondary">
+              Wyczyść filtry
+            </button>
           )}
         </div>
-
-        {/* Results Info */}
-        <div className="results-info">
-          <div className="results-count">
-            Znaleziono <span className="count-number">{filteredProducts.length}</span> {
-              filteredProducts.length === 1 ? 'produkt' : 
-              filteredProducts.length < 5 ? 'produkty' : 'produktów'
-            }
-          </div>
-          
-          <div className="sort-controls">
-            <span className="sort-label">Sortuj według:</span>
-            <select
-              value={`${sortConfig.key}-${sortConfig.direction}`}
-              onChange={(e) => {
-                const [key, direction] = e.target.value.split('-');
-                setSortConfig({ key, direction });
-              }}
-              className="sort-select"
-            >
-              <option value="name-asc">Nazwa A-Z</option>
-              <option value="name-desc">Nazwa Z-A</option>
-              <option value="supplier-asc">Dostawca A-Z</option>
-              <option value="supplier-desc">Dostawca Z-A</option>
-              <option value="category-asc">Kategoria A-Z</option>
-              <option value="category-desc">Kategoria Z-A</option>
-            </select>
-          </div>
+      ) : viewMode === 'grid' ? (
+        <div className="products-grid">
+          {currentProducts.map(product => (
+            <ProductCard key={product.product_id} product={product} />
+          ))}
         </div>
-
-        {/* Products Display */}
-        {filteredProducts.length === 0 ? (
-          <div className="empty-state">
-            <Package className="empty-icon" />
-            <h3 className="empty-title">Brak produktów</h3>
-            <p className="empty-text">Nie znaleziono produktów spełniających kryteria wyszukiwania.</p>
-            {(searchTerm || filters.categories.length > 0 || filters.suppliers.length > 0) && (
-              <button
-                onClick={clearFilters}
-                className="empty-action"
-              >
-                Wyczyść filtry
-              </button>
-            )}
-          </div>
-        ) : viewMode === 'grid' ? (
-          <div className="products-grid">
-            {currentProducts.map(product => (
-              <ProductCard key={product.product_id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <div className="table-container">
-            <table className="products-table">
-              <thead className="table-header">
+      ) : (
+        <div className="card card-flush">
+          <div className="table-wrap">
+            <table>
+              <thead>
                 <tr>
-                  <th className="table-header-cell">
-                    <button onClick={() => handleSort('name')} className="sort-header">
-                      Nazwa produktu
-                      {sortConfig.key === 'name' && (
-                        <span className="sort-indicator">
-                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </button>
-                  </th>
-                  <th className="table-header-cell">
-                    <button onClick={() => handleSort('supplier')} className="sort-header">
-                      Dostawca
-                      {sortConfig.key === 'supplier' && (
-                        <span className="sort-indicator">
-                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </button>
-                  </th>
-                  <th className="table-header-cell">
-                    <button onClick={() => handleSort('category')} className="sort-header">
-                      Kategoria
-                      {sortConfig.key === 'category' && (
-                        <span className="sort-indicator">
-                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </button>
-                  </th>
-                  <th className="table-header-cell">Akcje</th>
+                  <th><SortHeader column="name" label="Nazwa produktu" /></th>
+                  <th><SortHeader column="supplier" label="Producent" /></th>
+                  <th><SortHeader column="category" label="Kategoria" /></th>
+                  <th className="right">Cena</th>
+                  <th aria-label="Akcje"></th>
                 </tr>
               </thead>
               <tbody>
@@ -457,119 +418,111 @@ const ProductList = ({ addToShoppingList }) => {
               </tbody>
             </table>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="pagination">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="pagination-btn"
-            >
-              ←
-            </button>
-            
-            {[...Array(Math.min(5, totalPages))].map((_, i) => {
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (currentPage <= 3) {
-                pageNum = i + 1;
-              } else if (currentPage >= totalPages - 2) {
-                pageNum = totalPages - 4 + i;
-              } else {
-                pageNum = currentPage - 2 + i;
-              }
-              
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`pagination-btn ${currentPage === pageNum ? 'active' : ''}`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-            
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="pagination-btn"
-            >
-              →
-            </button>
-          </div>
-        )}
+      {totalPages > 1 && (
+        <nav className="pagination" aria-label="Strony">
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="page-btn"
+            aria-label="Poprzednia strona"
+          >
+            <ChevronLeft />
+          </button>
 
-        {/* Quick View Modal */}
-        {showQuickView && (
-          <div className="modal-overlay">
-            <div className="modal">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h2 className="modal-title">Szczegóły produktu</h2>
-                  <button
-                    onClick={() => setShowQuickView(null)}
-                    className="modal-close"
-                  >
-                    <X className="icon" />
-                  </button>
-                </div>
-                
-                <div className="modal-body">
-                  <div className="modal-image">
-                    <Package className="modal-icon" />
-                  </div>
-                  
-                  <div className="modal-details">
-                    <h3 className="modal-product-name">{showQuickView.name}</h3>
-                    
-                    <div className="modal-info">
-                      <div className="modal-info-item">
-                        <Building2 className="modal-info-icon" />
-                        <div>
-                          <span className="modal-info-label">Dostawca:</span>
-                          <p className="modal-info-value">{showQuickView.supplier}</p>
-                        </div>
-                      </div>
-                      <div className="modal-info-item">
-                        <Tag className="modal-info-icon" />
-                        <div>
-                          <span className="modal-info-label">Kategoria:</span>
-                          <p className="modal-info-value">{showQuickView.category}</p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="modal-actions">
-                      <button
-                        onClick={() => {
-                          addToShoppingListHandler(showQuickView);
-                          setShowQuickView(null);
-                        }}
-                        className="modal-add-btn"
-                      >
-                        <Plus className="icon" />
-                        Dodaj do listy zakupów
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {[...Array(Math.min(5, totalPages))].map((_, i) => {
+            let pageNum;
+            if (totalPages <= 5) {
+              pageNum = i + 1;
+            } else if (currentPage <= 3) {
+              pageNum = i + 1;
+            } else if (currentPage >= totalPages - 2) {
+              pageNum = totalPages - 4 + i;
+            } else {
+              pageNum = currentPage - 2 + i;
+            }
+
+            return (
+              <button
+                key={pageNum}
+                onClick={() => setCurrentPage(pageNum)}
+                className={`page-btn num ${currentPage === pageNum ? 'active' : ''}`}
+                aria-current={currentPage === pageNum ? 'page' : undefined}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+
+          <span className="page-total muted">z {totalPages}</span>
+
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="page-btn"
+            aria-label="Następna strona"
+          >
+            <ChevronRight />
+          </button>
+        </nav>
+      )}
+
+      {showQuickView && (
+        <div className="modal-backdrop" onClick={() => setShowQuickView(null)}>
+          <div
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="quick-view-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h2 id="quick-view-title" className="modal-title">{showQuickView.name}</h2>
+              <button
+                onClick={() => setShowQuickView(null)}
+                className="btn btn-ghost btn-sm icon-only"
+                aria-label="Zamknij"
+              >
+                <X />
+              </button>
+            </div>
+
+            <dl className="modal-facts">
+              <dt><Building2 aria-hidden="true" /> Producent</dt>
+              <dd>{showQuickView.supplier}</dd>
+              <dt><Tag aria-hidden="true" /> Kategoria</dt>
+              <dd>{showQuickView.category}</dd>
+              {formatPrice(showQuickView.price) && (
+                <>
+                  <dt>Cena</dt>
+                  <dd className="num">{formatPrice(showQuickView.price)}</dd>
+                </>
+              )}
+            </dl>
+
+            <div className="modal-actions">
+              <button className="btn btn-secondary" onClick={() => setShowQuickView(null)}>Zamknij</button>
+              <button
+                onClick={() => {
+                  addToShoppingListHandler(showQuickView);
+                  setShowQuickView(null);
+                }}
+                className="btn btn-primary"
+              >
+                <Plus /> Dodaj do listy zakupów
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Notification */}
-        {notification && (
-          <div className="notification">
-            <div className="notification-indicator"></div>
-            {notification}
-          </div>
-        )}
-      </div>
+      {notification && (
+        <div className="notice toast" role="status">
+          {notification}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,70 +1,33 @@
-# Getting Started with Create React App
+# MediDent
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Aplikacja do zarządzania zakupami i magazynem gabinetu stomatologicznego (React, Create React App).
 
-## Available Scripts
+## Uruchomienie
 
-In the project directory, you can run:
+```bash
+npm install
+npm start        # http://localhost:3000
+npm test         # testy (Jest)
+npm run build    # wersja produkcyjna w katalogu build/
+```
 
-### `npm start`
+## Moduły
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+| Ekran | Opis |
+|---|---|
+| Strona główna | Podsumowanie magazynu, zamówień w toku, wydatków i kalendarz wydarzeń |
+| Magazyn | Stan magazynu, przyjęcie i wydanie towaru, produkty dodane ręcznie |
+| Baza produktów | Katalog ok. 11 tys. produktów (`public/dental_products.json`) |
+| Lista zakupów | Budowanie listy, szablony, eksport CSV, złożenie zamówienia (otwiera e-mail do dostawców) |
+| Zamówienia | Historia zamówień, zmiana statusu, przyjęcie dostawy na magazyn |
+| Analizuj oferty | Porównanie ofert dostawców i składanie zamówień |
+| Dostawcy | Lista dostawców (używana też na liście zakupów) |
+| Wydatki (`/savings`) | Raport wydatków z historii zamówień |
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Dane
 
-### `npm test`
+Na razie wszystkie dane są zapisywane w `localStorage` przeglądarki. Dostęp do nich jest w jednym miejscu: `src/utils/storage.js`.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Przepływ danych: **Baza produktów / Magazyn → Lista zakupów → Zamówienia → (dostawa) → Magazyn**.
 
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Katalog `server/` zawiera eksperymentalny serwer Express + MS SQL (`npm run server`), z którego frontend jeszcze nie korzysta.

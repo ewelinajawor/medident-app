@@ -1,20 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Save, 
-  X, 
-  Building2, 
-  Mail, 
-  Phone, 
-  Hash,
-  Search,
-  Filter,
-  ChevronDown,
-  AlertTriangle,
-  Check
-} from "lucide-react";
+import { Plus, Pencil, Trash2, Search, AlertTriangle, Check } from "lucide-react";
 import "./Suppliers.css";
 
 const Suppliers = () => {
@@ -32,9 +17,8 @@ const Suppliers = () => {
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
+  const [sortConfig] = useState({ key: 'name', direction: 'asc' });
   const [notification, setNotification] = useState('');
-  const [loading, setLoading] = useState(true);
 
   // Funkcja do pobierania dostawców z localStorage
   const getStoredSuppliers = () => {
@@ -85,12 +69,6 @@ const Suppliers = () => {
     }
     return storedSuppliers;
   });
-
-  useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 500);
-  }, []);
 
   // Funkcja do zapisywania dostawców do localStorage
   const saveSuppliersToLocalStorage = (suppliersList) => {
@@ -157,12 +135,12 @@ const Suppliers = () => {
       updatedSuppliers[index] = { ...editingSupplier, ...newSupplier };
       setSuppliers(updatedSuppliers);
       setEditingSupplier(null);
-      setNotification('Dostawca został zaktualizowany!');
+      setNotification('Zapisano zmiany dostawcy.');
     } else {
       const newSupplierData = { id: Date.now(), ...newSupplier };
       updatedSuppliers.push(newSupplierData);
       setSuppliers(updatedSuppliers);
-      setNotification('Nowy dostawca został dodany!');
+      setNotification('Dodano dostawcę.');
     }
 
     setTimeout(() => setNotification(''), 3000);
@@ -184,7 +162,7 @@ const Suppliers = () => {
     const updatedSuppliers = suppliers.filter((supplier) => supplier.id !== id);
     setSuppliers(updatedSuppliers);
     setDeleteConfirmation(null);
-    setNotification('Dostawca został usunięty!');
+    setNotification('Usunięto dostawcę.');
     setTimeout(() => setNotification(''), 3000);
   };
 
@@ -204,13 +182,6 @@ const Suppliers = () => {
     setFormSubmitted(false);
   };
 
-  const handleSort = (key) => {
-    setSortConfig(prev => ({
-      key,
-      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
-    }));
-  };
-
   // Filtrowanie i sortowanie
   const filteredSuppliers = suppliers.filter(supplier =>
     supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -227,218 +198,122 @@ const Suppliers = () => {
     return 0;
   });
 
-  if (loading) {
+
+  const renderField = (id, label, { type = "text", placeholder, required = false, wide = false } = {}) => {
+    const hasError = formSubmitted && errors[id];
     return (
-      <div className="suppliers-loading">
-        <div className="loading-spinner"></div>
-        <p>Ładowanie dostawców...</p>
+      <div className={`sup-field ${wide ? "sup-field-wide" : ""}`}>
+        <label htmlFor={id}>
+          {label}
+          {required && <span className="sup-required" aria-hidden="true"> *</span>}
+        </label>
+        <input
+          type={type}
+          id={id}
+          name={id}
+          value={newSupplier[id] || ""}
+          onChange={handleInputChange}
+          className={hasError ? "sup-input-error" : ""}
+          placeholder={placeholder}
+          aria-invalid={hasError ? "true" : undefined}
+        />
+        {hasError && <div className="sup-error">{errors[id]}</div>}
       </div>
     );
-  }
+  };
 
   return (
-    <div className="suppliers-container">
-      {/* Header */}
-      <div className="suppliers-header">
-        <div className="header-title">
-          <Building2 className="header-icon" />
-          <h1>Lista Dostawców</h1>
-          <span className="suppliers-count">{suppliers.length}</span>
+    <div className="suppliers page">
+      <header className="page-header">
+        <div>
+          <h1 className="page-title">Dostawcy</h1>
+          <p className="page-subtitle">
+            {suppliers.length} {suppliers.length === 1 ? "dostawca" : "dostawców"} – używani także na liście zakupów
+          </p>
         </div>
-        <div className="header-actions">
-          <button 
-            className={`add-supplier-btn ${showForm ? 'cancel-mode' : ''}`} 
-            onClick={showForm ? cancelForm : () => setShowForm(true)}
-          >
-            {showForm ? (
-              <>
-                <X className="icon" /> Anuluj
-              </>
-            ) : (
-              <>
-                <Plus className="icon" /> Dodaj dostawcę
-              </>
-            )}
+        {!showForm && (
+          <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+            <Plus /> Dodaj dostawcę
           </button>
-        </div>
-      </div>
+        )}
+      </header>
 
-      {/* Search and Controls */}
-      <div className="suppliers-controls">
-        <div className="search-container">
-          <Search className="search-icon" />
-          <input
-            type="text"
-            placeholder="Szukaj dostawców..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
-        </div>
-        
-        <div className="results-info">
-          Znaleziono <span className="count">{filteredSuppliers.length}</span> {
-            filteredSuppliers.length === 1 ? 'dostawcę' : 'dostawców'
-          }
-        </div>
-      </div>
-
-      {/* Form */}
-      {showForm && (
-        <div className="supplier-form-container">
-          <div className="form-header">
-            <h3>{editingSupplier ? 'Edytuj dostawcę' : 'Dodaj nowego dostawcę'}</h3>
-          </div>
-          
-          <div className="supplier-form">
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="name">
-                  <Building2 className="label-icon" />
-                  Nazwa firmy *
-                </label>
-                <input 
-                  type="text" 
-                  id="name" 
-                  name="name" 
-                  value={newSupplier.name} 
-                  onChange={handleInputChange} 
-                  className={formSubmitted && errors.name ? "error" : ""} 
-                  placeholder="Np. Koldental"
-                />
-                {formSubmitted && errors.name && <div className="error-message">{errors.name}</div>}
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="contactPerson">
-                  Osoba kontaktowa
-                </label>
-                <input 
-                  type="text" 
-                  id="contactPerson" 
-                  name="contactPerson" 
-                  value={newSupplier.contactPerson} 
-                  onChange={handleInputChange} 
-                  placeholder="Imię i nazwisko"
-                />
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="email">
-                  <Mail className="label-icon" />
-                  Email *
-                </label>
-                <input 
-                  type="email" 
-                  id="email" 
-                  name="email" 
-                  value={newSupplier.email} 
-                  onChange={handleInputChange} 
-                  className={formSubmitted && errors.email ? "error" : ""} 
-                  placeholder="kontakt@firma.pl"
-                />
-                {formSubmitted && errors.email && <div className="error-message">{errors.email}</div>}
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="phone">
-                  <Phone className="label-icon" />
-                  Telefon *
-                </label>
-                <input 
-                  type="tel" 
-                  id="phone" 
-                  name="phone" 
-                  value={newSupplier.phone} 
-                  onChange={handleInputChange} 
-                  className={formSubmitted && errors.phone ? "error" : ""} 
-                  placeholder="+48 123 456 789"
-                />
-                {formSubmitted && errors.phone && <div className="error-message">{errors.phone}</div>}
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="nip">
-                  <Hash className="label-icon" />
-                  NIP *
-                </label>
-                <input 
-                  type="text" 
-                  id="nip" 
-                  name="nip" 
-                  value={newSupplier.nip} 
-                  onChange={handleInputChange} 
-                  className={formSubmitted && errors.nip ? "error" : ""} 
-                  placeholder="123-456-78-90"
-                />
-                {formSubmitted && errors.nip && <div className="error-message">{errors.nip}</div>}
-              </div>
-
-              <div className="form-group full-width">
-                <label htmlFor="address">
-                  Adres
-                </label>
-                <input 
-                  type="text" 
-                  id="address" 
-                  name="address" 
-                  value={newSupplier.address} 
-                  onChange={handleInputChange} 
-                  placeholder="ul. Przykładowa 123, 00-000 Miasto"
-                />
-              </div>
-            </div>
-
-            <div className="form-actions">
-              <button className="save-btn" onClick={addSupplier}>
-                <Save className="icon" />
-                {editingSupplier ? "Zapisz zmiany" : "Dodaj dostawcę"}
-              </button>
-            </div>
-          </div>
+      {notification && (
+        <div className="notice" role="status">
+          <Check size={16} /> {notification}
         </div>
       )}
 
-      {/* Suppliers List */}
+      {showForm && (
+        <section className="card sup-form" aria-labelledby="sup-form-title">
+          <h2 id="sup-form-title" className="sup-form-title">
+            {editingSupplier ? `Edycja: ${editingSupplier.name}` : "Nowy dostawca"}
+          </h2>
+          <div className="sup-form-grid">
+            {renderField("name", "Nazwa firmy", { placeholder: "np. Koldental", required: true })}
+            {renderField("contactPerson", "Osoba kontaktowa", { placeholder: "Imię i nazwisko" })}
+            {renderField("email", "E-mail", { type: "email", placeholder: "kontakt@firma.pl", required: true })}
+            {renderField("phone", "Telefon", { type: "tel", placeholder: "+48 123 456 789", required: true })}
+            {renderField("nip", "NIP", { placeholder: "123-456-78-90", required: true })}
+            {renderField("address", "Adres", { placeholder: "ul. Przykładowa 123, 00-000 Miasto" })}
+          </div>
+          <div className="sup-form-actions">
+            <button className="btn btn-secondary" onClick={cancelForm}>Anuluj</button>
+            <button className="btn btn-primary" onClick={addSupplier}>
+              {editingSupplier ? "Zapisz zmiany" : "Dodaj dostawcę"}
+            </button>
+          </div>
+        </section>
+      )}
+
+      <div className="sup-toolbar">
+        <div className="sup-search">
+          <Search className="sup-search-icon" size={16} aria-hidden="true" />
+          <input
+            type="search"
+            placeholder="Szukaj po nazwie, e-mailu lub osobie…"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            aria-label="Szukaj dostawców"
+          />
+        </div>
+        {searchTerm && (
+          <span className="muted">
+            Znaleziono {filteredSuppliers.length} {filteredSuppliers.length === 1 ? "dostawcę" : "dostawców"}
+          </span>
+        )}
+      </div>
+
       {sortedSuppliers.length === 0 ? (
         <div className="empty-state">
-          <Building2 className="empty-icon" />
-          <h3>
-            {searchTerm ? 'Brak wyników wyszukiwania' : 'Brak dostawców'}
-          </h3>
+          <h3>{searchTerm ? "Brak wyników" : "Brak dostawców"}</h3>
           <p>
-            {searchTerm 
-              ? 'Spróbuj zmienić kryteria wyszukiwania.' 
-              : 'Kliknij "Dodaj dostawcę", aby dodać pierwszego dostawcę.'
-            }
+            {searchTerm
+              ? "Spróbuj wpisać inną frazę."
+              : "Dodaj pierwszego dostawcę, aby móc wysyłać do niego zamówienia."}
           </p>
           {searchTerm && (
-            <button onClick={() => setSearchTerm('')} className="clear-search-btn">
+            <button onClick={() => setSearchTerm("")} className="btn btn-secondary">
               Wyczyść wyszukiwanie
             </button>
           )}
         </div>
       ) : (
-        <div className="suppliers-list">
+        <ul className="sup-list">
           {sortedSuppliers.map((supplier) => (
-            <div key={supplier.id} className={`supplier-card ${deleteConfirmation === supplier.id ? 'delete-mode' : ''}`}>
+            <li key={supplier.id} className="card sup-card">
               {deleteConfirmation === supplier.id ? (
-                <div className="delete-confirmation">
-                  <AlertTriangle className="warning-icon" />
-                  <div className="confirmation-content">
-                    <h4>Potwierdź usunięcie</h4>
-                    <p>Czy na pewno chcesz usunąć dostawcę <strong>{supplier.name}</strong>?</p>
-                    <div className="confirmation-actions">
-                      <button className="confirm-delete-btn" onClick={() => removeSupplier(supplier.id)}>
-                        <Trash2 className="icon" />
-                        Usuń
+                <div className="sup-confirm">
+                  <AlertTriangle className="sup-confirm-icon" size={18} aria-hidden="true" />
+                  <div>
+                    <p className="sup-confirm-text">
+                      Usunąć dostawcę <strong>{supplier.name}</strong>? Tej operacji nie można cofnąć.
+                    </p>
+                    <div className="sup-card-actions">
+                      <button className="btn btn-danger btn-sm" onClick={() => removeSupplier(supplier.id)}>
+                        <Trash2 /> Usuń
                       </button>
-                      <button className="cancel-delete-btn" onClick={cancelDelete}>
-                        <X className="icon" />
+                      <button className="btn btn-secondary btn-sm" onClick={cancelDelete}>
                         Anuluj
                       </button>
                     </div>
@@ -446,83 +321,50 @@ const Suppliers = () => {
                 </div>
               ) : (
                 <>
-                  <div className="supplier-header">
-                    <div className="supplier-name">
-                      <Building2 className="supplier-icon" />
+                  <div className="sup-card-head">
+                    <div className="sup-card-title">
                       <h3>{supplier.name}</h3>
+                      {supplier.contactPerson && <span className="muted">{supplier.contactPerson}</span>}
                     </div>
-                    <div className="supplier-actions">
-                      <button className="edit-btn" onClick={() => editSupplier(supplier)}>
-                        <Edit className="icon" />
-                        Edytuj
+                    <div className="sup-card-actions">
+                      <button className="btn btn-ghost btn-sm" onClick={() => editSupplier(supplier)}>
+                        <Pencil /> Edytuj
                       </button>
-                      <button className="delete-btn" onClick={() => confirmDelete(supplier.id)}>
-                        <Trash2 className="icon" />
-                        Usuń
+                      <button
+                        className="btn btn-ghost btn-sm sup-delete"
+                        onClick={() => confirmDelete(supplier.id)}
+                        aria-label={`Usuń ${supplier.name}`}
+                      >
+                        <Trash2 />
                       </button>
                     </div>
                   </div>
 
-                  <div className="supplier-details">
-                    <div className="detail-row">
-                      <div className="detail-item">
-                        <Mail className="detail-icon" />
-                        <div>
-                          <span className="detail-label">Email</span>
-                          <span className="detail-value">{supplier.email}</span>
-                        </div>
-                      </div>
-                      <div className="detail-item">
-                        <Phone className="detail-icon" />
-                        <div>
-                          <span className="detail-label">Telefon</span>
-                          <span className="detail-value">{supplier.phone}</span>
-                        </div>
-                      </div>
+                  <dl className="sup-details">
+                    <div>
+                      <dt>E-mail</dt>
+                      <dd><a href={`mailto:${supplier.email}`}>{supplier.email}</a></dd>
                     </div>
-
-                    <div className="detail-row">
-                      <div className="detail-item">
-                        <Hash className="detail-icon" />
-                        <div>
-                          <span className="detail-label">NIP</span>
-                          <span className="detail-value">{supplier.nip}</span>
-                        </div>
-                      </div>
-                      {supplier.contactPerson && (
-                        <div className="detail-item">
-                          <div>
-                            <span className="detail-label">Osoba kontaktowa</span>
-                            <span className="detail-value">{supplier.contactPerson}</span>
-                          </div>
-                        </div>
-                      )}
+                    <div>
+                      <dt>Telefon</dt>
+                      <dd className="num">{supplier.phone}</dd>
                     </div>
-
+                    <div>
+                      <dt>NIP</dt>
+                      <dd className="num">{supplier.nip}</dd>
+                    </div>
                     {supplier.address && (
-                      <div className="detail-row">
-                        <div className="detail-item full-width">
-                          <div>
-                            <span className="detail-label">Adres</span>
-                            <span className="detail-value">{supplier.address}</span>
-                          </div>
-                        </div>
+                      <div className="sup-details-wide">
+                        <dt>Adres</dt>
+                        <dd>{supplier.address}</dd>
                       </div>
                     )}
-                  </div>
+                  </dl>
                 </>
               )}
-            </div>
+            </li>
           ))}
-        </div>
-      )}
-
-      {/* Notification */}
-      {notification && (
-        <div className="notification">
-          <Check className="notification-icon" />
-          {notification}
-        </div>
+        </ul>
       )}
     </div>
   );

@@ -2,6 +2,7 @@
   "name": "medident-app",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://ewelinajawor.github.io/medident-app",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@shadcn/ui": "^0.0.4",
@@ -35,7 +36,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "server": "node server/server.js"
+    "server": "node server/server.js",
+    "predeploy": "npm run build && node -e \"require('fs').copyFileSync('build/index.html','build/404.html')\"",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
@@ -56,6 +59,7 @@
     ]
   },
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "gh-pages": "^6.3.0"
   }
 }

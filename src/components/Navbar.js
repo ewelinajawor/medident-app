@@ -1,164 +1,143 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import {
-  FaHome,
-  FaBox,
-  FaBell,
-  FaCog,
-  FaClipboardList,
-  FaTruck,
-  FaShoppingCart,
-  FaFileContract,
-  FaBars,
-  FaTimes,
-  FaChevronRight,
-  FaSignOutAlt
-} from "react-icons/fa";
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Receipt,
+  BookOpen,
+  Scale,
+  Truck,
+  Bell,
+  Settings,
+  LogOut,
+  Menu,
+  X
+} from "lucide-react";
 import "./Navbar.css";
+import { DEFAULT_AVATAR } from "../utils/avatar";
 
-// Przyjmujemy clinicName i profilePicture jako propsy
+const NAV_GROUPS = [
+  {
+    label: null,
+    items: [
+      { path: "/dashboard", icon: LayoutDashboard, text: "Strona główna" },
+      { path: "/inventory", icon: Package, text: "Magazyn" },
+      { path: "/shopping-list", icon: ShoppingCart, text: "Lista zakupów" },
+      { path: "/orders", icon: Receipt, text: "Zamówienia" },
+    ],
+  },
+  {
+    label: "Zakupy",
+    items: [
+      { path: "/product-list", icon: BookOpen, text: "Baza produktów" },
+      { path: "/offers", icon: Scale, text: "Porównanie ofert" },
+      { path: "/suppliers", icon: Truck, text: "Dostawcy" },
+    ],
+  },
+  {
+    label: "Konto",
+    items: [
+      { path: "/notifications", icon: Bell, text: "Powiadomienia" },
+      { path: "/settings", icon: Settings, text: "Ustawienia", also: ["/admin-panel", "/edit-profile"] },
+    ],
+  },
+];
+
 const Navbar = ({ clinicName, profilePicture }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const location = useLocation();
 
-  // Usunięto stan profileData oraz useEffect do synchronizacji z localStorage
-  // Dane profilu (clinicName, profilePicture) są teraz przekazywane jako propsy
-
-  // Śledzenie zmian rozmiaru okna z debouncingiem
+  // Na telefonie menu zamyka się po przejściu na inną stronę.
   useEffect(() => {
-    const debounce = (func, delay) => {
-      let timeoutId;
-      return (...args) => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => {
-          func.apply(this, args);
-        }, delay);
-      };
-    };
-
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    const debouncedHandleResize = debounce(handleResize, 250);
-    window.addEventListener('resize', debouncedHandleResize);
-    return () => {
-      window.removeEventListener('resize', debouncedHandleResize);
-    };
-  }, []);
-
-  const isLinkActive = useCallback((path) => {
-    return location.pathname === path;
+    setIsOpen(false);
   }, [location.pathname]);
 
-  const toggleMenu = () => {
-    setIsOpen(!isOpen);
-  };
-
   const handleLogout = () => {
+    // TODO: logowanie nie jest jeszcze zaimplementowane
     console.log("Użytkownik wylogowany");
-    // TODO: Implement actual logout logic (e.g., clear tokens, redirect)
   };
 
-  const navItems = [
-    { path: "/dashboard", icon: <FaHome />, text: "Strona Główna" },
-    { path: "/inventory", icon: <FaBox />, text: "Magazyn" },
-    { path: "/notifications", icon: <FaBell />, text: "Powiadomienia" },
-    { path: "/settings", icon: <FaCog />, text: "Ustawienia" },
-    { path: "/product-list", icon: <FaClipboardList />, text: "Baza produktów" },
-    { path: "/suppliers", icon: <FaTruck />, text: "Dostawcy" },
-    { path: "/shopping-list", icon: <FaShoppingCart />, text: "Lista Zakupów" },
-    { path: "/offers", icon: <FaFileContract />, text: "Analizuj oferty" },
-  ];
-
-  const sidebarInteractionProps = isMobile
-    ? {}
-    : {
-        onMouseEnter: () => setIsOpen(true),
-        onMouseLeave: () => setIsOpen(false),
-      };
-
-  // Domyślny obrazek, jeśli profilePicture nie zostanie przekazany lub jest null/undefined
-  const displayProfilePicture = profilePicture || "https://via.placeholder.com/50";
-  // Domyślna nazwa kliniki, jeśli clinicName nie zostanie przekazany
-  const displayClinicName = clinicName || "Gabinet Medyczny";
-
+  const displayClinicName = clinicName || "Gabinet";
 
   return (
-    <nav
-      className={`sidebar ${isOpen ? "open" : ""}`}
-      {...sidebarInteractionProps}
-    >
-      <div
-        className="menu-toggle"
-        onClick={toggleMenu}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleMenu(); }}
-        aria-expanded={isOpen}
-        aria-controls="nav-links-list"
-        aria-label={isOpen ? "Zwiń menu" : "Rozwiń menu"}
-      >
-        {isOpen ? <FaTimes /> : <FaBars />}
-        {isOpen && !isMobile && <span className="toggle-text">Zwiń menu</span>}
-      </div>
+    <>
+      <header className="topbar">
+        <button
+          type="button"
+          className="topbar-menu"
+          onClick={() => setIsOpen(true)}
+          aria-label="Otwórz menu"
+          aria-expanded={isOpen}
+          aria-controls="sidebar"
+        >
+          <Menu size={20} />
+        </button>
+        <span className="brand-name">MediDent</span>
+      </header>
 
-      <div className="user-profile">
-        <div className="profile-image-container">
-          <img
-            src={displayProfilePicture} // Używamy propsa (z fallbackiem)
-            alt="Profil"
-            className="profile-pic"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = "https://via.placeholder.com/50"; // Ostateczny fallback
-            }}
-          />
-        </div>
-        {/* Używamy propsa (z fallbackiem) */}
-        {isOpen && <div className="clinic-name">{displayClinicName}</div>}
-      </div>
+      {isOpen && <div className="sidebar-scrim" onClick={() => setIsOpen(false)} aria-hidden="true" />}
 
-      <ul className="nav-links" id="nav-links-list">
-        {navItems.map((item) => (
-          <li key={item.path}>
-            <Link
-              to={item.path}
-              className={`nav-item ${isLinkActive(item.path) ? "active" : ""}`}
-              title={!isOpen ? item.text : undefined}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              {isOpen && (
-                <>
-                  <span className="nav-text">{item.text}</span>
-                  <FaChevronRight className="chevron-icon" aria-hidden="true" />
-                </>
-              )}
-            </Link>
-          </li>
-        ))}
-      </ul>
-
-      <div className="sidebar-footer">
-        {isOpen && (
-          <div className="footer-content-open">
-            <button onClick={handleLogout} className="logout-button nav-item" title="Wyloguj">
-              <span className="nav-icon"><FaSignOutAlt /></span>
-              <span className="nav-text">Wyloguj</span>
-            </button>
-            <div className="app-version">
-              <span>MediDent v1.0</span>
-            </div>
-          </div>
-        )}
-        {!isOpen && (
-          <button onClick={handleLogout} className="logout-button-collapsed nav-item" title="Wyloguj">
-            <span className="nav-icon"><FaSignOutAlt /></span>
+      <nav id="sidebar" className={`sidebar ${isOpen ? "open" : ""}`} aria-label="Menu główne">
+        <div className="sidebar-brand">
+          <span className="brand-mark" aria-hidden="true">M</span>
+          <span className="brand-name">MediDent</span>
+          <button
+            type="button"
+            className="sidebar-close"
+            onClick={() => setIsOpen(false)}
+            aria-label="Zamknij menu"
+          >
+            <X size={18} />
           </button>
-        )}
-      </div>
-    </nav>
+        </div>
+
+        <div className="sidebar-groups">
+          {NAV_GROUPS.map((group, index) => (
+            <div className="nav-group" key={group.label || index}>
+              {group.label && <div className="nav-group-label">{group.label}</div>}
+              <ul className="nav-links">
+                {group.items.map(({ path, icon: Icon, text, also = [] }) => (
+                  <li key={path}>
+                    <NavLink
+                      to={path}
+                      className={({ isActive }) =>
+                        `nav-item ${isActive || also.includes(location.pathname) ? "active" : ""}`
+                      }
+                    >
+                      <Icon className="nav-icon" size={18} strokeWidth={1.75} aria-hidden="true" />
+                      <span>{text}</span>
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="sidebar-footer">
+          <NavLink to="/edit-profile" className="sidebar-profile" title="Edytuj profil">
+            <img
+              src={profilePicture || DEFAULT_AVATAR}
+              alt=""
+              className="profile-pic"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = DEFAULT_AVATAR;
+              }}
+            />
+            <span className="profile-text">
+              <span className="clinic-name">{displayClinicName}</span>
+              <span className="profile-hint">Edytuj profil</span>
+            </span>
+          </NavLink>
+          <button type="button" onClick={handleLogout} className="logout-button" title="Wyloguj">
+            <LogOut size={17} strokeWidth={1.75} aria-hidden="true" />
+            <span className="sr-only">Wyloguj</span>
+          </button>
+        </div>
+      </nav>
+    </>
   );
 };
 

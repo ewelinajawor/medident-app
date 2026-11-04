@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import "./AdminPanel.css";
 
 const AdminPanel = () => {
@@ -32,93 +33,109 @@ const AdminPanel = () => {
   const saveSettings = () => {
     // Tutaj dodaj logikę zapisywania ustawień do backendu
     console.log("Zapisano ustawienia:", autoGenerateSettings);
-    alert("Ustawienia automatycznego generowania listy zostały zapisane!");
+    alert("Zapisano ustawienia automatycznej listy zakupów.");
+  };
+
+  const dayLabels = {
+    Monday: "Poniedziałek",
+    Tuesday: "Wtorek",
+    Wednesday: "Środa",
+    Thursday: "Czwartek",
+    Friday: "Piątek",
+    Saturday: "Sobota",
+    Sunday: "Niedziela"
   };
 
   return (
-    <div className="admin-container">
-      <button className="back-button" onClick={() => navigate("/settings")}>
-        ← Powrót do Ustawień
+    <div className="admin-panel page">
+      <button className="btn btn-ghost btn-sm ap-back" onClick={() => navigate("/settings")}>
+        <ArrowLeft /> Ustawienia
       </button>
-      <h1 className="admin-title">Panel Administracyjny</h1>
-      
-      <div className="auto-generate-settings">
-        <h2>Automatyczne generowanie listy zakupów</h2>
-        
-        <div className="setting-row">
-          <label>
-            <input
-              type="checkbox"
-              name="enabled"
-              checked={autoGenerateSettings.enabled}
-              onChange={handleSettingsChange}
-            />
-            Włącz automatyczne generowanie
-          </label>
+
+      <header className="page-header">
+        <div>
+          <h1 className="page-title">Panel administracyjny</h1>
+          <p className="page-subtitle">Automatyzacja listy zakupów i historia działań w aplikacji.</p>
         </div>
-        
+      </header>
+
+      <section className="card ap-card">
+        <h2 className="ap-card-title">Automatyczna lista zakupów</h2>
+        <p className="muted ap-card-desc">
+          W wybrany dzień aplikacja przygotuje listę zakupów z produktów poniżej minimalnego stanu.
+        </p>
+
+        <label className="ap-toggle">
+          <input
+            type="checkbox"
+            name="enabled"
+            checked={autoGenerateSettings.enabled}
+            onChange={handleSettingsChange}
+          />
+          Włącz automatyczne generowanie
+        </label>
+
         {autoGenerateSettings.enabled && (
           <>
-            <div className="setting-row">
-              <label>Dzień tygodnia:</label>
-              <select
-                name="dayOfWeek"
-                value={autoGenerateSettings.dayOfWeek}
-                onChange={handleSettingsChange}
-              >
-                {daysOfWeek.map(day => (
-                  <option key={day} value={day}>
-                    {day === "Monday" && "Poniedziałek"}
-                    {day === "Tuesday" && "Wtorek"}
-                    {day === "Wednesday" && "Środa"}
-                    {day === "Thursday" && "Czwartek"}
-                    {day === "Friday" && "Piątek"}
-                    {day === "Saturday" && "Sobota"}
-                    {day === "Sunday" && "Niedziela"}
-                  </option>
-                ))}
-              </select>
+            <div className="ap-fields">
+              <div className="ap-field">
+                <label htmlFor="ap-day">Dzień tygodnia</label>
+                <select
+                  id="ap-day"
+                  name="dayOfWeek"
+                  value={autoGenerateSettings.dayOfWeek}
+                  onChange={handleSettingsChange}
+                >
+                  {daysOfWeek.map((day) => (
+                    <option key={day} value={day}>{dayLabels[day]}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="ap-field">
+                <label htmlFor="ap-time">Godzina</label>
+                <input
+                  id="ap-time"
+                  type="time"
+                  name="time"
+                  value={autoGenerateSettings.time}
+                  onChange={handleSettingsChange}
+                />
+              </div>
             </div>
-            
-            <div className="setting-row">
-              <label>Godzina:</label>
-              <input
-                type="time"
-                name="time"
-                value={autoGenerateSettings.time}
-                onChange={handleSettingsChange}
-              />
+
+            <div className="ap-actions">
+              <button className="btn btn-primary" onClick={saveSettings}>
+                Zapisz ustawienia
+              </button>
             </div>
-            
-            <button 
-              className="save-settings-button"
-              onClick={saveSettings}
-            >
-              Zapisz ustawienia
-            </button>
           </>
         )}
-      </div>
-      
-      <h2 className="activity-log-title">Dziennik aktywności</h2>
-      <table className="activity-table">
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Użytkownik</th>
-            <th>Akcja</th>
-          </tr>
-        </thead>
-        <tbody>
-          {activityLogs.map((log, index) => (
-            <tr key={index}>
-              <td>{log.date}</td>
-              <td>{log.user}</td>
-              <td>{log.action}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      </section>
+
+      <section className="card ap-log">
+        <h2 className="ap-card-title ap-log-title">Dziennik aktywności</h2>
+        <div className="ap-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Użytkownik</th>
+                <th>Akcja</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activityLogs.map((log, index) => (
+                <tr key={index}>
+                  <td className="num">{log.date}</td>
+                  <td>{log.user}</td>
+                  <td>{log.action}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 };

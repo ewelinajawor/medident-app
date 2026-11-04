@@ -1,75 +1,97 @@
 import React from "react";
-import { useNavigate } from "react-router-dom"; 
-import { FaUserShield, FaUserEdit, FaBell, FaLock, FaCog, FaUsers } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { ShieldCheck, UserRound, Users, Bell, KeyRound, ChevronRight } from "lucide-react";
 import "./Settings.css";
 
 const Settings = () => {
   const navigate = useNavigate();
 
-  const settingsOptions = [
+  const sections = [
     {
-      id: 1,
-      title: "Panel Administracyjny",
-      icon: <FaUserShield />,
-      onClick: () => navigate("/admin-panel"),
-      description: "Zarządzaj użytkownikami i ustawieniami systemu"
+      label: "Gabinet",
+      options: [
+        {
+          id: 3,
+          title: "Profil gabinetu",
+          icon: UserRound,
+          onClick: () => navigate("/edit-profile"),
+          description: "Nazwa, logo i dane kontaktowe"
+        },
+        {
+          id: 1,
+          title: "Panel administracyjny",
+          icon: ShieldCheck,
+          onClick: () => navigate("/admin-panel"),
+          description: "Automatyczna lista zakupów i dziennik aktywności"
+        }
+      ]
     },
     {
-      id: 2,
-      title: "Uprawnienia użytkowników",
-      icon: <FaUsers />,
-      onClick: () => navigate("/permissions"),
-      description: "Przydzielaj role i kontroluj dostęp do funkcji"
-    },
-    {
-      id: 3,
-      title: "Edytuj Profil",
-      icon: <FaUserEdit />,
-      onClick: () => navigate("/edit-profile"),
-      description: "Aktualizuj swoje dane osobowe i kontaktowe"
-    },
-    {
-      id: 4,
-      title: "Zarządzaj Powiadomieniami",
-      icon: <FaBell />,
-      onClick: () => console.log("Powiadomienia"),
-      description: "Dostosuj preferencje powiadomień email i aplikacji"
-    },
-    {
-      id: 5,
-      title: "Zmień Hasło",
-      icon: <FaLock />,
-      onClick: () => console.log("Zmiana hasła"),
-      description: "Aktualizuj swoje hasło i ustawienia bezpieczeństwa"
+      label: "Konto i dostęp",
+      options: [
+        {
+          id: 2,
+          title: "Uprawnienia użytkowników",
+          icon: Users,
+          comingSoon: true,
+          description: "Role i dostęp do poszczególnych modułów"
+        },
+        {
+          id: 4,
+          title: "Powiadomienia",
+          icon: Bell,
+          comingSoon: true,
+          description: "Które powiadomienia dostajesz e-mailem i w aplikacji"
+        },
+        {
+          id: 5,
+          title: "Hasło",
+          icon: KeyRound,
+          comingSoon: true,
+          description: "Zmiana hasła i ustawienia bezpieczeństwa"
+        }
+      ]
     }
   ];
 
   return (
-    <div className="settings-container">
-      <div className="settings-header">
-        <FaCog className="settings-icon" />
-        <h1 className="settings-title">Ustawienia</h1>
-      </div>
-      
-      <p className="settings-description">
-        Zarządzaj swoim profilem, uprawnieniami i preferencjami aplikacji poniżej.
-      </p>
+    <div className="settings page">
+      <header className="page-header">
+        <div>
+          <h1 className="page-title">Ustawienia</h1>
+          <p className="page-subtitle">Profil gabinetu, dostęp i preferencje aplikacji.</p>
+        </div>
+      </header>
 
-      <div className="settings-grid">
-        {settingsOptions.map((option) => (
-          <div 
-            key={option.id}
-            className="settings-tile" 
-            onClick={option.onClick}
-          >
-            <div className="settings-tile-icon">
-              {option.icon}
-            </div>
-            <h3 className="settings-tile-title">{option.title}</h3>
-            <p className="settings-tile-description">{option.description}</p>
-          </div>
-        ))}
-      </div>
+      {sections.map((section) => (
+        <section key={section.label} className="set-section">
+          <h2 className="section-label">{section.label}</h2>
+          <ul className="set-list card">
+            {section.options.map(({ id, title, icon: Icon, onClick, description, comingSoon }) => (
+              <li key={id}>
+                <button
+                  type="button"
+                  className="set-row"
+                  onClick={onClick}
+                  disabled={comingSoon}
+                >
+                  <span className="set-icon" aria-hidden="true">
+                    <Icon size={18} strokeWidth={1.75} />
+                  </span>
+                  <span className="set-text">
+                    <span className="set-title">
+                      {title}
+                      {comingSoon && <span className="badge">Wkrótce</span>}
+                    </span>
+                    <span className="set-description">{description}</span>
+                  </span>
+                  {!comingSoon && <ChevronRight className="set-chevron" size={18} aria-hidden="true" />}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
     </div>
   );
 };

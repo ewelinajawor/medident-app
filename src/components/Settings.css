@@ -1,224 +1,76 @@
-:root {
-  --primary-color: #100e20;
-  --secondary-color: #241848;
-  --background-color: #ecf0f1;
-  --text-color: #2c3e50;
-  --accent-color: #3498db;
-  --success-color: #27ae60;
-  --warning-color: #f39c12;
-  --danger-color: #e74c3c;
-  --light-text-color: #ffffff;
-  --tile-background: #ffffff;
-  --border-radius: 12px;
-  --box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-  --transition: all 0.25s cubic-bezier(.4,0,.2,1);
+/* Ustawienia */
 
-  --gradient-navy: linear-gradient(135deg, #100e20 0%, #241848 100%);
-  --gradient-blue: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+.settings { max-width: 760px; margin-left: 0; }
+
+.settings .set-section + .set-section { margin-top: var(--space-6); }
+
+.settings .set-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
-.settings-container {
-  max-width: 900px;
-  margin: 32px auto;
-  padding: 32px;
-  background: var(--tile-background);
-  border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
-  transition: var(--transition);
-}
+.settings .set-list li + li { border-top: 1px solid var(--border); }
 
-.settings-header {
+.settings .set-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 24px;
+  gap: var(--space-4);
+  width: 100%;
+  padding: var(--space-4) var(--space-5);
+  border: none;
+  background: transparent;
+  text-align: left;
+  transition: background var(--transition);
 }
 
-.settings-icon {
-  font-size: 32px;
-  color: var(--primary-color);
-  margin-right: 16px;
-  animation: rotateGear 10s linear infinite;
-}
+.settings .set-row:hover:not(:disabled) { background: var(--surface-muted); }
 
-@keyframes rotateGear {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+.settings .set-row:disabled { cursor: default; }
 
-.settings-title {
-  font-size: 34px;
-  color: var(--primary-color);
-  margin: 0;
-  font-weight: 700;
-}
-
-.settings-description {
-  font-size: 17px;
-  color: var(--text-color);
-  text-align: center;
-  margin-bottom: 32px;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.settings-grid {
+.settings .set-icon {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
-.settings-tile {
-  background: var(--tile-background);
-  border-radius: var(--border-radius);
-  padding: 28px 20px 24px 20px;
-  box-shadow: var(--box-shadow);
-  transition: var(--transition);
-  cursor: pointer;
+.settings .set-row:disabled .set-icon {
+  background: var(--surface-hover);
+  color: var(--text-subtle);
+}
+
+.settings .set-text {
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.settings .set-title {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  min-height: 180px;
+  gap: var(--space-2);
+  font-weight: 500;
+  color: var(--text);
 }
 
-.settings-tile::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  background: var(--gradient-blue);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.3s ease;
+.settings .set-row:disabled .set-title { color: var(--text-muted); }
+
+.settings .set-description {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
 }
 
-.settings-tile:hover {
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 12px 28px rgba(0,0,0,0.12);
-}
+.settings .set-chevron { color: var(--text-subtle); flex-shrink: 0; }
 
-.settings-tile:hover::before {
-  transform: scaleX(1);
-}
-
-.settings-tile-icon {
-  font-size: 38px;
-  color: var(--accent-color);
-  margin-bottom: 16px;
-  transition: var(--transition);
-}
-
-.settings-tile:hover .settings-tile-icon {
-  transform: scale(1.12);
-  color: var(--primary-color);
-}
-
-.settings-tile-title {
-  font-size: 21px;
-  font-weight: 600;
-  color: var(--primary-color);
-  margin: 0 0 10px 0;
-  transition: var(--transition);
-}
-
-.settings-tile:hover .settings-tile-title {
-  color: var(--accent-color);
-}
-
-.settings-tile-description {
-  font-size: 15px;
-  color: var(--text-color);
-  opacity: 0.85;
-  margin: 0;
-  transition: var(--transition);
-}
-
-/* Panel uprawnień (przykład stylu do /permissions) */
-.permissions-panel {
-  background: var(--background-color);
-  border-radius: var(--border-radius);
-  padding: 24px;
-  margin-top: 24px;
-  box-shadow: var(--box-shadow);
-}
-
-.permissions-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: var(--tile-background);
-  border-radius: var(--border-radius);
-  overflow: hidden;
-  margin-top: 8px;
-}
-
-.permissions-table th,
-.permissions-table td {
-  padding: 14px 12px;
-  text-align: left;
-  color: var(--text-color);
-}
-
-.permissions-table th {
-  background: var(--gradient-blue);
-  color: var(--light-text-color);
-  font-weight: 600;
-  border-bottom: 2px solid var(--accent-color);
-}
-
-.permissions-table tr:nth-child(even) {
-  background: #f7f9fa;
-}
-
-.permissions-role-select {
-  padding: 7px 12px;
-  border-radius: 6px;
-  border: 1px solid #d0d6e1;
-  background: #fff;
-  font-size: 15px;
-  color: var(--text-color);
-}
-
-.permissions-action-btn {
-  background: var(--accent-color);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 14px;
-  cursor: pointer;
-  font-size: 15px;
-  transition: background 0.2s;
-}
-
-.permissions-action-btn:hover {
-  background: var(--primary-color);
-}
-
-/* Responsywność */
-@media (max-width: 900px) {
-  .settings-container {
-    padding: 18px;
-    margin: 10px;
-  }
-  .settings-grid {
-    grid-template-columns: 1fr;
-    gap: 18px;
-  }
-  .settings-title {
-    font-size: 26px;
-  }
-  .settings-tile {
-    padding: 18px;
-    min-height: 120px;
-  }
-  .permissions-panel {
-    padding: 12px;
-  }
+@media (max-width: 520px) {
+  .settings .set-row { padding: var(--space-3) var(--space-4); gap: var(--space-3); }
 }

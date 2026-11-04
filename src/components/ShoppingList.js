@@ -1,86 +1,92 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { saveAs } from "file-saver";
+import { Search, Plus, X, Send, Download } from "lucide-react";
 import "./ShoppingList.css";
+import { formatMoney } from '../utils/format';
+import {
+  KEYS,
+  readJSON,
+  writeJSON,
+  getSuppliers,
+  getOrders,
+  appendOrder,
+  buildOrderEmail,
+} from "../utils/storage";
 
-const ShoppingList = () => {
-  const [products, setProducts] = useState(
-    JSON.parse(localStorage.getItem("products")) || []
-  );
-  const [orderHistory, setOrderHistory] = useState(
-    JSON.parse(localStorage.getItem("orderHistory")) || []
-  );
-  const [notes, setNotes] = useState(localStorage.getItem("notes") || "");
+const formatPrice = (value) => (value > 0 ? `${formatMoney(value)}` : "—");
+
+// Starsze zamówienia mają datę w formacie "dd.mm.rrrr", nowe – ISO.
+const formatOrderDate = (value) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString("pl-PL", { dateStyle: "medium", timeStyle: "short" });
+};
+
+const ShoppingList = ({ clinicName }) => {
+  const [products, setProducts] = useState(() => readJSON(KEYS.shoppingList, []));
+  const [orderHistory, setOrderHistory] = useState(() => getOrders());
+  const [notes, setNotes] = useState(() => localStorage.getItem(KEYS.orderNotes) || "");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedProviders, setSelectedProviders] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
+  // Dostawcy pochodzą z ekranu "Dostawcy", więc nowo dodani pojawiają się także tutaj.
+  const [suppliers] = useState(() =>
+    getSuppliers().map((s) => ({
+      value: s.name,
+      label: s.name,
+      email: s.email,
+    }))
+  );
   const [productOptions, setProductOptions] = useState([]);
   const [categories, setCategories] = useState([]);
-  
-  // New state for enhanced features
+
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [groupByCategory, setGroupByCategory] = useState(true);
-  const [showTemplates, setShowTemplates] = useState(false);
   const [activeTab, setActiveTab] = useState("build"); // "build", "compare", "templates"
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
   const [quickAddAmount, setQuickAddAmount] = useState(1);
+  const [message, setMessage] = useState("");
 
-  // Load data on component mount
   useEffect(() => {
-    localStorage.setItem("products", JSON.stringify(products));
+    writeJSON(KEYS.shoppingList, products);
   }, [products]);
 
   useEffect(() => {
-    localStorage.setItem("orderHistory", JSON.stringify(orderHistory));
-  }, [orderHistory]);
-
-  useEffect(() => {
-    localStorage.setItem("notes", notes);
+    localStorage.setItem(KEYS.orderNotes, notes);
   }, [notes]);
 
   useEffect(() => {
-    const fetchSuppliers = async () => {
-      const supplierData = await fetchSuppliersFromAPI();
-      setSuppliers(supplierData);
-    };
-
-    fetchSuppliers();
-
     const loadProducts = async () => {
       const fetchedProducts = await fetchProductsFromAPI();
-      const sortedProducts = fetchedProducts.sort((a, b) => a.name.localeCompare(b.name));
+      const sortedProducts = fetchedProducts.sort((a, b) => a.name.localeCompare(b.name, "pl"));
       setProductOptions(sortedProducts);
 
-      const uniqueCategories = [...new Set(fetchedProducts.map((product) => product.category))].sort();
+      const uniqueCategories = [...new Set(fetchedProducts.map((product) => product.category))]
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, "pl"));
       setCategories(uniqueCategories);
     };
 
     loadProducts();
   }, []);
 
-  const fetchSuppliersFromAPI = () => {
-    return [
-      { value: "Koldental", label: "Koldental", color: "#3498DB" },
-      { value: "Meditrans", label: "Meditrans", color: "#2ECC71" },
-      { value: "Marrodent", label: "Marrodent", color: "#E74C3C" },
-    ];
+  const showMessage = (text) => {
+    setMessage(text);
+    setTimeout(() => setMessage(""), 4000);
   };
 
   const fetchProductsFromAPI = async () => {
     try {
-      const response = await fetch("/dental_products.json");
+      const response = await fetch(`${process.env.PUBLIC_URL}/dental_products.json`);
       if (!response.ok) {
         throw new Error("Nie udało się załadować danych.");
       }
       const data = await response.json();
+      // Ceny u dostawców pokazujemy tylko wtedy, gdy są w danych (supplierPrices).
+      // Wcześniej były one wyliczane z mnożników (x1.15, x1.08), czyli zmyślone.
       return data.map(product => ({
         ...product,
-        supplierPrices: product.supplierPrices || {
-          "Koldental": product.price || 0,
-          "Meditrans": (product.price || 0) * 1.15,
-          "Marrodent": (product.price || 0) * 1.08
-        }
+        category: product.category || "Inne",
+        supplierPrices: product.supplierPrices || null,
       }));
     } catch (error) {
       console.error("Błąd podczas pobierania danych:", error);
@@ -151,20 +157,12 @@ const ShoppingList = () => {
   const smartSuggestions = useMemo(() => {
     if (orderHistory.length === 0) return [];
     
-    // Get frequently ordered products
-    const productFrequency = {};
-    orderHistory.forEach(order => {
-      order.products.forEach(product => {
-        productFrequency[product.name] = (productFrequency[product.name] || 0) + 1;
-      });
-    });
-    
     // Find products often bought together
     const currentProductNames = products.map(p => p.name);
     const suggestions = [];
-    
+
     orderHistory.forEach(order => {
-      const orderProductNames = order.products.map(p => p.name);
+      const orderProductNames = order.items.map(p => p.name);
       const hasCurrentProducts = currentProductNames.some(name => 
         orderProductNames.includes(name)
       );
@@ -198,7 +196,7 @@ const ShoppingList = () => {
   const templates = [
     {
       id: "basic",
-      name: "🦷 Materiały podstawowe",
+      name: "Materiały podstawowe",
       description: "Codzienne potrzeby gabinetu",
       products: [
         { name: "Amalgam dentystyczny", quantity: 10 },
@@ -209,7 +207,7 @@ const ShoppingList = () => {
     },
     {
       id: "endodontics",
-      name: "🩺 Endodoncja - komplet",
+      name: "Endodoncja – komplet",
       description: "Zestaw do leczenia kanałowego",
       products: [
         { name: "Wkłady endodontyczne", quantity: 2 },
@@ -219,7 +217,7 @@ const ShoppingList = () => {
     },
     {
       id: "surgery",
-      name: "🔪 Chirurgia - zestaw",
+      name: "Chirurgia – zestaw",
       description: "Materiały do zabiegów chirurgicznych",
       products: [
         { name: "Nici chirurgiczne", quantity: 5 },
@@ -229,7 +227,7 @@ const ShoppingList = () => {
     },
     {
       id: "protection",
-      name: "🛡️ Środki ochrony",
+      name: "Środki ochrony",
       description: "Kompletna ochrona personelu",
       products: [
         { name: "Rękawice nitrylowe M", quantity: 10 },
@@ -247,7 +245,7 @@ const ShoppingList = () => {
     const grouped = {};
     products.forEach(product => {
       const productData = productOptions.find(p => p.name === product.name);
-      const category = productData?.category || "Inne";
+      const category = productData?.category || product.category || "Inne";
       
       if (!grouped[category]) {
         grouped[category] = [];
@@ -282,29 +280,29 @@ const ShoppingList = () => {
     setShowSuggestions(e.target.value.length >= 2);
   };
 
+  const createListItem = (productData, quantity) => {
+    const bestOffer = getBestSupplier(productData.name);
+    return {
+      name: productData.name,
+      quantity,
+      dateAdded: new Date().toLocaleDateString("pl-PL"),
+      price: productData.price || 0,
+      bestSupplier: bestOffer?.supplier,
+      bestPrice: bestOffer?.price,
+      category: productData.category,
+    };
+  };
+
+  // Scala nowe pozycje z listą bez mutowania istniejących obiektów.
+  const mergeItems = (list, newItems) =>
+    newItems.reduce((acc, item) => {
+      const index = acc.findIndex(p => p.name === item.name);
+      if (index === -1) return [...acc, item];
+      return acc.map((p, i) => (i === index ? { ...p, quantity: p.quantity + item.quantity } : p));
+    }, list);
+
   const handleAddProduct = (productData, quantity = quickAddAmount) => {
-    const existingIndex = products.findIndex(p => p.name === productData.name);
-    
-    if (existingIndex !== -1) {
-      const updatedProducts = [...products];
-      updatedProducts[existingIndex].quantity += quantity;
-      setProducts(updatedProducts);
-    } else {
-      const bestOffer = getBestSupplier(productData.name);
-      setProducts([
-        ...products,
-        {
-          name: productData.name,
-          quantity: quantity,
-          dateAdded: new Date().toLocaleDateString(),
-          price: productData.price || 0,
-          bestSupplier: bestOffer?.supplier,
-          bestPrice: bestOffer?.price,
-          category: productData.category
-        }
-      ]);
-    }
-    
+    setProducts(prev => mergeItems(prev, [createListItem(productData, quantity)]));
     setSearchQuery("");
     setShowSuggestions(false);
   };
@@ -326,68 +324,66 @@ const ShoppingList = () => {
   };
 
   const handleApplyTemplate = (template) => {
+    // Szablony używają nazw ogólnych, więc szukamy najpierw dokładnej nazwy, potem nazwy zawierającej frazę.
+    const findProduct = (name) => {
+      const lower = name.toLowerCase();
+      return (
+        productOptions.find(p => p.name.toLowerCase() === lower) ||
+        productOptions.find(p => p.name.toLowerCase().includes(lower))
+      );
+    };
+
+    const missing = [];
     const templateProducts = template.products
       .map(templateProduct => {
-        const productData = productOptions.find(p => p.name === templateProduct.name);
-        if (!productData) return null;
-        
-        const bestOffer = getBestSupplier(productData.name);
-        return {
-          name: productData.name,
-          quantity: templateProduct.quantity,
-          dateAdded: new Date().toLocaleDateString(),
-          price: productData.price || 0,
-          bestSupplier: bestOffer?.supplier,
-          bestPrice: bestOffer?.price,
-          category: productData.category
-        };
-      })
-      .filter(Boolean);
-    
-    // Merge with existing products
-    const mergedProducts = [...products];
-    templateProducts.forEach(newProduct => {
-      const existingIndex = mergedProducts.findIndex(p => p.name === newProduct.name);
-      if (existingIndex !== -1) {
-        mergedProducts[existingIndex].quantity += newProduct.quantity;
-      } else {
-        mergedProducts.push(newProduct);
-      }
-    });
-    
-    setProducts(mergedProducts);
-    setShowTemplates(false);
+        const productData = findProduct(templateProduct.name);
+        if (!productData) {
+          missing.push(templateProduct.name);
+          // Produkt spoza bazy i tak trafia na listę – lepiej niż ciche pominięcie.
+          return createListItem({ name: templateProduct.name, category: "Inne" }, templateProduct.quantity);
+        }
+        return createListItem(productData, templateProduct.quantity);
+      });
+
+    setProducts(prev => mergeItems(prev, templateProducts));
     setActiveTab("build");
+    showMessage(
+      missing.length > 0
+        ? `Dodano szablon. Spoza bazy produktów: ${missing.join(", ")}.`
+        : "Dodano produkty z szablonu."
+    );
   };
 
   const handleSendOrder = () => {
     if (selectedProviders.length === 0) {
-      alert("Wybierz co najmniej jednego dostawcę przed wysłaniem zamówienia!");
-      return;
-    }
-    
-    if (products.length === 0) {
-      alert("Dodaj produkty do zamówienia przed wysłaniem!");
+      showMessage("Wybierz co najmniej jednego dostawcę.");
       return;
     }
 
+    if (products.length === 0) {
+      showMessage("Dodaj produkty do zamówienia.");
+      return;
+    }
+
+    // Jedno zamówienie na dostawcę – dzięki temu każde ma własny status na ekranie "Zamówienia".
+    selectedProviders.forEach(provider => {
+      appendOrder({ supplier: provider.label, items: products, notes });
+    });
+    setOrderHistory(getOrders());
+
+    // Aplikacja nie ma własnej wysyłki e-maili, więc otwieramy program pocztowy z gotową treścią.
+    const emails = selectedProviders.map(p => p.email).filter(Boolean);
+    if (emails.length > 0) {
+      const subject = encodeURIComponent(`Zamówienie${clinicName ? ` – ${clinicName}` : ""}`);
+      const body = encodeURIComponent(buildOrderEmail({ clinicName, items: products, notes }));
+      window.location.href = `mailto:?bcc=${emails.join(",")}&subject=${subject}&body=${body}`;
+    }
+
     const providersList = selectedProviders.map(p => p.label).join(", ");
-    const now = new Date();
-    const orderSummary = {
-      date: now.toLocaleDateString('pl-PL'),
-      time: now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }),
-      fullDate: now.toLocaleString('pl-PL'),
-      products: [...products],
-      notes: notes,
-      providers: providersList,
-      totalCost: calculateTotalCost()
-    };
-    
-    setOrderHistory([...orderHistory, orderSummary]);
     setProducts([]);
     setNotes("");
     setSelectedProviders([]);
-    alert(`Zamówienie zostało wysłane do: ${providersList}`);
+    showMessage(`Zamówienie zapisane (${providersList}). Treść e-maila otwarto w programie pocztowym.`);
   };
 
   const calculateTotalCost = () => {
@@ -399,7 +395,7 @@ const ShoppingList = () => {
 
   const handleExportCSV = () => {
     if (products.length === 0) {
-      alert("Brak produktów do eksportu!");
+      alert("Brak produktów do eksportu.");
       return;
     }
     
@@ -411,149 +407,154 @@ const ShoppingList = () => {
     }).join("\n");
     
     const totalValue = calculateTotalCost();
-    const summary = `\n\nPodsumowanie:,,,,"${totalValue.toFixed(2)} zł",`;
+    const summary = `\n\nPodsumowanie:,,,,"${formatMoney(totalValue)}",`;
     
     const blob = new Blob([headers + csvContent + summary], { type: "text/csv;charset=utf-8" });
     saveAs(blob, `lista_zakupow_${new Date().toISOString().slice(0, 10)}.csv`);
   };
 
-  return (
-    <div className="shopping-list-container">
-      <h2 className="welcome-message">🛒 Inteligentna Lista Zakupów</h2>
+  const STATUS_BADGE = {
+    "W realizacji": "badge-info",
+    "Wysłane": "badge-warning",
+    "Dostarczone": "badge-success",
+  };
 
-      {/* Tab Navigation */}
-      <div className="tab-navigation">
-        <button 
-          className={activeTab === "build" ? "active" : ""}
-          onClick={() => setActiveTab("build")}
-        >
-          🛠️ Buduj listę
-        </button>
-        <button 
-          className={activeTab === "compare" ? "active" : ""}
-          onClick={() => setActiveTab("compare")}
-        >
-          💰 Porównaj ceny
-        </button>
-        <button 
-          className={activeTab === "templates" ? "active" : ""}
-          onClick={() => setActiveTab("templates")}
-        >
-          📋 Szablony
-        </button>
+  const totalCost = calculateTotalCost();
+
+  return (
+    <div className="shopping-list page">
+      <header className="page-header">
+        <div>
+          <h1 className="page-title">Lista zakupów</h1>
+          <p className="page-subtitle">Zbierz produkty, porównaj ceny i wyślij zamówienie do dostawców.</p>
+        </div>
+        {products.length > 0 && (
+          <button onClick={handleExportCSV} className="btn btn-secondary">
+            <Download /> Eksportuj CSV
+          </button>
+        )}
+      </header>
+
+      {message && <div className="notice" role="status">{message}</div>}
+
+      <div className="tabs" role="tablist">
+        {[
+          { id: "build", label: "Lista" },
+          { id: "compare", label: "Porównanie cen" },
+          { id: "templates", label: "Szablony" },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            className={`tab ${activeTab === tab.id ? "active" : ""}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+            {tab.id === "build" && products.length > 0 && <span className="tab-count num">{products.length}</span>}
+          </button>
+        ))}
       </div>
 
-      {/* Build List Tab */}
+      {/* Lista */}
       {activeTab === "build" && (
-        <>
-          {/* Smart Search Section */}
-          <div className="section">
-            <div className="smart-search-container">
-              <div className="search-header">
-                <h3>🔍 Dodaj produkty</h3>
-                <div className="quick-controls">
-                  <label>Szybka ilość:</label>
-                  <div className="quick-amount-control">
-                    <button 
-                      className="amount-btn"
+        <div className="sl-layout">
+          <div className="sl-main">
+            <section className="card sl-add">
+              <div className="sl-add-head">
+                <h3>Dodaj produkt</h3>
+                <div className="sl-quick-amount">
+                  <span className="muted">Ilość przy dodawaniu</span>
+                  <div className="stepper">
+                    <button
+                      type="button"
                       onClick={() => setQuickAddAmount(Math.max(1, quickAddAmount - 1))}
+                      aria-label="Zmniejsz ilość"
                     >
-                      -
+                      −
                     </button>
-                    <span className="amount-value">{quickAddAmount}</span>
-                    <button 
-                      className="amount-btn"
+                    <span className="num">{quickAddAmount}</span>
+                    <button
+                      type="button"
                       onClick={() => setQuickAddAmount(quickAddAmount + 1)}
+                      aria-label="Zwiększ ilość"
                     >
                       +
                     </button>
                   </div>
                 </div>
               </div>
-              
-              <div className="search-input-container">
-                <input
-                  type="text"
-                  className="smart-search-input"
-                  placeholder="🔍 Wpisz nazwę produktu (min. 2 znaki)..."
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  onFocus={() => setShowSuggestions(searchQuery.length >= 2)}
-                />
-                
-                <div className="search-filters">
-                  <select 
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="category-filter"
-                  >
-                    <option value="all">Wszystkie kategorie</option>
-                    {categories.map(category => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
-                  </select>
+
+              <div className="sl-search">
+                <div className="sl-search-field">
+                  <Search className="sl-search-icon" aria-hidden="true" />
+                  <input
+                    type="search"
+                    placeholder="Wpisz nazwę produktu (min. 2 znaki)"
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    onFocus={() => setShowSuggestions(searchQuery.length >= 2)}
+                  />
                 </div>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  aria-label="Kategoria"
+                >
+                  <option value="all">Wszystkie kategorie</option>
+                  {categories.map(category => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+
+                {showSuggestions && filteredProducts.length > 0 && (
+                  <ul className="sl-suggestions">
+                    {filteredProducts.map((product, index) => {
+                      const bestOffer = getBestSupplier(product.name);
+                      return (
+                        <li key={index}>
+                          <button type="button" onClick={() => handleAddProduct(product)}>
+                            <span className="sl-suggestion-main">
+                              <span className="sl-suggestion-name">{product.name}</span>
+                              <span className="sl-suggestion-meta">
+                                {product.category}
+                                {bestOffer && ` · ${bestOffer.supplier}`}
+                              </span>
+                            </span>
+                            <span className="num muted">{formatPrice(bestOffer?.price ?? product.price ?? 0)}</span>
+                            <span className="sl-suggestion-add">Dodaj {quickAddAmount}</span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </div>
 
-              {/* Search Suggestions */}
-              {showSuggestions && filteredProducts.length > 0 && (
-                <div className="search-suggestions">
-                  {filteredProducts.map((product, index) => {
-                    const bestOffer = getBestSupplier(product.name);
-                    return (
-                      <div 
-                        key={index} 
-                        className="suggestion-item"
-                        onClick={() => handleAddProduct(product)}
-                      >
-                        <div className="suggestion-main">
-                          <div className="suggestion-name">{product.name}</div>
-                          <div className="suggestion-category">{product.category}</div>
-                        </div>
-                        <div className="suggestion-price">
-                          {bestOffer && (
-                            <>
-                              <div className="best-price">{bestOffer.price.toFixed(2)} zł</div>
-                              <div className="best-supplier">{bestOffer.supplier}</div>
-                            </>
-                          )}
-                        </div>
-                        <button className="quick-add-btn">
-                          +{quickAddAmount}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Smart Suggestions */}
               {smartSuggestions.length > 0 && (
-                <div className="smart-suggestions">
-                  <h4>💡 Często kupowane razem:</h4>
-                  <div className="suggestion-chips">
+                <div className="sl-related">
+                  <span className="section-label">Często kupowane razem</span>
+                  <div className="sl-related-list">
                     {smartSuggestions.map((suggestion, index) => (
                       <button
                         key={index}
-                        className="suggestion-chip"
+                        type="button"
+                        className="btn btn-secondary btn-sm"
                         onClick={() => handleAddProduct(suggestion)}
                       >
-                        <span className="chip-name">{suggestion.name}</span>
-                        <span className="chip-frequency">({suggestion.frequency}x)</span>
+                        <Plus /> {suggestion.name}
+                        <span className="muted num">{suggestion.frequency}×</span>
                       </button>
                     ))}
                   </div>
                 </div>
               )}
-            </div>
-          </div>
+            </section>
 
-          {/* Current List */}
-          <div className="section">
-            <div className="list-header">
-              <h3>📋 Aktualna lista ({products.length} produktów)</h3>
-              <div className="list-controls">
-                <label>
+            <section className="card card-flush">
+              <div className="sl-list-head">
+                <h3>Na liście <span className="muted num">({products.length})</span></h3>
+                <label className="sl-check">
                   <input
                     type="checkbox"
                     checked={groupByCategory}
@@ -561,177 +562,194 @@ const ShoppingList = () => {
                   />
                   Grupuj według kategorii
                 </label>
-                <div className="total-cost">
-                  Wartość: <strong>{calculateTotalCost().toFixed(2)} zł</strong>
-                </div>
               </div>
-            </div>
 
-            {products.length > 0 ? (
-              <div className="grouped-products">
-                {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
-                  <div key={category} className="category-group">
-                    {groupByCategory && (
-                      <div className="category-header">
-                        <h4>{category}</h4>
-                        <span className="category-count">({categoryProducts.length} produktów)</span>
-                      </div>
-                    )}
-                    
-                    <div className="products-grid">
-                      {categoryProducts.map((product, index) => {
-                        const globalIndex = products.findIndex(p => p === product);
-                        return (
-                          <div key={globalIndex} className="product-card">
-                            <div className="product-header">
-                              <h5 className="product-name">{product.name}</h5>
-                              <button 
-                                className="remove-product-btn"
-                                onClick={() => handleRemoveProduct(globalIndex)}
-                              >
-                                ✕
-                              </button>
-                            </div>
-                            
-                            <div className="product-info">
-                              <div className="quantity-section">
-                                <label>Ilość:</label>
-                                <div className="quantity-controls">
-                                  <button 
-                                    onClick={() => handleQuantityChange(globalIndex, product.quantity - 1)}
-                                  >
-                                    -
-                                  </button>
-                                  <span className="quantity">{product.quantity}</span>
-                                  <button 
-                                    onClick={() => handleQuantityChange(globalIndex, product.quantity + 1)}
-                                  >
-                                    +
-                                  </button>
-                                </div>
-                              </div>
-                              
-                              {product.bestSupplier && (
-                                <div className="supplier-info">
-                                  <div className="best-supplier">
-                                    📦 {product.bestSupplier}
+              {products.length > 0 ? (
+                <div className="table-wrap">
+                  <table className="sl-table">
+                    <thead>
+                      <tr>
+                        <th>Produkt</th>
+                        <th className="right">Cena</th>
+                        <th>Ilość</th>
+                        <th className="right">Wartość</th>
+                        <th aria-label="Akcje"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
+                        <React.Fragment key={category}>
+                          {groupByCategory && (
+                            <tr className="sl-group-row">
+                              <td colSpan={5}>
+                                {category} <span className="muted num">· {categoryProducts.length}</span>
+                              </td>
+                            </tr>
+                          )}
+                          {categoryProducts.map((product) => {
+                            const globalIndex = products.findIndex(p => p === product);
+                            const unitPrice = product.bestPrice || product.price || 0;
+                            return (
+                              <tr key={globalIndex}>
+                                <td>
+                                  <span className="sl-product-name">{product.name}</span>
+                                  {product.bestSupplier && (
+                                    <span className="sl-product-meta">{product.bestSupplier}</span>
+                                  )}
+                                </td>
+                                <td className="right num muted">{formatPrice(unitPrice)}</td>
+                                <td>
+                                  <div className="sl-qty">
+                                    <div className="stepper">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleQuantityChange(globalIndex, product.quantity - 1)}
+                                        aria-label="Zmniejsz ilość"
+                                      >
+                                        −
+                                      </button>
+                                      <span className="num">{product.quantity}</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleQuantityChange(globalIndex, product.quantity + 1)}
+                                        aria-label="Zwiększ ilość"
+                                      >
+                                        +
+                                      </button>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      className="btn btn-ghost btn-sm"
+                                      onClick={() => handleQuantityChange(globalIndex, product.quantity + 5)}
+                                      title="Dodaj 5"
+                                    >
+                                      +5
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="btn btn-ghost btn-sm"
+                                      onClick={() => handleQuantityChange(globalIndex, Math.max(1, product.quantity - 2))}
+                                      title="Odejmij 2"
+                                    >
+                                      −2
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="btn btn-ghost btn-sm"
+                                      onClick={() => handleAddProduct({ name: product.name, category: product.category })}
+                                      title={`Dodaj ${quickAddAmount} (ilość przy dodawaniu)`}
+                                    >
+                                      +{quickAddAmount}
+                                    </button>
                                   </div>
-                                  <div className="price-info">
-                                    {product.bestPrice?.toFixed(2)} zł/szt
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                            
-                            <div className="quick-actions">
-                              <button 
-                                className="quick-action-btn"
-                                onClick={() => handleQuantityChange(globalIndex, product.quantity + 5)}
-                              >
-                                +5
-                              </button>
-                              <button 
-                                className="quick-action-btn"
-                                onClick={() => handleQuantityChange(globalIndex, Math.max(1, product.quantity - 2))}
-                              >
-                                -2
-                              </button>
-                              <button 
-                                className="quick-action-btn duplicate"
-                                onClick={() => handleAddProduct({ name: product.name, category: product.category })}
-                              >
-                                🔄
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="empty-list">
-                <p>📝 Lista jest pusta</p>
-                <p>Wyszukaj produkty powyżej lub skorzystaj z szablonów</p>
-              </div>
-            )}
+                                </td>
+                                <td className="right num">{formatPrice(unitPrice * product.quantity)}</td>
+                                <td className="right">
+                                  <button
+                                    type="button"
+                                    className="sl-remove"
+                                    onClick={() => handleRemoveProduct(globalIndex)}
+                                    aria-label={`Usuń ${product.name}`}
+                                    title="Usuń z listy"
+                                  >
+                                    <X />
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </React.Fragment>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="sl-empty">
+                  <p>Lista jest pusta.</p>
+                  <p className="muted">Wyszukaj produkt powyżej, dodaj go z bazy produktów albo skorzystaj z szablonu.</p>
+                </div>
+              )}
+            </section>
           </div>
 
-          {/* Notes and Actions */}
           {products.length > 0 && (
-            <div className="section">
-              <div className="order-finalization">
-                <div className="notes-section">
-                  <label>📝 Uwagi do zamówienia:</label>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Dodaj uwagi, specjalne instrukcje..."
-                    className="notes-textarea"
-                  />
-                </div>
-                
-                <div className="provider-selection">
-                  <label>🏢 Wybierz dostawców:</label>
-                  <div className="supplier-checkboxes">
-                    {suppliers.map(supplier => (
-                      <label key={supplier.value} className="supplier-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={selectedProviders.some(p => p.value === supplier.value)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedProviders([...selectedProviders, supplier]);
-                            } else {
-                              setSelectedProviders(selectedProviders.filter(p => p.value !== supplier.value));
-                            }
-                          }}
-                        />
-                        <span style={{ color: supplier.color }}>{supplier.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="action-buttons">
-                  <button 
-                    onClick={handleSendOrder}
-                    className="send-order-btn"
-                    disabled={selectedProviders.length === 0}
-                  >
-                    📤 Wyślij zamówienie
-                  </button>
-                  <button 
-                    onClick={handleExportCSV}
-                    className="export-btn"
-                  >
-                    📄 Eksportuj CSV
-                  </button>
-                </div>
-              </div>
-            </div>
+            <aside className="card sl-summary">
+              <h3>Zamówienie</h3>
+              <dl className="sl-totals">
+                <dt>Pozycji</dt>
+                <dd className="num">{products.length}</dd>
+                <dt>Wartość (znane ceny)</dt>
+                <dd className="num sl-total-value">{formatMoney(totalCost)}</dd>
+              </dl>
+
+              <label className="sl-field">
+                <span className="sl-field-label">Uwagi do zamówienia</span>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Np. termin dostawy, numer gabinetu"
+                />
+              </label>
+
+              <fieldset className="sl-field sl-suppliers">
+                <legend className="sl-field-label">Dostawcy</legend>
+                {suppliers.map(supplier => (
+                  <label key={supplier.value} className="sl-check">
+                    <input
+                      type="checkbox"
+                      checked={selectedProviders.some(p => p.value === supplier.value)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedProviders([...selectedProviders, supplier]);
+                        } else {
+                          setSelectedProviders(selectedProviders.filter(p => p.value !== supplier.value));
+                        }
+                      }}
+                    />
+                    <span>{supplier.label}</span>
+                    {supplier.email && <span className="sl-supplier-email muted">{supplier.email}</span>}
+                  </label>
+                ))}
+              </fieldset>
+
+              <button
+                onClick={handleSendOrder}
+                className="btn btn-primary sl-send"
+                disabled={selectedProviders.length === 0}
+              >
+                <Send /> Wyślij zamówienie
+              </button>
+              <p className="sl-hint muted">
+                Zamówienie trafi do historii, a program pocztowy otworzy gotową wiadomość.
+              </p>
+            </aside>
           )}
-        </>
+        </div>
       )}
 
-      {/* Compare Prices Tab */}
+      {/* Porównanie cen */}
       {activeTab === "compare" && (
-        <div className="section">
-          <h3>💰 Porównanie cen dostawców</h3>
+        <section className="card card-flush">
+          <div className="sl-list-head">
+            <h3>Porównanie cen dostawców</h3>
+          </div>
+          {products.length > 0 && !products.some(p => productOptions.find(o => o.name === p.name)?.supplierPrices) && (
+            <p className="sl-info">
+              Baza produktów nie zawiera jeszcze cen od dostawców (pole <code>supplierPrices</code>),
+              więc nie ma czego porównać. Ceny ofert dostawców można sprawdzić na ekranie „Porównanie ofert”.
+            </p>
+          )}
           {products.length > 0 ? (
-            <div className="price-comparison-table">
-              <table>
+            <div className="table-wrap">
+              <table className="sl-table">
                 <thead>
                   <tr>
-                    <th className="product-col">Produkt</th>
-                    <th className="quantity-col">Ilość</th>
+                    <th>Produkt</th>
+                    <th className="right">Ilość</th>
                     {suppliers.map(supplier => (
-                      <th key={supplier.value} style={{ color: supplier.color }}>
-                        {supplier.label}
-                      </th>
+                      <th key={supplier.value} className="right">{supplier.label}</th>
                     ))}
-                    <th className="best-col">Najlepszy</th>
+                    <th>Najlepsza oferta</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -739,40 +757,39 @@ const ShoppingList = () => {
                     const productData = productOptions.find(p => p.name === product.name);
                     const supplierPrices = productData?.supplierPrices || {};
                     const bestOffer = getBestSupplier(product.name);
-                    
+
                     return (
                       <tr key={index}>
-                        <td className="product-name">{product.name}</td>
-                        <td className="quantity">{product.quantity}</td>
+                        <td>{product.name}</td>
+                        <td className="right num">{product.quantity}</td>
                         {suppliers.map(supplier => {
                           const price = supplierPrices[supplier.value];
                           const totalPrice = price ? (price * product.quantity) : 0;
                           const isBest = bestOffer?.supplier === supplier.value;
-                          
+
                           return (
-                            <td 
-                              key={supplier.value}
-                              className={isBest ? "best-price" : ""}
-                            >
+                            <td key={supplier.value} className={`right num ${isBest ? "sl-best" : ""}`}>
                               {price ? (
                                 <>
-                                  <div className="unit-price">{price.toFixed(2)} zł</div>
-                                  <div className="total-price">{totalPrice.toFixed(2)} zł</div>
+                                  <span className="sl-unit-price">{formatMoney(price)}</span>
+                                  <span className="sl-line-total">{formatMoney(totalPrice)}</span>
                                 </>
                               ) : (
-                                <span className="no-price">—</span>
+                                <span className="muted">—</span>
                               )}
                             </td>
                           );
                         })}
-                        <td className="best-supplier">
-                          {bestOffer && (
+                        <td>
+                          {bestOffer ? (
                             <>
-                              <div className="supplier-name">{bestOffer.supplier}</div>
-                              <div className="savings">
-                                {(bestOffer.price * product.quantity).toFixed(2)} zł
-                              </div>
+                              <span className="sl-product-name">{bestOffer.supplier}</span>
+                              <span className="sl-product-meta num">
+                                {formatMoney((bestOffer.price * product.quantity))}
+                              </span>
                             </>
+                          ) : (
+                            <span className="muted">—</span>
                           )}
                         </td>
                       </tr>
@@ -780,151 +797,163 @@ const ShoppingList = () => {
                   })}
                 </tbody>
                 <tfoot>
-                  <tr className="totals-row">
-                    <td colSpan="2"><strong>RAZEM:</strong></td>
+                  <tr>
+                    <td colSpan="2">Razem</td>
                     {suppliers.map(supplier => {
                       const total = products.reduce((sum, product) => {
                         const productData = productOptions.find(p => p.name === product.name);
                         const price = productData?.supplierPrices?.[supplier.value] || 0;
                         return sum + (price * product.quantity);
                       }, 0);
-                      
+
                       return (
-                        <td key={supplier.value}>
-                          <strong>{total.toFixed(2)} zł</strong>
-                        </td>
+                        <td key={supplier.value} className="right num">{formatMoney(total)}</td>
                       );
                     })}
-                    <td>
-                      <strong className="best-total">
-                        {calculateTotalCost().toFixed(2)} zł
-                      </strong>
-                    </td>
+                    <td className="num">{formatMoney(totalCost)}</td>
                   </tr>
                 </tfoot>
               </table>
             </div>
           ) : (
-            <div className="empty-comparison">
-              <p>Dodaj produkty do listy aby porównać ceny</p>
-            </div>
+            <p className="sl-info">Dodaj produkty do listy, aby porównać ceny.</p>
           )}
-        </div>
+        </section>
       )}
 
-      {/* Templates Tab */}
+      {/* Szablony */}
       {activeTab === "templates" && (
-        <div className="section">
-          <h3>📋 Szablony list zakupów</h3>
-          <div className="templates-grid">
-            {templates.map(template => (
-              <div key={template.id} className="template-card">
-                <div className="template-header">
-                  <h4>{template.name}</h4>
-                  <p>{template.description}</p>
-                </div>
-                
-                <div className="template-products">
-                  <h5>Produkty ({template.products.length}):</h5>
-                  <ul>
-                    {template.products.map((product, index) => (
-                      <li key={index}>
-                        {product.name} <span className="template-quantity">({product.quantity})</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <button 
-                  className="apply-template-btn"
-                  onClick={() => handleApplyTemplate(template)}
-                >
-                  ✅ Zastosuj szablon
-                </button>
-              </div>
-            ))}
-          </div>
+        <div className="sl-templates">
+          {templates.map(template => (
+            <section key={template.id} className="card sl-template">
+              <h3>{template.name}</h3>
+              <p className="muted">{template.description}</p>
+              <ul className="sl-template-items">
+                {template.products.map((product, index) => (
+                  <li key={index}>
+                    <span>{product.name}</span>
+                    <span className="num muted">{product.quantity}</span>
+                  </li>
+                ))}
+              </ul>
+              <button
+                className="btn btn-secondary"
+                onClick={() => handleApplyTemplate(template)}
+              >
+                <Plus /> Dodaj do listy
+              </button>
+            </section>
+          ))}
         </div>
       )}
 
-      {/* Order History */}
-      <div className="section">
-        <h3>📚 Historia zamówień</h3>
+      {/* Historia zamówień */}
+      <section className="card card-flush sl-history">
+        <div className="sl-list-head">
+          <h3>Ostatnie zamówienia</h3>
+        </div>
         {orderHistory.length > 0 ? (
-          <div className="order-history">
-            {orderHistory.slice(-5).reverse().map((order, index) => (
-              <div key={index} className="history-item">
-                <div className="history-header">
-                  <div className="order-date-info">
-                    <span className="order-date">📅 {order.date}</span>
-                    {order.time && <span className="order-time">🕐 {order.time}</span>}
-                  </div>
-                  <span className="order-providers">🏢 {order.providers}</span>
-                  <span className="order-cost">💰 {order.totalCost?.toFixed(2) || '—'} zł</span>
-                </div>
-                <div className="history-products">
-                  {order.products.slice(0, 3).map((product, idx) => (
-                    <span key={idx} className="history-product">
-                      {product.name} ({product.quantity})
-                    </span>
-                  ))}
-                  {order.products.length > 3 && (
-                    <span className="more-products">+{order.products.length - 3} więcej</span>
-                  )}
-                </div>
-                <div className="history-actions">
-                  <button onClick={() => setSelectedOrder(order)}>👁️ Podgląd</button>
-                  <button onClick={() => {
-                    setProducts(order.products);
-                    setNotes(order.notes);
-                    setActiveTab("build");
-                  }}>🔄 Kopiuj</button>
-                </div>
-              </div>
-            ))}
+          <div className="table-wrap">
+            <table className="sl-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Dostawca</th>
+                  <th>Status</th>
+                  <th>Produkty</th>
+                  <th className="right">Wartość</th>
+                  <th aria-label="Akcje"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...orderHistory].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5).map((order) => (
+                  <tr key={order.id}>
+                    <td className="num sl-nowrap">{formatOrderDate(order.date)}</td>
+                    <td>{order.supplier}</td>
+                    <td><span className={`badge ${STATUS_BADGE[order.status] || ""}`}>{order.status}</span></td>
+                    <td className="sl-history-items">
+                      {order.items.slice(0, 3).map(product => `${product.name} (${product.quantity})`).join(", ")}
+                      {order.items.length > 3 && (
+                        <span className="muted"> i {order.items.length - 3} więcej</span>
+                      )}
+                    </td>
+                    <td className="right num">{formatPrice(order.amount)}</td>
+                    <td className="right sl-nowrap">
+                      <button className="btn btn-ghost btn-sm" onClick={() => setSelectedOrder(order)}>
+                        Podgląd
+                      </button>
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => {
+                          setProducts(order.items.map(i => createListItem(i, i.quantity)));
+                          setNotes(order.notes);
+                          setActiveTab("build");
+                        }}
+                      >
+                        Kopiuj
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : (
-          <div className="empty-history">
-            <p>Brak historii zamówień</p>
-          </div>
+          <p className="sl-info">Brak historii zamówień.</p>
         )}
-      </div>
+      </section>
 
-      {/* Order Details Modal */}
+      {/* Szczegóły zamówienia */}
       {selectedOrder && (
-        <div className="modal-overlay" onClick={() => setSelectedOrder(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>📋 Szczegóły zamówienia</h3>
-            <div className="order-details">
-              <div className="order-date-detail">
-                <p><strong>Data zamówienia:</strong> {selectedOrder.date}</p>
-                {selectedOrder.time && <p><strong>Godzina:</strong> {selectedOrder.time}</p>}
-                {selectedOrder.fullDate && <p><strong>Pełna data:</strong> {selectedOrder.fullDate}</p>}
-              </div>
-              <p><strong>Dostawcy:</strong> {selectedOrder.providers}</p>
-              {selectedOrder.totalCost && (
-                <p><strong>Wartość:</strong> {selectedOrder.totalCost.toFixed(2)} zł</p>
-              )}
-              <p><strong>Uwagi:</strong> {selectedOrder.notes || "Brak uwag"}</p>
-              
-              <h4>Produkty:</h4>
-              <div className="order-products">
-                {selectedOrder.products.map((product, index) => (
-                  <div key={index} className="order-product">
-                    <span className="product-name">{product.name}</span>
-                    <span className="product-quantity">{product.quantity} szt</span>
-                    {product.bestPrice && (
-                      <span className="product-value">
-                        {(product.quantity * product.bestPrice).toFixed(2)} zł
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
+        <div className="modal-backdrop" onClick={() => setSelectedOrder(null)}>
+          <div
+            className="sl-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sl-modal-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sl-modal-head">
+              <h3 id="sl-modal-title">Szczegóły zamówienia</h3>
+              <button
+                type="button"
+                className="sl-remove"
+                onClick={() => setSelectedOrder(null)}
+                aria-label="Zamknij"
+              >
+                <X />
+              </button>
             </div>
-            <button onClick={() => setSelectedOrder(null)} className="close-modal">
-              Zamknij
-            </button>
+            <dl className="sl-totals">
+              <dt>Data</dt>
+              <dd className="num">{formatOrderDate(selectedOrder.date)}</dd>
+              <dt>Status</dt>
+              <dd><span className={`badge ${STATUS_BADGE[selectedOrder.status] || ""}`}>{selectedOrder.status}</span></dd>
+              <dt>Dostawca</dt>
+              <dd>{selectedOrder.supplier}</dd>
+              <dt>Wartość</dt>
+              <dd className="num">{formatPrice(selectedOrder.amount)}</dd>
+              <dt>Uwagi</dt>
+              <dd>{selectedOrder.notes || <span className="muted">Brak uwag</span>}</dd>
+            </dl>
+
+            <h4 className="section-label">Produkty</h4>
+            <ul className="sl-template-items">
+              {selectedOrder.items.map((product, index) => (
+                <li key={index}>
+                  <span>{product.name}</span>
+                  <span className="num muted">
+                    {product.quantity} szt.
+                    {product.price > 0 && ` · ${formatMoney((product.quantity * product.price))}`}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <div className="sl-modal-actions">
+              <button onClick={() => setSelectedOrder(null)} className="btn btn-secondary">
+                Zamknij
+              </button>
+            </div>
           </div>
         </div>
       )}

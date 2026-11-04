@@ -1,30 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { 
-  ShoppingCart, 
-  Search, 
-  Trash2, 
-  X, 
-  Send, 
-  ChevronDown, 
-  ChevronUp, 
-  Info, 
-  Store, 
-  Package, 
+import {
+  Search,
+  Trash2,
+  X,
+  Send,
+  ChevronDown,
+  ChevronUp,
   Plus,
   Minus,
   Gift,
-  Star,
-  TrendingDown,
-  Filter,
-  Check,
-  Calendar,
-  FileText,
-  AlertCircle
+  Check
 } from "lucide-react";
 import "./Offers.css";
+import { appendOrder } from "../utils/storage";
+import { formatMoney } from '../utils/format';
 
 const Offers = () => {
-  const [suppliers, setSuppliers] = useState([
+  const [suppliers] = useState([
     {
       id: 1,
       name: "Koldental",
@@ -172,24 +164,26 @@ const Offers = () => {
     );
     
     if (selectedSuppliers.length === 0) {
-      setNotification('Wybierz przynajmniej jednego dostawcę');
+      setNotification('Wybierz przynajmniej jednego dostawcę.');
       setTimeout(() => setNotification(''), 3000);
       return;
     }
     
-    const orders = selectedSuppliers.map(supplier => ({
-      supplierName: supplier.supplierName,
-      date: new Date().toLocaleDateString(),
-      deliveryDate: orderFormData.deliveryDate,
-      note: supplier.note,
-      products: supplier.products,
-      totalCost: supplier.products.reduce(
-        (sum, item) => sum + item.product.price * item.quantity, 0
-      )
-    }));
-    
-    console.log("Zamówienia wysłane:", orders);
-    setNotification(`Wysłano ${orders.length} zamówień do: ${orders.map(o => o.supplierName).join(', ')}`);
+    const orders = selectedSuppliers.map(supplier =>
+      appendOrder({
+        supplier: supplier.supplierName,
+        items: supplier.products.map(item => ({
+          name: item.product.name,
+          category: item.product.category,
+          price: item.product.price,
+          quantity: item.quantity,
+        })),
+        notes: supplier.note,
+        deliveryDate: orderFormData.deliveryDate,
+      })
+    );
+
+    setNotification(`Zapisano ${orders.length} zamówień (${orders.map(o => o.supplier).join(', ')}) – zobacz zakładkę „Zamówienia”.`);
     setTimeout(() => setNotification(''), 5000);
     
     setSelectedProducts([]);
@@ -243,12 +237,17 @@ const Offers = () => {
   };
 
   const addAllSupplierProducts = (supplier) => {
+    // Jeden produkt (po nazwie) może być w koszyku tylko raz – tak samo jak przy pojedynczym wyborze.
+    const names = supplier.products.map((p) => p.name);
     const newSelectedProducts = supplier.products.map((product) => ({
       product,
       supplier: supplier.name,
       quantity: 1,
     }));
-    setSelectedProducts((prev) => [...prev, ...newSelectedProducts]);
+    setSelectedProducts((prev) => [
+      ...prev.filter((item) => !names.includes(item.product.name)),
+      ...newSelectedProducts,
+    ]);
     setNotification(`Dodano wszystkie produkty z ${supplier.name}`);
     setTimeout(() => setNotification(''), 3000);
   };
@@ -292,7 +291,7 @@ const Offers = () => {
   const productsBySupplier = getProductsBySupplier();
   const categories = getCategories();
 
-  const ProductComparisonCard = ({ productName, offers, onSelectProduct, selectedProducts }) => {
+  const renderComparisonCard = (productName, offers) => {
     const selectedProductId = selectedProducts.find(
       item => item.product.name === productName
     )?.product.id;
@@ -304,451 +303,377 @@ const Offers = () => {
     });
 
     return (
-      <div className="product-comparison-card">
-        <div className="product-header">
-          <h4>{productName}</h4>
-          <span className="offers-count">{offers.length} ofert</span>
+      <section key={productName} className="card card-flush of-product">
+        <div className="of-product-head">
+          <h3>{productName}</h3>
+          <span className="muted">{offers.length} {offers.length === 1 ? 'oferta' : offers.length < 5 ? 'oferty' : 'ofert'}</span>
         </div>
-        
-        <div className="offers-grid">
-          {sortedOffers.map((offer) => (
-            <div 
-              key={`${offer.supplierId}-${offer.id}`} 
-              className={`offer-card ${offer.isCheapest ? 'cheapest' : ''} ${selectedProductId === offer.id ? 'selected' : ''}`}
-              onClick={() => onSelectProduct(offer, offer.supplier)}
-            >
-              <div className="offer-header">
-                <div className="supplier-info">
-                  <span className="supplier-name">{offer.supplier}</span>
-                  <div className="supplier-meta">
-                    <span className="rating">★ {offer.supplierRating}</span>
-                    <span className="delivery">{offer.deliveryTime}</span>
-                  </div>
-                </div>
-                {offer.isCheapest && (
-                  <span className="best-price-badge">
-                    <TrendingDown className="icon" />
-                    Najlepsza cena
+
+        <ul className="of-offers">
+          {sortedOffers.map((offer) => {
+            const isSelected = selectedProductId === offer.id;
+            return (
+              <li key={`${offer.supplierId}-${offer.id}`}>
+                <label className={`of-offer ${isSelected ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name={`product-${productName}`}
+                    checked={isSelected}
+                    onChange={() => handleSelectProduct(offer, offer.supplier)}
+                  />
+                  <span className="of-offer-supplier">
+                    <span className="of-offer-name">{offer.supplier}</span>
+                    <span className="of-offer-meta">
+                      Ocena {offer.supplierRating} · dostawa {offer.deliveryTime}
+                    </span>
                   </span>
-                )}
-              </div>
-
-              <div className="offer-price-section">
-                <span className="price">{offer.price.toFixed(2)} zł</span>
-                {offer.savings > 0 && (
-                  <span className="savings">+{offer.savings.toFixed(2)} zł</span>
-                )}
-              </div>
-
-              {offer.gratis && (
-                <div className="gratis-section">
-                  <Gift className="icon" />
-                  <span>Gratis: {offer.gratis}</span>
-                </div>
-              )}
-
-              <div className="offer-actions">
-                <input
-                  type="radio"
-                  name={`product-${productName}`}
-                  checked={selectedProductId === offer.id}
-                  onChange={() => onSelectProduct(offer, offer.supplier)}
-                  className="offer-radio"
-                />
-                <span className="select-label">
-                  {selectedProductId === offer.id ? 'Wybrano' : 'Wybierz'}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+                  <span className="of-offer-tags">
+                    {offer.gratis && (
+                      <span className="badge badge-accent"><Gift /> Gratis: {offer.gratis}</span>
+                    )}
+                    {offer.isCheapest && <span className="badge badge-success">Najniższa cena</span>}
+                  </span>
+                  <span className="of-offer-price">
+                    <span className="num">{formatMoney(offer.price)}</span>
+                    {offer.savings > 0 && (
+                      <span className="of-offer-diff num">+{formatMoney(offer.savings)}</span>
+                    )}
+                  </span>
+                </label>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
     );
   };
 
-  const QuantityControl = ({ value, onChange, productId }) => (
-    <div className="quantity-control">
-      <button 
-        onClick={() => onChange(productId, value - 1)}
-        className="quantity-btn"
+  const renderQuantityControl = (value, productId) => (
+    <div className="stepper">
+      <button
+        type="button"
+        onClick={() => handleQuantityChange(productId, value - 1)}
         disabled={value <= 1}
+        aria-label="Zmniejsz ilość"
       >
-        <Minus className="icon" />
+        <Minus />
       </button>
       <input
         type="number"
         value={value}
-        onChange={(e) => onChange(productId, Number(e.target.value))}
-        className="quantity-input"
+        onChange={(e) => handleQuantityChange(productId, Number(e.target.value))}
         min="1"
+        aria-label="Ilość"
       />
-      <button 
-        onClick={() => onChange(productId, value + 1)}
-        className="quantity-btn"
+      <button
+        type="button"
+        onClick={() => handleQuantityChange(productId, value + 1)}
+        aria-label="Zwiększ ilość"
       >
-        <Plus className="icon" />
+        <Plus />
       </button>
     </div>
   );
 
+  const cartTotal = selectedProducts.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const selectedSupplierCount = orderFormData.supplierOrders.filter(s => s.selected).length;
+
   return (
-    <div className="offers-container">
-      {/* Header */}
-      <div className="offers-header">
-        <div className="header-title">
-          <ShoppingCart className="header-icon" />
-          <h1>Porównanie Ofert</h1>
+    <div className="offers page">
+      <header className="page-header">
+        <div>
+          <h1 className="page-title">Porównanie ofert</h1>
+          <p className="page-subtitle">Ceny tych samych produktów u różnych dostawców.</p>
         </div>
-        
-        <div className="view-toggle">
-          <button 
-            className={`toggle-btn ${viewMode === 'comparison' ? 'active' : ''}`}
+        <div className="of-segmented" role="group" aria-label="Widok">
+          <button
+            type="button"
+            className={viewMode === 'comparison' ? 'active' : ''}
+            aria-pressed={viewMode === 'comparison'}
             onClick={() => setViewMode('comparison')}
           >
-            Porównanie
+            Według produktów
           </button>
-          <button 
-            className={`toggle-btn ${viewMode === 'suppliers' ? 'active' : ''}`}
+          <button
+            type="button"
+            className={viewMode === 'suppliers' ? 'active' : ''}
+            aria-pressed={viewMode === 'suppliers'}
             onClick={() => setViewMode('suppliers')}
           >
-            Dostawcy
+            Według dostawców
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Controls */}
-      <div className="offers-controls">
-        <div className="search-filter-section">
-          <div className="search-container">
-            <Search className="search-icon" />
-            <input
-              type="text"
-              placeholder="Szukaj produktów..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-          </div>
-          
-          <div className="filter-controls">
-            <select 
-              value={filterCategory} 
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="filter-select"
-            >
-              <option value="all">Wszystkie kategorie</option>
-              {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-            
-            <select 
-              value={sortBy} 
-              onChange={(e) => setSortBy(e.target.value)}
-              className="sort-select"
-            >
-              <option value="price">Sortuj po cenie</option>
-              <option value="supplier">Sortuj po dostawcy</option>
-              <option value="name">Sortuj po nazwie</option>
-            </select>
-          </div>
+      <div className="of-toolbar">
+        <div className="of-search">
+          <Search className="of-search-icon" aria-hidden="true" />
+          <input
+            type="search"
+            placeholder="Szukaj produktu"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
+        <select
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value)}
+          aria-label="Kategoria"
+        >
+          <option value="all">Wszystkie kategorie</option>
+          {categories.map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          aria-label="Sortowanie"
+        >
+          <option value="price">Sortuj: cena</option>
+          <option value="supplier">Sortuj: dostawca</option>
+          <option value="name">Sortuj: nazwa</option>
+        </select>
       </div>
 
-      <div className="offers-content">
-        {/* Main Content */}
-        <div className="offers-main">
+      <div className="of-layout">
+        <div className="of-main">
           {viewMode === 'comparison' ? (
-            <div className="comparison-view">
-              <h3>Porównanie produktów</h3>
-              {Object.keys(filteredProducts).length > 0 ? (
-                Object.keys(filteredProducts).map((productName) => (
-                  <ProductComparisonCard
-                    key={productName}
-                    productName={productName}
-                    offers={filteredProducts[productName]}
-                    onSelectProduct={handleSelectProduct}
-                    selectedProducts={selectedProducts}
-                  />
-                ))
-              ) : (
-                <div className="empty-state">
-                  <Package className="empty-icon" />
-                  <h4>Brak produktów</h4>
-                  <p>Nie znaleziono produktów spełniających kryteria wyszukiwania.</p>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="suppliers-view">
-              <h3>Oferty według dostawców</h3>
-              <div className="suppliers-grid">
-                {suppliers.map((supplier) => (
-                  <div key={supplier.id} className="supplier-card">
-                    <div className="supplier-header">
-                      <div className="supplier-info">
-                        <Store className="supplier-icon" />
-                        <div>
-                          <h4>{supplier.name}</h4>
-                          <div className="supplier-meta">
-                            <span className="rating">★ {supplier.rating}</span>
-                            <span className="delivery">{supplier.deliveryTime}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => addAllSupplierProducts(supplier)}
-                        className="add-all-btn"
-                      >
-                        <Plus className="icon" />
-                        Dodaj wszystkie
-                      </button>
-                    </div>
-                    
-                    <div className="supplier-products">
-                      {supplier.products.map((product) => {
-                        const isSelected = selectedProducts.some(
-                          (item) => item.product.id === product.id
-                        );
-                        return (
-                          <div key={product.id} className={`product-item ${isSelected ? 'selected' : ''}`}>
-                            <div className="product-info">
-                              <div className="product-name">{product.name}</div>
-                              <div className="product-category">{product.category}</div>
-                            </div>
-                            <div className="product-price">{product.price.toFixed(2)} zł</div>
-                            {product.gratis && (
-                              <div className="product-gratis">
-                                <Gift className="icon" />
-                                {product.gratis}
-                              </div>
-                            )}
-                            <button
-                              onClick={() => handleSelectProduct(product, supplier.name)}
-                              className={`select-btn ${isSelected ? 'selected' : ''}`}
-                            >
-                              {isSelected ? <Check className="icon" /> : <Plus className="icon" />}
-                              {isSelected ? 'Wybrano' : 'Wybierz'}
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
+            Object.keys(filteredProducts).length > 0 ? (
+              Object.keys(filteredProducts).map((productName) =>
+                renderComparisonCard(productName, filteredProducts[productName])
+              )
+            ) : (
+              <div className="empty-state">
+                <h4>Brak produktów</h4>
+                <p>Nie znaleziono produktów spełniających kryteria wyszukiwania.</p>
               </div>
+            )
+          ) : (
+            <div className="of-suppliers">
+              {suppliers.map((supplier) => (
+                <section key={supplier.id} className="card card-flush of-supplier">
+                  <div className="of-product-head">
+                    <div>
+                      <h3>{supplier.name}</h3>
+                      <span className="of-offer-meta">
+                        Ocena {supplier.rating} · dostawa {supplier.deliveryTime}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => addAllSupplierProducts(supplier)}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      <Plus /> Dodaj wszystkie
+                    </button>
+                  </div>
+
+                  <ul className="of-supplier-products">
+                    {supplier.products.map((product) => {
+                      const isSelected = selectedProducts.some(
+                        (item) => item.product.id === product.id
+                      );
+                      return (
+                        <li key={product.id} className={isSelected ? 'selected' : ''}>
+                          <span className="of-offer-supplier">
+                            <span className="of-offer-name">{product.name}</span>
+                            <span className="of-offer-meta">
+                              {product.category}
+                              {product.gratis && ` · gratis: ${product.gratis}`}
+                            </span>
+                          </span>
+                          <span className="num">{formatMoney(product.price)}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleSelectProduct(product, supplier.name)}
+                            className={`btn btn-sm ${isSelected ? 'btn-ghost of-selected-btn' : 'btn-secondary'}`}
+                          >
+                            {isSelected ? <Check /> : <Plus />}
+                            {isSelected ? 'Wybrano' : 'Wybierz'}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              ))}
             </div>
           )}
         </div>
 
-        {/* Shopping Cart Sidebar */}
-        <div className="shopping-cart">
-          <div className="cart-header">
-            <h3>
-              <ShoppingCart className="cart-icon" />
-              Koszyk ({selectedProducts.length})
-            </h3>
+        <aside className="card card-flush of-cart">
+          <div className="of-product-head">
+            <h3>Koszyk</h3>
+            <span className="muted num">{selectedProducts.length} poz.</span>
           </div>
 
           {selectedProducts.length > 0 ? (
             <>
-              <div className="cart-items">
+              <div className="of-cart-groups">
                 {Object.keys(productsBySupplier).map((supplierName) => (
-                  <div key={supplierName} className="cart-supplier-section">
-                    <div 
-                      className="cart-supplier-header"
+                  <div key={supplierName} className="of-cart-group">
+                    <button
+                      type="button"
+                      className="of-cart-group-head"
                       onClick={() => toggleOrderSupplierDetails(supplierName)}
+                      aria-expanded={!!expandedOrderSuppliers[supplierName]}
                     >
-                      <div className="supplier-info">
-                        <Store className="supplier-icon" />
-                        <span>{supplierName}</span>
-                      </div>
-                      <div className="supplier-summary">
-                        <span className="supplier-total">
-                          {getSupplierTotal(productsBySupplier[supplierName]).toFixed(2)} zł
-                        </span>
-                        {expandedOrderSuppliers[supplierName] ? (
-                          <ChevronUp className="expand-icon" />
-                        ) : (
-                          <ChevronDown className="expand-icon" />
-                        )}
-                      </div>
-                    </div>
-                    
+                      <span className="of-offer-name">{supplierName}</span>
+                      <span className="muted num">
+                        {productsBySupplier[supplierName].length} poz.
+                      </span>
+                      <span className="num of-cart-group-total">
+                        {formatMoney(getSupplierTotal(productsBySupplier[supplierName]))}
+                      </span>
+                      {expandedOrderSuppliers[supplierName] ? (
+                        <ChevronUp className="of-chevron" />
+                      ) : (
+                        <ChevronDown className="of-chevron" />
+                      )}
+                    </button>
+
                     {expandedOrderSuppliers[supplierName] && (
-                      <div className="cart-products">
+                      <ul className="of-cart-items">
                         {productsBySupplier[supplierName].map((item) => (
-                          <div key={item.product.id} className="cart-product">
-                            <div className="product-details">
-                              <div className="product-name">{item.product.name}</div>
-                              {item.product.gratis && (
-                                <div className="product-gratis">
-                                  <Gift className="icon" />
-                                  +{item.product.gratis}
-                                </div>
-                              )}
-                            </div>
-                            
-                            <div className="product-controls">
-                              <QuantityControl 
-                                value={item.quantity}
-                                onChange={handleQuantityChange}
-                                productId={item.product.id}
-                              />
-                              <div className="product-total">
-                                {(item.product.price * item.quantity).toFixed(2)} zł
-                              </div>
-                              <button 
+                          <li key={item.product.id}>
+                            <div className="of-cart-item-head">
+                              <span>{item.product.name}</span>
+                              <button
+                                type="button"
                                 onClick={() => handleRemoveProduct(item.product.id)}
-                                className="remove-btn"
+                                className="of-icon-btn"
+                                aria-label={`Usuń ${item.product.name}`}
+                                title="Usuń"
                               >
-                                <Trash2 className="icon" />
+                                <Trash2 />
                               </button>
                             </div>
-                          </div>
+                            {item.product.gratis && (
+                              <span className="of-offer-meta">Gratis: {item.product.gratis}</span>
+                            )}
+                            <div className="of-cart-item-foot">
+                              {renderQuantityControl(item.quantity, item.product.id)}
+                              <span className="num">
+                                {formatMoney((item.product.price * item.quantity))}
+                              </span>
+                            </div>
+                          </li>
                         ))}
-                      </div>
+                      </ul>
                     )}
                   </div>
                 ))}
               </div>
 
-              <div className="cart-footer">
-                <div className="cart-total">
-                  <span>Łączna wartość:</span>
-                  <span className="total-amount">
-                    {selectedProducts
-                      .reduce((sum, item) => sum + item.product.price * item.quantity, 0)
-                      .toFixed(2)} zł
-                  </span>
+              <div className="of-cart-foot">
+                <div className="of-cart-total">
+                  <span>Razem</span>
+                  <span className="num">{formatMoney(cartTotal)}</span>
                 </div>
-                <button className="checkout-btn" onClick={openOrderForm}>
-                  <Send className="icon" />
-                  Złóż zamówienie
+                <button type="button" className="btn btn-primary of-full" onClick={openOrderForm}>
+                  <Send /> Złóż zamówienie
                 </button>
               </div>
             </>
           ) : (
-            <div className="empty-cart">
-              <ShoppingCart className="empty-icon" />
-              <p>Koszyk jest pusty</p>
-              <span>Wybierz produkty z ofert</span>
-            </div>
+            <p className="of-cart-empty muted">
+              Koszyk jest pusty. Wybierz oferty z listy.
+            </p>
           )}
-        </div>
+        </aside>
       </div>
 
-      {/* Order Form Modal */}
       {showOrderForm && (
-        <div className="order-modal-overlay">
-          <div className="order-modal">
-            <div className="modal-header">
-              <h3>
-                <FileText className="icon" />
-                Finalizacja zamówienia
-              </h3>
-              <button className="close-btn" onClick={() => setShowOrderForm(false)}>
-                <X className="icon" />
+        <div className="modal-backdrop">
+          <div className="of-modal" role="dialog" aria-modal="true" aria-labelledby="of-modal-title">
+            <div className="of-modal-head">
+              <h3 id="of-modal-title">Finalizacja zamówienia</h3>
+              <button
+                type="button"
+                className="of-icon-btn"
+                onClick={() => setShowOrderForm(false)}
+                aria-label="Zamknij"
+              >
+                <X />
               </button>
             </div>
 
-            <div className="modal-content">
-              <div className="order-section">
-                <h4>
-                  <Calendar className="icon" />
-                  Szczegóły zamówienia
-                </h4>
-                <div className="form-group">
-                  <label htmlFor="deliveryDate">Preferowana data dostawy:</label>
-                  <input
-                    type="date"
-                    id="deliveryDate"
-                    value={orderFormData.deliveryDate}
-                    onChange={handleDeliveryDateChange}
-                    className="date-input"
-                  />
-                </div>
-              </div>
+            <div className="of-modal-body">
+              <label className="of-field">
+                <span className="of-field-label">Preferowana data dostawy</span>
+                <input
+                  type="date"
+                  id="deliveryDate"
+                  value={orderFormData.deliveryDate}
+                  onChange={handleDeliveryDateChange}
+                />
+              </label>
 
-              <div className="order-section">
-                <h4>
-                  <Store className="icon" />
-                  Wybierz dostawców ({orderFormData.supplierOrders.filter(s => s.selected).length})
-                </h4>
+              <div className="of-field">
+                <span className="of-field-label">
+                  Dostawcy <span className="muted num">({selectedSupplierCount} wybranych)</span>
+                </span>
                 {orderFormData.supplierOrders.map((supplierOrder, index) => (
-                  <div key={index} className={`supplier-order-card ${supplierOrder.selected ? 'selected' : 'unselected'}`}>
-                    <div 
-                      className="supplier-order-header"
-                      onClick={() => toggleSupplierDetails(index)}
-                    >
-                      <div className="supplier-order-left">
-                        <label className="checkbox-wrapper" onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            checked={supplierOrder.selected}
-                            onChange={() => toggleSupplierSelection(index)}
-                          />
-                          <span className="checkmark"></span>
-                        </label>
-                        <div className="supplier-info">
-                          <span className="supplier-name">{supplierOrder.supplierName}</span>
-                          <span className="products-count">
-                            {supplierOrder.products.length} produktów
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="supplier-order-right">
-                        <span className="order-total">
-                          {supplierOrder.products.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)} zł
+                  <div
+                    key={index}
+                    className={`of-supplier-order ${supplierOrder.selected ? '' : 'unselected'}`}
+                  >
+                    <div className="of-supplier-order-head">
+                      <input
+                        type="checkbox"
+                        checked={supplierOrder.selected}
+                        onChange={() => toggleSupplierSelection(index)}
+                        aria-label={`Zamów u ${supplierOrder.supplierName}`}
+                      />
+                      <button
+                        type="button"
+                        className="of-supplier-order-toggle"
+                        onClick={() => toggleSupplierDetails(index)}
+                        aria-expanded={expandedSupplier === index}
+                      >
+                        <span className="of-offer-supplier">
+                          <span className="of-offer-name">{supplierOrder.supplierName}</span>
+                          <span className="of-offer-meta">{supplierOrder.products.length} poz.</span>
+                        </span>
+                        <span className="num">
+                          {formatMoney(supplierOrder.products.reduce((sum, item) => sum + item.product.price * item.quantity, 0))}
                         </span>
                         {expandedSupplier === index ? (
-                          <ChevronUp className="expand-icon" />
+                          <ChevronUp className="of-chevron" />
                         ) : (
-                          <ChevronDown className="expand-icon" />
+                          <ChevronDown className="of-chevron" />
                         )}
-                      </div>
+                      </button>
                     </div>
-                    
+
                     {expandedSupplier === index && (
-                      <div className="supplier-order-details">
-                        <div className="order-products-list">
+                      <div className="of-supplier-order-body">
+                        <ul className="of-order-lines">
                           {supplierOrder.products.map((item, itemIndex) => (
-                            <div key={itemIndex} className="order-product-item">
-                              <div className="product-info">
-                                <span className="product-name">{item.product.name}</span>
+                            <li key={itemIndex}>
+                              <span>
+                                {item.product.name}
                                 {item.product.gratis && (
-                                  <span className="product-gratis">
-                                    <Gift className="icon" />
-                                    +{item.product.gratis}
-                                  </span>
+                                  <span className="of-offer-meta"> · gratis {item.product.gratis}</span>
                                 )}
-                              </div>
-                              <div className="product-summary">
-                                <span className="quantity">{item.quantity} szt.</span>
-                                <span className="amount">
-                                  {(item.product.price * item.quantity).toFixed(2)} zł
-                                </span>
-                              </div>
-                            </div>
+                              </span>
+                              <span className="num muted">{item.quantity} szt.</span>
+                              <span className="num">{formatMoney((item.product.price * item.quantity))}</span>
+                            </li>
                           ))}
-                        </div>
-                        
-                        <div className="supplier-note-section">
-                          <label htmlFor={`supplier-note-${index}`}>
-                            <Info className="icon" /> 
-                            Uwagi dla {supplierOrder.supplierName}:
-                          </label>
+                        </ul>
+                        <label className="of-field">
+                          <span className="of-field-label">Uwagi dla {supplierOrder.supplierName}</span>
                           <textarea
                             id={`supplier-note-${index}`}
                             rows="3"
                             value={supplierOrder.note}
                             onChange={(e) => handleSupplierNoteChange(index, e.target.value)}
                             disabled={!supplierOrder.selected}
-                            placeholder="Dodatkowe informacje, uwagi specjalne..."
-                            className="note-textarea"
+                            placeholder="Dodatkowe informacje dla dostawcy"
                           />
-                        </div>
+                        </label>
                       </div>
                     )}
                   </div>
@@ -756,24 +681,21 @@ const Offers = () => {
               </div>
             </div>
 
-            <div className="modal-footer">
-              <button className="cancel-btn" onClick={() => setShowOrderForm(false)}>
+            <div className="of-modal-foot">
+              <button type="button" className="btn btn-secondary" onClick={() => setShowOrderForm(false)}>
                 Anuluj
               </button>
-              <button className="submit-btn" onClick={handleSendOrder}>
-                <Send className="icon" />
-                Wyślij zamówienie ({orderFormData.supplierOrders.filter(s => s.selected).length})
+              <button type="button" className="btn btn-primary" onClick={handleSendOrder}>
+                <Send /> Wyślij zamówienie ({selectedSupplierCount})
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Notification */}
       {notification && (
-        <div className="notification-toast">
-          <Check className="notification-icon" />
-          {notification}
+        <div className="notice of-toast" role="status">
+          <Check /> {notification}
         </div>
       )}
     </div>

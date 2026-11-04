@@ -1,181 +1,257 @@
-/* EventCalendar.css */
-.calendar-container {
-  background: white;
-  border-radius: var(--border-radius);
-  padding: 20px;
-  box-shadow: var(--box-shadow);
+/* Kalendarz wydarzeń (react-big-calendar) – motyw zgodny z systemem projektowym */
+
+.event-calendar {
+  --ec-inventory: var(--accent);
+  --ec-delivery: var(--info);
+  --ec-meeting: #b7832a;
+  --ec-other: #6f7773;
 }
 
-.calendar-header {
+.event-calendar .ec-header {
   display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
-.calendar-header h3 {
+.event-calendar .ec-title { margin: 0 0 var(--space-2); }
+
+.event-calendar .ec-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  list-style: none;
   margin: 0;
-  color: var(--primary-color);
+  padding: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
 }
 
-.add-event-button {
-  background: var(--accent-color);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  padding: 8px 15px;
-  cursor: pointer;
-  transition: background-color 0.3s;
+.event-calendar .ec-legend li { display: inline-flex; align-items: center; gap: 6px; }
+
+.event-calendar .ec-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
 }
 
-.add-event-button:hover {
-  background: var(--primary-color);
+.event-calendar .ec-swatch-inventory { background: var(--ec-inventory); }
+.event-calendar .ec-swatch-delivery { background: var(--ec-delivery); }
+.event-calendar .ec-swatch-meeting { background: var(--ec-meeting); }
+.event-calendar .ec-swatch-other { background: var(--ec-other); }
+
+/* ---------- Pasek narzędzi kalendarza ---------- */
+
+.event-calendar .rbc-calendar { font-family: var(--font); color: var(--text); }
+
+.event-calendar .rbc-toolbar {
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-base);
 }
 
-.event-modal {
-  background: white;
-  border-radius: var(--border-radius);
-  padding: 25px;
-  width: 500px;
-  max-width: 90%;
+.event-calendar .rbc-toolbar-label {
+  font-weight: 600;
+  font-size: var(--text-md);
+  text-transform: capitalize;
 }
 
-.form-group {
-  margin-bottom: 15px;
-}
+.event-calendar .rbc-btn-group { display: inline-flex; }
 
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
+.event-calendar .rbc-toolbar button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-sm);
   font-weight: 500;
-  color: var(--primary-color);
+  line-height: 1;
+  box-shadow: none;
+  transition: background var(--transition);
 }
 
-.form-group input, 
-.form-group select, 
-.form-group textarea {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: var(--border-radius);
-  font-family: inherit;
+.event-calendar .rbc-toolbar button:hover,
+.event-calendar .rbc-toolbar button:focus {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+  color: var(--text);
 }
 
-.modal-actions {
+.event-calendar .rbc-toolbar button.rbc-active,
+.event-calendar .rbc-toolbar button.rbc-active:hover,
+.event-calendar .rbc-toolbar button:active {
+  background: var(--accent-soft);
+  border-color: #b9d3cf;
+  color: var(--accent-text);
+  box-shadow: none;
+}
+
+.event-calendar .rbc-btn-group > button:first-child:not(:last-child) {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+.event-calendar .rbc-btn-group > button:last-child:not(:first-child) {
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.event-calendar .rbc-btn-group > button:only-child { border-radius: var(--radius); }
+
+/* ---------- Siatka ---------- */
+
+.event-calendar .rbc-month-view,
+.event-calendar .rbc-time-view,
+.event-calendar .rbc-agenda-view table.rbc-agenda-table {
+  border-color: var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.event-calendar .rbc-header {
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.event-calendar .rbc-header + .rbc-header,
+.event-calendar .rbc-day-bg + .rbc-day-bg,
+.event-calendar .rbc-month-row + .rbc-month-row,
+.event-calendar .rbc-time-header-content,
+.event-calendar .rbc-time-content > * + * > *,
+.event-calendar .rbc-timeslot-group,
+.event-calendar .rbc-day-slot .rbc-time-slot,
+.event-calendar .rbc-time-content,
+.event-calendar .rbc-time-header.rbc-overflowing,
+.event-calendar .rbc-agenda-view table.rbc-agenda-table tbody > tr > td + td,
+.event-calendar .rbc-agenda-view table.rbc-agenda-table tbody > tr + tr {
+  border-color: var(--border);
+}
+
+.event-calendar .rbc-day-slot .rbc-time-slot { border-top-color: #f1f0eb; }
+
+.event-calendar .rbc-off-range-bg { background: var(--surface-muted); }
+.event-calendar .rbc-off-range { color: var(--text-subtle); }
+
+.event-calendar .rbc-date-cell {
+  padding: 6px 8px 2px;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.event-calendar .rbc-today { background: var(--accent-soft); }
+
+.event-calendar .rbc-date-cell.rbc-now { font-weight: 600; color: var(--accent-text); }
+
+.event-calendar .rbc-time-gutter,
+.event-calendar .rbc-label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.event-calendar .rbc-current-time-indicator { background: var(--danger); }
+
+.event-calendar .rbc-show-more {
+  color: var(--accent);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  background: transparent;
+}
+
+/* ---------- Wydarzenia ---------- */
+
+.event-calendar .rbc-event,
+.event-calendar .rbc-day-slot .rbc-background-event {
+  padding: 2px 6px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--ec-other);
+  color: #fff;
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+
+.event-calendar .rbc-event.ec-event-inventory { background: var(--ec-inventory); }
+.event-calendar .rbc-event.ec-event-delivery { background: var(--ec-delivery); }
+.event-calendar .rbc-event.ec-event-meeting { background: var(--ec-meeting); }
+
+.event-calendar .rbc-event.rbc-selected { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text-subtle); }
+.event-calendar .rbc-event:focus { outline: 2px solid var(--text); outline-offset: 1px; }
+
+.event-calendar .rbc-day-slot .rbc-event { border: 1px solid rgba(255, 255, 255, 0.6); }
+
+/* Widok listy */
+.event-calendar .rbc-agenda-view table.rbc-agenda-table thead > tr > th {
+  border-bottom-color: var(--border);
+  background: var(--surface-muted);
+}
+
+.event-calendar .rbc-agenda-view table.rbc-agenda-table td { padding: 8px 10px; }
+
+.event-calendar .rbc-agenda-empty { color: var(--text-muted); padding: var(--space-4) 0; }
+
+/* ---------- Okno dodawania ---------- */
+
+.event-calendar .ec-modal {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.event-calendar .ec-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.event-calendar .ec-modal-head h3 { margin: 0; }
+
+.event-calendar .ec-modal-body {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+}
+
+.event-calendar .ec-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.event-calendar .ec-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.event-calendar .ec-field label { font-size: var(--text-sm); font-weight: 500; }
+.event-calendar .ec-field input,
+.event-calendar .ec-field select,
+.event-calendar .ec-field textarea { width: 100%; }
+
+.event-calendar .ec-modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--border);
+  background: var(--surface-muted);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
-.cancel-button, .add-button {
-  padding: 8px 15px;
-  border-radius: var(--border-radius);
-  cursor: pointer;
-  border: none;
-}
-
-.cancel-button {
-  background: #f1f2f3;
-  color: #333;
-}
-
-.add-button {
-  background: var(--accent-color);
-  color: white;
-}
-
-/* Stylowanie wydarzeń w sekcji "Dzisiaj" */
-.event-item {
-  display: flex;
-  gap: 15px;
-  padding: 12px 15px;
-  background: #f8f9fa;
-  border-radius: var(--border-radius);
-  margin-bottom: 10px;
-}
-
-.event-inventory {
-  border-left: 4px solid #f1c40f;
-}
-
-.event-delivery {
-  border-left: 4px solid #2ecc71;
-}
-
-.event-meeting {
-  border-left: 4px solid #9b59b6;
-}
-
-.event-other {
-  border-left: 4px solid #3498db;
-}
-
-.event-time {
-  font-weight: bold;
-  color: var(--primary-color);
-  min-width: 60px;
-}
-
-.event-content {
-  flex: 1;
-}
-
-.event-title {
-  font-weight: 500;
-  margin-bottom: 4px;
-}
-
-.event-description {
-  font-size: 13px;
-  color: #666;
-}
-
-/* Modal overlay dla dodawania wydarzenia */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-/* Styl dla małego przycisku dodawania wydarzenia */
-.add-event-small-button {
-  background: var(--accent-color);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  padding: 5px 10px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.add-event-small-button:hover {
-  background: var(--primary-color);
-}
-
-/* Dostosowanie nagłówka panelu "Dzisiaj" */
-.today-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 15px;
-  color: var(--primary-color);
-}
-
-.today-header h3 {
-  margin: 0;
-  font-size: 18px;
-  flex-grow: 1;
+@media (max-width: 640px) {
+  .event-calendar .rbc-toolbar { flex-direction: column; align-items: stretch; }
+  .event-calendar .rbc-btn-group { justify-content: center; }
+  .event-calendar .ec-row { grid-template-columns: 1fr; }
 }

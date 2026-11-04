@@ -1,10 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, Plus, ShoppingCart, PackagePlus, PackageMinus } from 'lucide-react';
 import './Inventory.css';
+import { KEYS, readJSON, writeJSON, addToShoppingList } from '../utils/storage';
+
+// Katalog ma ponad 11 tys. pozycji – renderujemy je partiami, żeby strona nie zamarzała.
+const CATALOG_PAGE_SIZE = 60;
+
+const UNIT_MAP = { 'op.': 'opak', 'szt': 'szt', 'kpl.': 'kpl', 'para': 'para' };
 
 function Inventory() {
   const [productCatalog, setProductCatalog] = useState([]); // Katalog z JSON
-  const [inventoryStock, setInventoryStock] = useState([]); // Aktualny stan magazynu
+  const [inventoryStock, setInventoryStock] = useState(() => readJSON(KEYS.inventory, [])); // Aktualny stan magazynu
   const [loadingCatalog, setLoadingCatalog] = useState(true);
+  const [visibleCatalogCount, setVisibleCatalogCount] = useState(CATALOG_PAGE_SIZE);
+  const [message, setMessage] = useState('');
+  const isFirstSave = useRef(true);
   
   // UI States
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -40,22 +50,22 @@ function Inventory() {
   useEffect(() => {
     const loadCatalog = async () => {
       try {
-        const response = await fetch('/dental_products.json');
+        const response = await fetch(`${process.env.PUBLIC_URL}/dental_products.json`);
         const catalog = await response.json();
         
         // Ensure all products have required fields
+        // Identyfikatory "catalog_<indeks>" zostają bez zmian, bo odwołują się do nich zapisane stany magazynu.
         const processedCatalog = catalog.map((product, index) => ({
           id: product.id || `catalog_${index}`,
-          name: product.name || 'Unnamed Product',
+          name: product.name || 'Produkt bez nazwy',
           category: product.category || 'Inne',
           description: product.description || '',
-          unit: product.unit || 'szt',
+          unit: product.unit || UNIT_MAP[product.stock] || 'szt',
           minStock: product.minStock || 5
         }));
-        
-        setProductCatalog(processedCatalog);
-        console.log(`Loaded ${processedCatalog.length} products to catalog`);
-        
+
+        setProductCatalog([...processedCatalog, ...readJSON(KEYS.customProducts, [])]);
+
       } catch (error) {
         console.error('Error loading product catalog:', error);
         // Fallback catalog
@@ -73,33 +83,32 @@ function Inventory() {
     loadCatalog();
   }, []);
 
-  // Load inventory stock from localStorage
+  // Zapis stanu magazynu – tylko po faktycznej zmianie (nie przy pierwszym renderze).
   useEffect(() => {
-    const savedStock = localStorage.getItem('inventoryStock');
-    if (savedStock) {
-      try {
-        const stock = JSON.parse(savedStock);
-        setInventoryStock(stock);
-      } catch (error) {
-        console.error('Error loading inventory stock:', error);
-        setInventoryStock([]);
-      }
+    if (isFirstSave.current) {
+      isFirstSave.current = false;
+      return;
     }
-  }, []);
+    writeJSON(KEYS.inventory, inventoryStock);
+    const now = new Date().toLocaleString('pl-PL');
+    setLastUpdate(now);
+    localStorage.setItem(KEYS.inventoryUpdatedAt, now);
+  }, [inventoryStock]);
 
-  // Save inventory stock to localStorage
   useEffect(() => {
-    if (!loadingCatalog) {
-      try {
-        localStorage.setItem('inventoryStock', JSON.stringify(inventoryStock));
-        const now = new Date().toLocaleString();
-        setLastUpdate(now);
-        localStorage.setItem('lastInventoryUpdate', now);
-      } catch (error) {
-        console.error('Failed to save inventory stock:', error);
-      }
-    }
-  }, [inventoryStock, loadingCatalog]);
+    setVisibleCatalogCount(CATALOG_PAGE_SIZE);
+  }, [searchQuery, selectedCategory]);
+
+  const showMessage = (text) => {
+    setMessage(text);
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  const handleAddToShoppingList = (item) => {
+    const shortage = item.minStock - item.quantity;
+    addToShoppingList({ name: item.name, category: item.category, quantity: shortage > 0 ? shortage : 1 });
+    showMessage(`Dodano „${item.name}” do listy zakupów.`);
+  };
 
   // Get unique categories from catalog
   const availableCategories = [...new Set(productCatalog.map(product => product.category))].sort();
@@ -127,7 +136,10 @@ function Inventory() {
 
   // Function to receive goods (add to inventory)
   const receiveGoods = (catalogProduct, quantity, note = '') => {
-    const existingIndex = inventoryStock.findIndex(item => item.catalogId === catalogProduct.id);
+    const stockRef = String(catalogProduct.id).startsWith('stock:') ? String(catalogProduct.id).slice(6) : null;
+    const existingIndex = inventoryStock.findIndex(item =>
+      stockRef ? String(item.id) === stockRef : item.catalogId === catalogProduct.id
+    );
     
     if (existingIndex >= 0) {
       // Update existing stock
@@ -226,261 +238,324 @@ function Inventory() {
     };
 
     setProductCatalog(prev => [...prev, customProduct]);
+    writeJSON(KEYS.customProducts, [...readJSON(KEYS.customProducts, []), customProduct]);
     setNewProduct({ name: '', category: 'Materiały', description: '', unit: 'szt' });
     setShowAddForm(false);
   };
 
+  const TABS = [
+    { id: 'stock', label: 'Stan magazynu' },
+    { id: 'receive', label: 'Przyjęcie towaru' },
+    { id: 'issue', label: 'Wydanie towaru' }
+  ];
+
+  const stockStatus = (item) => {
+    if (item.quantity === 0) return <span className="badge badge-danger">Brak</span>;
+    if (item.quantity < item.minStock) return <span className="badge badge-warning">Niski stan</span>;
+    return <span className="badge badge-success">W normie</span>;
+  };
+
+  const issuableStock = filteredStock.filter(item => item.quantity > 0);
+
   if (loadingCatalog) {
     return (
-      <div className="inventory">
-        <h2 className="gradient-header">Magazyn</h2>
-        <div className="loading-message">
-          <p>Ładowanie katalogu produktów...</p>
-        </div>
+      <div className="inventory-page page">
+        <header className="page-header">
+          <h1 className="page-title">Magazyn</h1>
+        </header>
+        <p className="muted">Ładowanie katalogu produktów…</p>
       </div>
     );
   }
 
   return (
-    <div className="inventory">
-      <h2 className="gradient-header">Magazyn</h2>
+    <div className="inventory-page page">
+      <header className="page-header">
+        <div>
+          <h1 className="page-title">Magazyn</h1>
+          <p className="page-subtitle">Ostatnia aktualizacja: {lastUpdate}</p>
+        </div>
+      </header>
 
-      {/* Statistics Panel */}
-      <div className="summary-panel">
-        <div className="summary-item">
-          <span>Łączna ilość:</span>
-          <strong>{totalItems} pozycji</strong>
+      {message && <div className="notice" role="status">{message}</div>}
+
+      <div className="stat-row">
+        <div className="stat">
+          <span className="stat-label">Produktów w magazynie</span>
+          <span className="stat-value num">{inventoryStock.length}</span>
         </div>
-        <div className="summary-item">
-          <span>Produktów w magazynie:</span>
-          <strong>{inventoryStock.length}</strong>
+        <div className="stat">
+          <span className="stat-label">Łączna ilość</span>
+          <span className="stat-value num">{totalItems}</span>
         </div>
-        <div className="summary-item low-stock">
-          <span>Niski stan:</span>
-          <strong>{lowStockItems}</strong>
+        <div className={`stat ${lowStockItems > 0 ? 'warning' : ''}`}>
+          <span className="stat-label">Niski stan</span>
+          <span className="stat-value num">{lowStockItems}</span>
         </div>
-        <div className="summary-item critical-stock">
-          <span>Brak na stanie:</span>
-          <strong>{outOfStockItems}</strong>
+        <div className={`stat ${outOfStockItems > 0 ? 'danger' : ''}`}>
+          <span className="stat-label">Brak na stanie</span>
+          <span className="stat-value num">{outOfStockItems}</span>
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="tab-navigation">
-        <button 
-          className={activeTab === 'stock' ? 'active' : ''}
-          onClick={() => setActiveTab('stock')}
-        >
-          📦 Stan magazynu
-        </button>
-        <button 
-          className={activeTab === 'receive' ? 'active' : ''}
-          onClick={() => setActiveTab('receive')}
-        >
-          📥 Przyjęcie towaru
-        </button>
-        <button 
-          className={activeTab === 'issue' ? 'active' : ''}
-          onClick={() => setActiveTab('issue')}
-        >
-          📤 Wydanie towaru
-        </button>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="search-bar">
-        <input
-          type="text"
-          placeholder={activeTab === 'stock' ? "Szukaj w magazynie..." : "Szukaj produktu..."}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
-
-      <ul className="filters-list">
-        <li>
-          <button 
-            className={selectedCategory === '' ? 'active' : ''}
-            onClick={() => setSelectedCategory('')}
+      <div className="tabs" role="tablist">
+        {TABS.map(tab => (
+          <button
+            key={tab.id}
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            className={`tab ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
           >
-            Wszystkie
+            {tab.label}
           </button>
-        </li>
-        {availableCategories.map((category) => (
-          <li key={category}>
-            <button 
-              className={selectedCategory === category ? 'active' : ''}
-              onClick={() => setSelectedCategory(category)}
-            >
-              {category}
-            </button>
-          </li>
         ))}
-      </ul>
+      </div>
 
-      {/* Content based on active tab */}
-      {activeTab === 'stock' && (
-        <div className="stock-view">
-          <h3>Aktualny stan magazynu</h3>
-          {filteredStock.length === 0 ? (
-            <div className="empty-state">
-              <p>Brak produktów w magazynie spełniających kryteria wyszukiwania.</p>
-              <p>Przejdź do zakładki "Przyjęcie towaru" aby dodać produkty.</p>
-            </div>
-          ) : (
-            <div className="stock-grid">
-              {filteredStock.map((item) => (
-                <div key={item.id} className={`stock-card ${item.quantity === 0 ? 'out-of-stock' : item.quantity < item.minStock ? 'low-stock' : ''}`}>
-                  <h4>{item.name}</h4>
-                  <p className="category">Kategoria: {item.category}</p>
-                  {item.description && <p className="description">{item.description}</p>}
-                  <div className="quantity-info">
-                    <span className="quantity">{item.quantity} {item.unit}</span>
-                    <span className="min-stock">Min: {item.minStock}</span>
-                  </div>
-                  {item.quantity < item.minStock && (
-                    <div className="warning">⚠️ Niski stan</div>
-                  )}
-                  <div className="stock-actions">
-                    <button 
-                      className="issue-btn"
-                      onClick={() => openIssueModal(item)}
-                      disabled={item.quantity === 0}
-                    >
-                      📤 Wydaj
-                    </button>
-                    <button 
-                      className="receive-btn"
-                      onClick={() => {
-                        const catalogProduct = productCatalog.find(p => p.id === item.catalogId);
-                        if (catalogProduct) openReceiveModal(catalogProduct);
-                      }}
-                    >
-                      📥 Przyjmij
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+      <div className="toolbar">
+        <div className="search-field">
+          <Search className="search-field-icon" aria-hidden="true" />
+          <input
+            type="search"
+            placeholder={activeTab === 'stock' ? 'Szukaj w magazynie' : 'Szukaj produktu'}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Szukaj"
+          />
         </div>
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          aria-label="Kategoria"
+          className="category-select"
+        >
+          <option value="">Wszystkie kategorie</option>
+          {availableCategories.map((category) => (
+            <option key={category} value={category}>{category}</option>
+          ))}
+        </select>
+        {activeTab === 'receive' && (
+          <button className="btn btn-secondary toolbar-end" onClick={() => setShowAddForm(true)}>
+            <Plus /> Nowy produkt w katalogu
+          </button>
+        )}
+      </div>
+
+      {activeTab === 'stock' && (
+        filteredStock.length === 0 ? (
+          <div className="empty-state">
+            <h4>Brak produktów</h4>
+            <p>Nic w magazynie nie pasuje do wyszukiwania. Nowe produkty dodasz w zakładce „Przyjęcie towaru”.</p>
+          </div>
+        ) : (
+          <div className="card card-flush">
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Produkt</th>
+                    <th className="hide-sm">Kategoria</th>
+                    <th className="right">Stan</th>
+                    <th className="right hide-sm">Minimum</th>
+                    <th>Status</th>
+                    <th aria-label="Akcje"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredStock.map((item) => (
+                    <tr key={item.id}>
+                      <td>
+                        <span className="item-name">{item.name}</span>
+                        {item.description && <span className="item-desc">{item.description}</span>}
+                      </td>
+                      <td className="muted hide-sm">{item.category}</td>
+                      <td className="right num nowrap">{item.quantity} {item.unit}</td>
+                      <td className="right num muted hide-sm">{item.minStock}</td>
+                      <td>{stockStatus(item)}</td>
+                      <td className="right">
+                        <div className="row-actions">
+                          {item.quantity < item.minStock && (
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              onClick={() => handleAddToShoppingList(item)}
+                              title="Dodaj do listy zakupów"
+                              aria-label={`Dodaj do listy zakupów: ${item.name}`}
+                            >
+                              <ShoppingCart /> <span className="label-wide">Do listy</span>
+                            </button>
+                          )}
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => openIssueModal(item)}
+                            disabled={item.quantity === 0}
+                          >
+                            Wydaj
+                          </button>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => {
+                              // Pozycje przyjęte z zamówień mogą nie mieć odpowiednika w katalogu – wtedy używamy samej pozycji.
+                              const catalogProduct = productCatalog.find(p => p.id === item.catalogId);
+                              openReceiveModal(catalogProduct || { ...item, id: item.catalogId || `stock:${item.id}` });
+                            }}
+                          >
+                            Przyjmij
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
       )}
 
       {activeTab === 'receive' && (
-        <div className="receive-view">
-          <div className="section-header">
-            <h3>Przyjęcie towaru do magazynu</h3>
-            <button className="add-product-button" onClick={() => setShowAddForm(true)}>
-              + Dodaj nowy produkt do katalogu
-            </button>
+        filteredCatalogProducts.length === 0 ? (
+          <div className="empty-state">
+            <h4>Nie znaleziono produktów w katalogu</h4>
+            <p>Zmień wyszukiwanie albo dodaj nowy produkt do katalogu.</p>
           </div>
-          
-          {filteredCatalogProducts.length === 0 ? (
-            <div className="empty-state">
-              <p>Nie znaleziono produktów w katalogu.</p>
+        ) : (
+          <>
+            <p className="list-meta muted">
+              Wyświetlono {Math.min(visibleCatalogCount, filteredCatalogProducts.length)} z {filteredCatalogProducts.length} produktów
+              {filteredCatalogProducts.length > visibleCatalogCount && ' – zawęź wyszukiwanie lub pokaż więcej'}
+            </p>
+            <div className="card card-flush">
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Produkt</th>
+                      <th className="hide-sm">Kategoria</th>
+                      <th className="right">Na stanie</th>
+                      <th className="right hide-sm">Minimum</th>
+                      <th aria-label="Akcje"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCatalogProducts.slice(0, visibleCatalogCount).map((product) => {
+                      const currentStock = inventoryStock.find(item => item.catalogId === product.id);
+                      return (
+                        <tr key={product.id}>
+                          <td>
+                            <span className="item-name">{product.name}</span>
+                            {product.description && <span className="item-desc">{product.description}</span>}
+                          </td>
+                          <td className="muted hide-sm">{product.category}</td>
+                          <td className="right num nowrap">{currentStock ? currentStock.quantity : 0} {product.unit}</td>
+                          <td className="right num muted hide-sm">{product.minStock}</td>
+                          <td className="right">
+                            <button className="btn btn-secondary btn-sm" onClick={() => openReceiveModal(product)}>
+                              <PackagePlus /> Przyjmij
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          ) : (
-            <div className="catalog-grid">
-              {filteredCatalogProducts.map((product) => {
-                const currentStock = inventoryStock.find(item => item.catalogId === product.id);
-                return (
-                  <div key={product.id} className="catalog-card">
-                    <h4>{product.name}</h4>
-                    <p className="category">{product.category}</p>
-                    {product.description && <p className="description">{product.description}</p>}
-                    <div className="stock-info">
-                      <span>Stan: {currentStock ? currentStock.quantity : 0} {product.unit}</span>
-                      <span>Min: {product.minStock}</span>
-                    </div>
-                    <button 
-                      className="receive-btn"
-                      onClick={() => openReceiveModal(product)}
-                    >
-                      📥 Przyjmij towar
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+            {filteredCatalogProducts.length > visibleCatalogCount && (
+              <div className="load-more">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setVisibleCatalogCount(count => count + CATALOG_PAGE_SIZE)}
+                >
+                  Pokaż kolejne {CATALOG_PAGE_SIZE}
+                </button>
+              </div>
+            )}
+          </>
+        )
       )}
 
       {activeTab === 'issue' && (
-        <div className="issue-view">
-          <h3>Wydanie towaru z magazynu</h3>
-          {filteredStock.filter(item => item.quantity > 0).length === 0 ? (
-            <div className="empty-state">
-              <p>Brak produktów dostępnych do wydania.</p>
+        issuableStock.length === 0 ? (
+          <div className="empty-state">
+            <h4>Brak produktów do wydania</h4>
+            <p>Wszystkie pasujące pozycje mają zerowy stan.</p>
+          </div>
+        ) : (
+          <div className="card card-flush">
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Produkt</th>
+                    <th className="hide-sm">Kategoria</th>
+                    <th className="right">Dostępne</th>
+                    <th aria-label="Akcje"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {issuableStock.map((item) => (
+                    <tr key={item.id}>
+                      <td><span className="item-name">{item.name}</span></td>
+                      <td className="muted hide-sm">{item.category}</td>
+                      <td className="right num nowrap">{item.quantity} {item.unit}</td>
+                      <td className="right">
+                        <button className="btn btn-secondary btn-sm" onClick={() => openIssueModal(item)}>
+                          <PackageMinus /> Wydaj
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ) : (
-            <div className="issue-grid">
-              {filteredStock.filter(item => item.quantity > 0).map((item) => (
-                <div key={item.id} className="issue-card">
-                  <h4>{item.name}</h4>
-                  <p className="category">{item.category}</p>
-                  <div className="available-quantity">
-                    Dostępne: <strong>{item.quantity} {item.unit}</strong>
-                  </div>
-                  <button 
-                    className="issue-btn"
-                    onClick={() => openIssueModal(item)}
-                  >
-                    📤 Wydaj towar
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+          </div>
+        )
       )}
 
-      {/* Receive Modal */}
       {receiveModal && selectedProduct && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Przyjęcie towaru</h3>
-            <div className="product-details">
-              <p><strong>Produkt:</strong> {selectedProduct.name}</p>
-              <p><strong>Kategoria:</strong> {selectedProduct.category}</p>
-              <p><strong>Jednostka:</strong> {selectedProduct.unit}</p>
-            </div>
-            <div className="form-group">
-              <label>Ilość:</label>
+        <div className="modal-backdrop">
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="receive-title">
+            <h2 id="receive-title" className="modal-title">Przyjęcie towaru</h2>
+            <dl className="modal-facts">
+              <dt>Produkt</dt><dd>{selectedProduct.name}</dd>
+              <dt>Kategoria</dt><dd>{selectedProduct.category}</dd>
+              <dt>Jednostka</dt><dd>{selectedProduct.unit}</dd>
+            </dl>
+            <label className="field">
+              <span className="field-label">Ilość</span>
               <input
                 type="number"
                 min="1"
                 value={receiveQuantity}
                 onChange={(e) => setReceiveQuantity(parseInt(e.target.value) || 1)}
               />
-            </div>
-            <div className="form-group">
-              <label>Notatka (opcjonalna):</label>
+            </label>
+            <label className="field">
+              <span className="field-label">Notatka <span className="muted">(opcjonalnie)</span></span>
               <textarea
                 value={receiveNote}
                 onChange={(e) => setReceiveNote(e.target.value)}
-                placeholder="Np. dostawca, numer faktury..."
+                placeholder="Np. dostawca, numer faktury"
               />
-            </div>
+            </label>
             <div className="modal-actions">
-              <button onClick={() => setReceiveModal(false)}>Anuluj</button>
-              <button onClick={confirmReceive} className="primary">Przyjmij</button>
+              <button className="btn btn-secondary" onClick={() => setReceiveModal(false)}>Anuluj</button>
+              <button className="btn btn-primary" onClick={confirmReceive}>Przyjmij</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Issue Modal */}
       {issueModal && selectedProduct && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Wydanie towaru</h3>
-            <div className="product-details">
-              <p><strong>Produkt:</strong> {selectedProduct.name}</p>
-              <p><strong>Dostępne:</strong> {selectedProduct.quantity} {selectedProduct.unit}</p>
-            </div>
-            <div className="form-group">
-              <label>Ilość do wydania:</label>
+        <div className="modal-backdrop">
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="issue-title">
+            <h2 id="issue-title" className="modal-title">Wydanie towaru</h2>
+            <dl className="modal-facts">
+              <dt>Produkt</dt><dd>{selectedProduct.name}</dd>
+              <dt>Dostępne</dt><dd className="num">{selectedProduct.quantity} {selectedProduct.unit}</dd>
+            </dl>
+            <label className="field">
+              <span className="field-label">Ilość do wydania</span>
               <input
                 type="number"
                 min="1"
@@ -488,20 +563,20 @@ function Inventory() {
                 value={issueQuantity}
                 onChange={(e) => setIssueQuantity(parseInt(e.target.value) || 1)}
               />
-            </div>
-            <div className="form-group">
-              <label>Cel wydania (opcjonalne):</label>
+            </label>
+            <label className="field">
+              <span className="field-label">Cel wydania <span className="muted">(opcjonalnie)</span></span>
               <textarea
                 value={issueNote}
                 onChange={(e) => setIssueNote(e.target.value)}
-                placeholder="Np. pacjent, gabinet, procedura..."
+                placeholder="Np. pacjent, gabinet, procedura"
               />
-            </div>
+            </label>
             <div className="modal-actions">
-              <button onClick={() => setIssueModal(false)}>Anuluj</button>
-              <button 
-                onClick={confirmIssue} 
-                className="primary"
+              <button className="btn btn-secondary" onClick={() => setIssueModal(false)}>Anuluj</button>
+              <button
+                className="btn btn-primary"
+                onClick={confirmIssue}
                 disabled={issueQuantity > selectedProduct.quantity}
               >
                 Wydaj
@@ -511,26 +586,26 @@ function Inventory() {
         </div>
       )}
 
-      {/* Add Custom Product Modal */}
       {showAddForm && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Dodaj nowy produkt do katalogu</h3>
+        <div className="modal-backdrop">
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="add-title">
+            <h2 id="add-title" className="modal-title">Nowy produkt w katalogu</h2>
             <form onSubmit={addCustomProduct}>
-              <div className="form-group">
-                <label>Nazwa produktu:</label>
+              <label className="field">
+                <span className="field-label">Nazwa produktu</span>
                 <input
                   type="text"
                   value={newProduct.name}
                   onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
                   required
                 />
-              </div>
-              <div className="form-group">
-                <label>Kategoria:</label>
+              </label>
+              <div className="field">
+                <span className="field-label">Kategoria</span>
                 <select
                   value={newProduct.category}
                   onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
+                  aria-label="Wybierz kategorię"
                 >
                   {availableCategories.map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
@@ -538,21 +613,21 @@ function Inventory() {
                 </select>
                 <input
                   type="text"
-                  placeholder="Lub wpisz nową kategorię..."
+                  placeholder="lub wpisz nową kategorię"
                   value={newProduct.category}
                   onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
-                  style={{ marginTop: '5px' }}
+                  aria-label="Nowa kategoria"
                 />
               </div>
-              <div className="form-group">
-                <label>Opis (opcjonalny):</label>
+              <label className="field">
+                <span className="field-label">Opis <span className="muted">(opcjonalnie)</span></span>
                 <textarea
                   value={newProduct.description}
                   onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
                 />
-              </div>
-              <div className="form-group">
-                <label>Jednostka:</label>
+              </label>
+              <label className="field">
+                <span className="field-label">Jednostka</span>
                 <select
                   value={newProduct.unit}
                   onChange={(e) => setNewProduct({...newProduct, unit: e.target.value})}
@@ -565,22 +640,15 @@ function Inventory() {
                   <option value="tuba">tuba</option>
                   <option value="butelka">butelka</option>
                 </select>
-              </div>
+              </label>
               <div className="modal-actions">
-                <button type="button" onClick={() => setShowAddForm(false)}>Anuluj</button>
-                <button type="submit" className="primary">Dodaj</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowAddForm(false)}>Anuluj</button>
+                <button type="submit" className="btn btn-primary">Dodaj</button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-      {/* Footer */}
-      <div className="inventory-footer">
-        <div className="last-update">
-          Ostatnia aktualizacja: {lastUpdate}
-        </div>
-      </div>
     </div>
   );
 }
