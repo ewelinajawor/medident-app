@@ -1,15 +1,17 @@
 {
   "files": {
-    "main.css": "/medident-app/static/css/main.fb9a9f5e.css",
-    "main.js": "/medident-app/static/js/main.9c92a9ff.js",
+    "main.css": "/medident-app/static/css/main.440d90f0.css",
+    "main.js": "/medident-app/static/js/main.cc77a9cc.js",
+    "static/js/189.11ca6996.chunk.js": "/medident-app/static/js/189.11ca6996.chunk.js",
     "static/js/488.04826c19.chunk.js": "/medident-app/static/js/488.04826c19.chunk.js",
     "index.html": "/medident-app/index.html",
-    "main.fb9a9f5e.css.map": "/medident-app/static/css/main.fb9a9f5e.css.map",
-    "main.9c92a9ff.js.map": "/medident-app/static/js/main.9c92a9ff.js.map",
+    "main.440d90f0.css.map": "/medident-app/static/css/main.440d90f0.css.map",
+    "main.cc77a9cc.js.map": "/medident-app/static/js/main.cc77a9cc.js.map",
+    "189.11ca6996.chunk.js.map": "/medident-app/static/js/189.11ca6996.chunk.js.map",
     "488.04826c19.chunk.js.map": "/medident-app/static/js/488.04826c19.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.fb9a9f5e.css",
-    "static/js/main.9c92a9ff.js"
+    "static/css/main.440d90f0.css",
+    "static/js/main.cc77a9cc.js"
   ]
 }
